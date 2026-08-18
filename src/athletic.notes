@@ -39,6 +39,7 @@
 # LA CABECERA Y LAS RUTINAS DEL VDP
 # =============================================================================
 D 0x4000 0x4010 cabecera_del_cartucho La cabecera que lee la BIOS: "AB", INIT=0x4077 y a cero STATEMENT, DEVICE y TEXT. La BIOS mapea el cartucho en la pagina 1 (0x4000-0x7FFF) y salta a 0x4077 al terminar de arrancar
+F 0x4000 2,w4,6
 L 0x4010 VPOKE            Escribe A en la VRAM DE. Salta a 0x4070 para acabar (res 6,d deja DE como estaba)
 L 0x4019 VPEEK            Lee en A el byte de la VRAM DE
 L 0x4023 VDP_DIRECCION    Manda DE al VDP como direccion (con el bit 6 de D a 1 es de escritura)
@@ -135,6 +136,7 @@ L 0x412A PASO_DEL_JUEGO    Cada fotograma: contador, parpadeo del 1P/2P, teclas 
 C 0x413A Estados 8-17 (menu y partida): aqui no valen las teclas 1-4
 C 0x4146 Tabla de 20 estados justo detras
 D 0x4149 0x4171 tabla_de_estados Los 20 estados del juego, indice E000. 0 espera; 1-6 la secuencia del titulo (KONAMI que sube, VIDEO CARTRIDGE, ATHLETIC LAND, PLAY SELECT, cortinilla); 7,18,19 la partida de demostracion; 8 el menu; 9 vida nueva; 10 espera; 11 la partida; 12-14 muerte, cambio de jugador y GAME OVER; 15 fase superada; 16,17 cambio de pantalla. Cierra clavada contra su primer destino, 0x4171
+F 0x4149 w1
 
 L 0x4171 ESTADO_00_ARRANCA   Estado 0: no hace nada; pasa al 1
 L 0x4174 ESTADO_01_LOGO      Estado 1: si hace falta, la cortinilla (E00B); luego carga el logotipo KONAMI (4B52) y pasa al 2
@@ -154,6 +156,7 @@ C 0x41E1 Estado 17+1 = 18: cambio de pantalla de la demo
 L 0x41E5 DEMO_TERMINA        Vuelve al estado 1 pidiendo cortinilla (E00B)
 L 0x41F2 ESTADO_08_MENU      Estado 8: el menu, en dos pasos por E001
 D 0x41F8 0x41FC tabla_del_menu Los dos pasos del menu: 0x41FC pinta, 0x421C hace parpadear la opcion elegida
+F 0x41F8 w1
 L 0x41FC MENU_0_PINTA        Paso 0: cortinilla entera de golpe, titulo y menu de una vez, la musica del menu (0x9C) y 80 fotogramas para elegir
 C 0x4201 La cortinilla completa dentro de este mismo fotograma
 C 0x420A Titulo, KONAMI 1984 y menu de golpe
@@ -232,6 +235,7 @@ L 0x443B SCENE_A_BCD_DECENAS  Cuenta decenas en el nibble alto de C
 L 0x444F SUBESTADO_POR_JUGADORES E001 = 0x20 con un jugador, 0 con dos (con dos se pinta PLAYER n)
 L 0x445B ALL_STAGE_CLEAR      La fase 99 superada: los creditos por el motor de rotulos y espera sin limite
 D 0x445E 0x4464 parametros_de_445B Los seis bytes del call 0x5F65: lista 0x4468, tiles 0x447E, VRAM 0x38A7 (fila 5, columna 7)
+F 0x445E w3
 L 0x4464 ALL_STAGE_CLEAR_ESPERA Al estado 10 con E004 = 0
 D 0x4468 0x447E creditos_lista Lista del motor de rotulos: relleno de 18 en la fila 5, copia de 18 en la 6, relleno de 18 en la 7 (el marco), y copias de 18 en las filas 16, 17 y 18 (los creditos)
 D 0x447E 0x44C8 creditos_tiles Los tiles: la raya (0x40) del marco, "ALL STAGE CLEAR", y "PROGRAM A.H Y.I", "SOUND Y.O", "CG R.S C.K" con rayas de relleno entre el oficio y las iniciales
@@ -246,6 +250,7 @@ L 0x4523 COLOR_DE_BORDE       Nadie lo llama: pondria A en el registro 7 (borde)
 L 0x4528 REGISTROS_DEL_VDP    Copia los 8 valores de 0x4545 a E038 y los manda al VDP
 L 0x4533 MANDA_REGISTROS_VDP  Manda al VDP los 8 registros guardados en E038
 D 0x4545 0x454D registros_del_vdp R0=02 SCREEN 2, R1=E2 16K/pantalla/interrupciones/sprites de 16x16, R2=0E nombres en 0x3800, R3=7F colores en 0x0000, R4=07 patrones en 0x2000, R5=76 atributos de sprites en 0x3B00, R6=03 patrones de sprites en 0x1800, R7=E1 borde negro
+F 0x4545 1
 L 0x454D COPIA_A_VRAM         BC bytes de HL a la VRAM DE
 L 0x4555 COPIA_A_VRAM_BUCLE   El bucle de salida, con la direccion ya puesta
 L 0x4560 RELLENA_VRAM         BC bytes de A en la VRAM DE
@@ -314,7 +319,9 @@ C 0x4754 En el estado 9 todavia no
 C 0x4767 Bloque de 2x2 lleno (0x4790)
 C 0x476E Bloque vacio (0x478B)
 D 0x478B 0x4790 vida_vacia Cinco bytes: un bloque de 2x2 tiles vacio (ceros) y el byte que se guarda de el
+F 0x478B 4,1
 D 0x4790 0x4795 vida_llena Los cuatro tiles del hombrecito de una vida (0x15 0x17 0x16 0x18) y el 0x06
+F 0x4790 4,1
 
 B 0x4795 ----------------------------------------------------------------------
 B 0x4795 LA PANTALLA DEL TITULO. Los tiles 0x40-0x61 del primer tercio se
@@ -334,11 +341,14 @@ C 0x47F8 52 llamadas en total
 D 0x47FB 0x48C2 logo_titulo_rle El logotipo ATHLETIC LAND comprimido (RLE de 0x4BB3, direccion 0x2200 delante): los patrones de los tiles 0x40-0x61 del primer tercio
 D 0x48C2 0x48CE logo_titulo_colores_rle Los 16 colores de una fila de tiles del logotipo, comprimidos; 0x4795 los repite 17 veces
 D 0x48CE 0x4A4E fuente Los 48 glifos de 8 bytes de la fuente: '0'-'9', el KONAMI pequeno (0x3A-0x3F), la raya (0x40), 'A'-'Z', ':' y los dos iconos de 2x1 del menu (0x5C-0x5F). El codigo de tile es el ASCII
+F 0x48CE 8
 D 0x4A4E 0x4A7B rotulos_del_marcador Lista de rotulos, cada uno con su raya (0x40) detras: "HI-" en 0x380C (fila 0, columna 12), "STAGE-" en 0x3816 (columna 22), "TIME" y 14 blancos en 0x382C (fila 1, columna 12), "SCENE-" en 0x3AF6 (fila 23, columna 22); y sigue con el "1P-" de 0x4A7B
 D 0x4A7B 0x4A81 rotulo_1p "1P-" en 0x3802 (fila 0, columna 2)
 D 0x4A81 0x4A87 rotulo_2p "2P-" en 0x3822 (fila 1, columna 2)
 D 0x4A87 0x4A89 direccion_konami_1984 La palabra 0x390B (fila 8, columna 11) delante de la lista de KONAMI 1984
+F 0x4A87 w1
 D 0x4A89 0x4A95 konami_1984 Los seis tiles del KONAMI pequeno y " 1984"
+F 0x4A89 6
 D 0x4A95 0x4B13 menu "PLAY SELECT" en la fila 13 y las cuatro opciones en las filas 16, 18, 20 y 22: 1 PLAYER JOYSTICK, 2 PLAYERS JOYSTICK, 1 PLAYER KEYBOARD, 2 PLAYERS KEYBOARD, con los iconos 0x5C-0x5F
 D 0x4B13 0x4B20 game_over "GAME  OVER" en la fila 11, columna 11; sigue en la lista de PLAYER
 D 0x4B20 0x4B29 rotulo_player "PLAYER" en la fila 9, columna 12 (el numero lo pone 0x441F)
@@ -445,9 +455,13 @@ L 0x5A64 BORRA_PANTALLA        Pone a cero E130-E330 salvo las cuatro fases de l
 C 0x5A95 Peces escalonados: E177 en 12 y E178 en 24 de los 31; aranas en las fases 5, 0 y 1
 C 0x5AA9 Altura segura del salto: el suelo
 D 0x5AAF 0x5AC3 sprites_iniciales_11_15 Cinco atributos de sprite (Y, X, patron, color) para los sprites 11-15: peces y bolas, escondidos (Y=0xFC/0xCC/0xEC) hasta que arrancan
+F 0x5AAF 4
 D 0x5AC3 0x5ACB sprites_del_tronco Los dos sprites del tronco (9 y 10): Y=0x87, X=0x98 y 0xA8, patrones 0x58 y 0xB4 (uno el espejo del otro), verde claro
+F 0x5AC3 4
 D 0x5ACB 0x5AD7 sprites_iniciales_16_18 Tres veces Y=0x8C, X=0xD0: las aranas (16-18) y, reusado, la bola que bota (22)
+F 0x5ACB 4
 D 0x5AD7 0x5AE3 sprites_de_las_vidas Cuatro tripletas Y=0xA7, X=0xE0/D0/C0/B0, patron 0xF4 (la cara normal): los sprites 27-30 de las vidas
+F 0x5AD7 3
 B 0x5AE3 ----------------------------------------------------------------------
 B 0x5AE3 CONSTRUYE LA PANTALLA. Los flags de la pantalla salen de la tabla
 B 0x5AE3 0x5C32 (5B8F); luego se colocan los sprites de los obstaculos, se
@@ -478,30 +492,40 @@ C 0x5BF2 Bit 1 del SCENE, sin liana ni trampolines ni aranas: decorado con cielo
 C 0x5C0C El decorado normal: suelo y los cerros de arriba (5E71)
 C 0x5C0F La tierra, el rotulo del CHILD PARK si toca, el estanque, los postes, los trampolines, los charcos, la hoguera y la piedra
 C 0x5C27 200 puntos por cada obstaculo de la lista E18C
-D 0x5C32 0x5C72 tabla_de_pantallas 32 pantallas: 32 bytes de E156 (obstaculos fijos) y 32 de E158 (moviles), indice SCENE modulo 32. Bits de E156: 0 cinco charcos, 1 lianas, 2 trampolines, 3 surtidores, 4 postes, 5 piedra, 6 hoguera, 7 estanque; de E158: 0-2 bolas que ruedan, 3 aranas, 4 peces, 5 tronco, 6 bola que bota, 7 abeja
+D 0x5C32 0x5C52 obstaculos_por_pantalla Un byte por cada una de las 32 pantallas (E156), indice SCENE modulo 32: bit 0 cinco charcos, 1 lianas, 2 trampolines, 3 surtidores, 4 postes, 5 piedra, 6 hoguera, 7 estanque
+D 0x5C52 0x5C72 moviles_por_pantalla Un byte por cada una de las 32 pantallas (E158), con el mismo indice: bits 0-2 bolas que ruedan, 3 aranas, 4 peces, 5 tronco, 6 bola que bota, 7 abeja
 L 0x5C72 DECORADO_CON_CIELO    Cuatro cielos segun los bits 2-3 del SCENE (E157), por el despachador
 D 0x5C7F 0x5C87 tabla_de_cielos Los cuatro decorados con cielo: 0x5C87, 0x5C9B, 0x5CAC, 0x5CA7
+F 0x5C7F w1
 L 0x5C87 CIELO_0               Cielo azul con cerros amarillos; el seto salvo con surtidores o postes (entonces solo la hierba)
 L 0x5C8A CIELO_SETO            El seto de la fila 10 salvo con surtidores o postes (bits 3-4 de E156)
 L 0x5C91 PINTA_SETO            El seto verde de las filas 10-12 y la hierba
 D 0x5C94 0x5C9A parametros_de_5C91 Lista 0x6DDF, tiles 0x6F27, VRAM 0x3940 (fila 10)
+F 0x5C94 w3
 L 0x5C9B CIELO_1               Cielo azul con cerros verdes y el seto; con surtidores o postes se pinta en cambio el cielo 0 sin seto (0x5C87)
 L 0x5CA7 CIELO_3               Cielo rojo con cerros blancos; el seto salvo con surtidores o postes
 L 0x5CAC CIELO_2               Cielo rojo con cerros verdes y el seto; con surtidores o postes se pinta en cambio el cielo 3 sin seto (0x5CA7)
 L 0x5CB8 PINTA_HIERBA          Solo la hierba de la fila 15
 D 0x5CBB 0x5CC1 parametros_de_5CB8 Lista 0x6DDB, tiles 0x6F24, VRAM 0x3940
+F 0x5CBB w3
 L 0x5CC2 CIELO_AZUL_AMARILLO   Filas 3-8: franjas azules y cerros amarillos
 D 0x5CC5 0x5CCB parametros_de_5CC2 Lista 0x6DD4, tiles 0x6E90, VRAM 0x3860 (fila 3)
+F 0x5CC5 w3
 L 0x5CCC CIELO_AZUL_VERDE      Filas 3-8: franjas azules y cerros verdes
 D 0x5CCF 0x5CD5 parametros_de_5CCC Lista 0x6DD4, tiles 0x6EB5, VRAM 0x3860
+F 0x5CCF w3
 L 0x5CD6 CIELO_ROJO_BLANCO     Filas 3-8: franjas rojas y cerros blancos
 D 0x5CD9 0x5CDF parametros_de_5CD6 Lista 0x6DD4, tiles 0x6EDA, VRAM 0x3860
+F 0x5CD9 w3
 L 0x5CE0 CIELO_ROJO_VERDE      Filas 3-8: franjas rojas y cerros verdes
 D 0x5CE3 0x5CE9 parametros_de_5CE0 Lista 0x6DD4, tiles 0x6EFF, VRAM 0x3860
+F 0x5CE3 w3
 L 0x5CEA PINTA_TIERRA          La tierra de las filas 16-19
 D 0x5CED 0x5CF3 parametros_de_5CEA Lista 0x6DE4, tiles 0x6F8B, VRAM 0x3A00 (fila 16)
+F 0x5CED w3
 L 0x5CF4 PINTA_ESTANQUE        Bit 7 de E156: el estanque de las filas 16-18, columnas 9-22
 D 0x5CFD 0x5D03 parametros_de_5CFA Lista 0x6DE8, tiles 0x6F8E, VRAM 0x3A09
+F 0x5CFD w3
 L 0x5D04 PINTA_TRAMPOLINES     Bit 2: cuatro trampolines de 2x2 en la fila 16 (columnas 9, 13, 17, 21), sus X en E1A5 (100 puntos cada uno) y la fruta (sprite 19) arriba en una X al azar
 C 0x5D0D El trampolin (tiles 0xD1-0xD4) cada cuatro columnas
 C 0x5D22 X de los trampolines: 0x48, 0x68, 0x88, 0xA8 (misma tabla desde el otro lado)
@@ -524,29 +548,37 @@ C 0x5E17 100 puntos por saltarla
 L 0x5E1E PINTA_PIEDRA          Bit 5: la piedra con matojo (tiles 0x19-0x1B) en la fila 17, columna 18 o 10, y su caja invisible (sprite 31, Y=0x80)
 C 0x5E2C X de la piedra para los puntos: 0xA0 o 0x48
 D 0x5E54 0x5E58 tiles_de_la_piedra Los tres tiles de la piedra con matojo, 0x19 0x1A 0x1B, y el 0xFF de fin de lista
+F 0x5E54 3,1
 L 0x5E58 ROTULO_CHILD_PARK     En el SCENE 0 y en los acabados en 0: sin obstaculos ninguno (E156 = E158 = 0) y el rotulo CHILD PARK en ladrillo rojo
 C 0x5E5E SCENE 0, 10, 20...: la entrada y las metas
 D 0x5E6A 0x5E70 parametros_de_5E67 Lista 0x6DF8, tiles 0x6FCF, VRAM 0x3929 (fila 9, columna 9)
+F 0x5E6A w3
 L 0x5E71 DECORADO_NORMAL       La hierba de la fila 15 y los cerros de arriba: cuatro combinaciones por los bits 1-2 del SCENE
 D 0x5E74 0x5E7A parametros_de_5E71 Lista 0x6DE2, tiles 0x6F8A, VRAM 0x39E0 (fila 15)
+F 0x5E74 w3
 C 0x5E7D Bits 1-2 del SCENE
 D 0x5E85 0x5E8D tabla_de_cerros Las cuatro combinaciones: 0x5E8D, 0x5E92, 0x5E97, 0x5E9C
+F 0x5E85 w1
 L 0x5E8D CERROS_0              Cerro con pendiente a la izquierda y cerro con pendiente a la derecha
 L 0x5E92 CERROS_1              Cerro con pendiente a la izquierda y meseta a la derecha
 L 0x5E97 CERROS_2              Meseta a la izquierda y meseta a la derecha
 L 0x5E9C CERROS_3              Meseta a la izquierda y cerro con pendiente a la derecha
 L 0x5EA1 CERRO_IZQUIERDA       Filas 2-4, columnas 0-15: el cerro con pendiente, y sus dos bloques de tiles
 D 0x5EA4 0x5EAA parametros_de_5EA1 Lista 0x6E2A, tiles 0x6FF9, VRAM 0x3840 (fila 2)
+F 0x5EA4 w3
 L 0x5EB9 PINTA_BLOQUE_8x4      Bloque de 8 filas por 4 columnas
 L 0x5EBE PINTA_BLOQUE_3x6      Bloque de 3 filas por 6 columnas
 L 0x5EC3 PINTA_BLOQUE_3x8      Bloque de 3 filas por 8 columnas
 L 0x5EC9 CERRO_DERECHA         Filas 2-4, columnas 16-31: el cerro con pendiente
 D 0x5ECC 0x5ED2 parametros_de_5EC9 Lista 0x6E44, tiles 0x703F, VRAM 0x3850 (fila 2, columna 16)
+F 0x5ECC w3
 L 0x5EE3 MESETA_IZQUIERDA      Filas 2-5, columnas 0-15: la meseta
 D 0x5EE6 0x5EEC parametros_de_5EE3 Lista 0x6E5E, tiles 0x7054, VRAM 0x3840
+F 0x5EE6 w3
 L 0x5EFB PINTA_BLOQUE_8x3      Bloque de 8 filas por 3 columnas
 L 0x5F01 MESETA_DERECHA        Filas 2-5, columnas 16-31: la meseta
 D 0x5F04 0x5F0A parametros_de_5F01 Lista 0x6E77, tiles 0x7094, VRAM 0x3850
+F 0x5F04 w3
 L 0x5F1B COLOCA_JUGADOR        Sprites 0-3 fuera, colores de los cuatro sprites del jugador, Y=0x6C, X y mirada segun por donde entra (E058), y sus sprites
 C 0x5F24 Rojo, amarillo, magenta y azul: los cuatro sprites del jugador
 C 0x5F32 Y del suelo
@@ -691,7 +723,9 @@ D 0x63B6 0x63C8 arco_plano El arco casi plano: 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0. 
 D 0x63C8 0x63E4 arco_de_salto El arco del jugador y de la bola que bota: 8 8 8 8 8 8 7 7 5 5 4 4 3 3 2 1 1 1 1 1 1 1 1 0 0
 L 0x63E4 HOGUERA               Bit 6 de E156: la hoguera de 2x2 en la fila 16, columna 26 o 4, con las llamas cambiando cada 11 fotogramas (bit 0 de E14F)
 D 0x6409 0x640D hoguera_a Los cuatro tiles de la hoguera, llamas altas: 0xE6 0xE7 / 0xE8 0xE9
+F 0x6409 2
 D 0x640D 0x6411 hoguera_b Llamas bajas: 0xEA 0xEB / 0xE8 0xE9
+F 0x640D 2
 L 0x6411 PINTA_BLOQUE          Bloque de B filas por C columnas de tiles desde HL en la VRAM DE
 L 0x6413 PINTA_BLOQUE_FILA     Una fila
 B 0x6426 ----------------------------------------------------------------------
@@ -771,6 +805,7 @@ B 0x66A6 ----------------------------------------------------------------------
 L 0x66A6 JUGADOR               Rotulos caducados fuera y el estado del jugador por la tabla
 C 0x66B2 Rotulo caducado: Y=0xC8, escondido
 D 0x66C2 0x66E4 tabla_de_estados_del_jugador Los 17 estados del jugador: 0x689B anda, 0x66E4 en el aire, 0x6D06 en la liana, 0x67E0 trampolin, 0x6847 surtidor, 0x6873 tronco, 0x6888 poste, 0x6987 meta, 0x69B3 fase superada, seis 0x0000 sin uso, 0x6A05 se hunde, 0x69D8 le han dado
+F 0x66C2 w1
 B 0x66E4 ----------------------------------------------------------------------
 B 0x66E4 ESTADO 1: EN EL AIRE. Un paso por el arco de salto (6C3C, que de paso
 B 0x66E4 mira si agarra una liana). Bajando: si hay trampolines y cae en uno,
@@ -786,6 +821,7 @@ C 0x6712 Cinco postes: Y y X en 0x6746
 C 0x671D A menos de 5 puntos por encima y a menos de 16 de su X
 C 0x672F De pie sobre el poste (Y+4), estado 6, y cobra los 100 puntos del poste
 D 0x6746 0x6750 postes_y_x Cinco parejas Y,X de la cabeza de cada poste: (0x58,0x30) (0x50,0x50) (0x50,0x70) (0x50,0x90) (0x58,0xB0)
+F 0x6746 2
 L 0x6750 AIRE_CAE              Surtidor, tronco o suelo; y si sale de la pantalla
 C 0x6753 Cayo al agua desde muy alto
 C 0x675D Sobre una tabla: cobra los 200 puntos de ese surtidor
@@ -930,9 +966,11 @@ L 0x6B79 SOMBRA_EN_EL_SUELO    Y=0x8C
 L 0x6B7D DOS_SPRITES           Dos sprites seguidos con la misma Y,X y los dos patrones siguientes de DE
 L 0x6B80 UN_SPRITE             Y=B, X=C, patron (DE), y salta el color
 D 0x6B8A 0x6BC2 poses_del_jugador Catorce poses de cuatro patrones (dos de arriba, dos de abajo): 0-6 mirando a la derecha (parado, andando, saltando, colgado...), 7-13 las mismas con los sprites espejados
+F 0x6B8A 4
 L 0x6BC2 PINTA_JUGADOR_MUERTO  Los sprites del jugador con la pose de muerte (0x6C06) segun hacia donde mira, y el color 8
 C 0x6BD2 Mirando a la izquierda: X+16 y la otra mitad de la tabla
 D 0x6C06 0x6C1A poses_de_muerte Cuatro poses de 5 patrones (los cuatro del jugador y uno mas en el hueco de la sombra): dos mirando a la derecha, que alternan cada 16 fotogramas, y sus espejos. Indice E136*5 modulo 16
+F 0x6C06 5
 L 0x6C1A ARCO_SUBIENDO         Arranca el arco HL hacia arriba (E202=0): un salto
 L 0x6C1D ARCO_CAYENDO          Arranca el arco HL hacia abajo (E202=1): una caida
 L 0x6C1F ARCO_ARRANCA          E200 = HL, E202 = A, E205 = 0
@@ -998,19 +1036,29 @@ D 0x6F8A 0x6F8B fondo_tiles_hierba_15 El tile de la hierba del decorado normal
 D 0x6F8B 0x6F8E fondo_tiles_tierra Tiles: la tierra
 D 0x6F8E 0x6FAB fondo_tiles_estanque Tiles: el estanque
 D 0x6FAB 0x6FAF bloque_trampolin Los cuatro tiles del trampolin (0xD1 0xD2 / 0xD3 0xD4)
+F 0x6FAB 2
 D 0x6FAF 0x6FB1 bloque_charco Los dos tiles del charco (0xCF 0xD0)
+F 0x6FAF 2
 D 0x6FB1 0x6FB7 bloque_poste_verde_bajo Poste bajo de 3x2 (0xEC 0xEC / 0xD9 0xD9 / 0xDA 0xDA)
+F 0x6FB1 2
 D 0x6FB7 0x6FBF bloque_poste_azul Poste alto de 4x2, azul
+F 0x6FB7 2
 D 0x6FBF 0x6FC7 bloque_poste_verde_alto Poste alto de 4x2, verde
+F 0x6FBF 2
 D 0x6FC7 0x6FCF bloque_poste_rojo Poste alto de 4x2, rojo
+F 0x6FC7 2
 D 0x6FCF 0x6FF9 fondo_tiles_child_park Tiles: CHILD PARK y su marco
 D 0x6FF9 0x700D fondo_tiles_cerro_izq Tiles del cerro con pendiente de la izquierda
 D 0x700D 0x701F bloque_cerro_3x6 Bloque de 3x6 de la pendiente (0x5EBE)
+F 0x700D 6
 D 0x701F 0x703F bloque_cerro_8x4 Bloque de 8x4 de la pendiente (0x5EB9)
+F 0x701F 4
 D 0x703F 0x7054 fondo_tiles_cerro_der Tiles del cerro con pendiente de la derecha
 D 0x7054 0x7064 fondo_tiles_meseta_izq Tiles de la meseta de la izquierda
 D 0x7064 0x707C bloque_meseta_3x8 Bloque de 3x8 de la meseta (0x5EC3)
+F 0x7064 8
 D 0x707C 0x7094 bloque_meseta_8x3 Bloque de 8x3 de la meseta (0x5EFB)
+F 0x707C 3
 D 0x7094 0x70A5 fondo_tiles_meseta_der Tiles de la meseta de la derecha
 B 0x70A5 ----------------------------------------------------------------------
 B 0x70A5 LOS PATRONES Y COLORES DEL JUEGO. Los patrones van a la VRAM 0x2000
@@ -1034,9 +1082,13 @@ C 0x7133 Colores de 0x8C-0x8F
 C 0x713C Colores desde el tile 0x90
 C 0x7145 Colores desde el tile 0xC0
 D 0x70F3 0x70F9 parametros_de_70F0 Lista 0x714F, colores 0x71E3, VRAM 0x0008 (colores del tile 1 en adelante)
+F 0x70F3 w3
 D 0x70FC 0x7102 parametros_de_70F9 Lista 0x7172, colores 0x7237, VRAM 0x0100 (del tile 0x20)
+F 0x70FC w3
 D 0x713F 0x7145 parametros_de_713C Lista 0x7176, colores 0x730A, VRAM 0x0480 (del tile 0x90)
+F 0x713F w3
 D 0x7148 0x714E parametros_de_7145 Lista 0x719D, colores 0x7336, VRAM 0x0600 (del tile 0xC0)
+F 0x7148 w3
 D 0x714F 0x7172 colores_lista_01 Lista del motor para los colores de los tiles 0x01-0x1F
 D 0x7172 0x7176 colores_lista_20 Lista para los colores de 0x20-0x2F
 D 0x7176 0x719D colores_lista_90 Lista para los colores de 0x90-0xAD
@@ -1044,28 +1096,47 @@ D 0x719D 0x71E3 colores_lista_C0 Lista para los colores de 0xC0-0xFD
 D 0x71E3 0x7237 colores_01 Los bytes de color (tinta y fondo por fila) de los tiles 0x01-0x1F
 D 0x7237 0x723A colores_20 Los de 0x20-0x2F (tres bytes de relleno)
 D 0x723A 0x72EA colores_60 Los 176 bytes de color de los tiles 0x60-0x75 (22 tiles), que se repiten en 0x76-0x8B con verde
+F 0x723A 8
 D 0x72EA 0x730A colores_8C Los 32 bytes de color de los tiles 0x8C-0x8F
+F 0x72EA 8
 D 0x730A 0x7336 colores_90 Los de 0x90-0xAD
 D 0x7336 0x73B0 colores_C0 Los de 0xC0-0xFD
 D 0x73B0 0x7440 patrones_0A Patrones de los tiles 0x0A-0x1B: barra de tiempo, hombrecito de las vidas, piedra
+F 0x73B0 8
 D 0x7440 0x74C0 patrones_20 Patrones de los tiles 0x20-0x2F: suelo, ladrillo, la barra llena
+F 0x7440 8
 D 0x74C0 0x7518 patrones_60 Los once tiles de cerros que se repiten cuatro veces (0x60-0x8B)
+F 0x74C0 8
 D 0x7518 0x7608 patrones_90 Patrones de los tiles 0x90-0xAD: cerros, arboles y matojos
+F 0x7518 8
 D 0x7608 0x77F8 patrones_C0 Patrones de los tiles 0xC0-0xFD: hierba, agua, trampolin, postes, charco, hoguera, ladrillo
+F 0x7608 8
 D 0x77F8 0x77FE relleno_77F8 Seis bytes sin uso entre los patrones y el sonido
 D 0x4C6B 0x4C93 tiles_B0 Siete tiles 0xB0-0xB6 (los cabos y remates de las lianas) que 0x5937 copia al primer tercio y espeja para 0xB7-0xBC
+F 0x4C6B 8
 D 0x4C93 0x4D83 tiles_lianas 30 tiles 0x60-0x7D del tercio de en medio: los tramos de la liana en sus nueve fases; espejados van a 0x7E-0x9B
+F 0x4C93 8
 D 0x4D83 0x4EAB tiles_AF 38 tiles 0xAF-0xD4 del tercio de en medio: las tablas y el agua de los surtidores, el trampolin y el charco
+F 0x4D83 8
 D 0x4EAB 0x4F2B tiles_9C 16 tiles 0x9C-0xAB (hierba y matojos); espejados van a 0xD5-0xE4
+F 0x4EAB 8
 D 0x4F2B 0x4F9B colores_AF Los colores de los tiles 0xAF-0xBC del tercio de en medio
+F 0x4F2B 8
 D 0x4F9B 0x4FBB colores_D1 Los colores del trampolin (0xD1-0xD4)
+F 0x4F9B 8
 D 0x4FBB 0x503B colores_9C Los colores de 0x9C-0xAB, repetidos para 0xD5-0xE4
+F 0x4FBB 8
 D 0x503B 0x531B sprites_0_22 23 sprites de 16x16 (32 bytes cada uno): el jugador por partes (0-14), las poses de muerte (15-22). Espejados dan los sprites 23-45
+F 0x503B 8
 D 0x531B 0x555B sprites_46_63 18 sprites: peces (46-48), bola que rueda (49), bola que bota (50), arana (51), pajaro sin uso (52), sombra (53), 50/100/200 (54-56 no: 56-58), caras contenta/llorando/normal/preocupada (59-62) y la fruta (63)
+F 0x531B 8
 D 0x555B 0x556D tabla_de_lianas Nueve punteros a los nueve dibujos de la liana, de izquierda a derecha
+F 0x555B w1
 D 0x556D 0x56DD dibujos_de_la_liana Nueve dibujos de 40 bytes: tiles con 0xFE/0xFD/0xFC de salto de fila y 0xFF de fin, y detras Y, X1, X2 del cabo (donde se agarra)
 D 0x56DD 0x5701 tabla_de_surtidores 18 punteros a los 18 bloques de la tabla del surtidor subiendo
+F 0x56DD w9
 D 0x5701 0x5857 bloques_de_surtidor 18 bloques de 6x3 tiles mas un byte: la tabla sobre su chorro de agua a 18 alturas, y la altura (0x52 abajo... 0x32 arriba, de dos en dos)
+F 0x5701 19
 
 
 # =============================================================================
@@ -1128,6 +1199,7 @@ L 0x794E MUSICA_OCTAVA         Una octava mas abajo por vuelta
 L 0x7951 PSG_PERIODO           Registros C y C-1 = HL (periodo)
 D 0x7960 0x796A periodos_de_notas Los periodos del PSG de Do6 a La6 (106, 100, 95, 89, 84, 80, 75, 71, 67, 63); La#6 y Si6 (60, 56) son los dos bytes siguientes, que a la vez son la entrada 0 de la tabla de punteros
 D 0x796A 0x79AE tabla_de_sonidos 34 punteros de pista, indice = numero del sonido & 0x3F, con los canales seguidos: 1-13 los efectos, 14-15 la musica de la partida (0x8E), 16-18 la muerte (0x90), 19-21 GAME OVER (0x93), 22-24 le han dado (0x96), 25-27 se hunde (0x99), 28-30 la fanfarria del menu y la meta (0x9C), 31-33 mudos. La entrada 0 (0x383C) no es un puntero: son las dos ultimas notas de la tabla de periodos. 0x79DB (un 0xFF) es la pista muda de los canales vacios y del sonido 6
+F 0x796A w1
 D 0x79AE 0x79BC duraciones_de_notas Las 14 duraciones en fotogramas que elige el nibble alto de cada nota: 5, 10, 15, 6, 12, 24, 40, 72, 4, 8, 16, 32, 20, 66
 D 0x79BC 0x79DC fanfarria_canal_a Sonido 0x9C (el menu y la meta), canal A. Su 0xFF final, en 0x79DB, es la pista muda del sonido 6 (calla el zumbido de la abeja) y de los canales vacios
 D 0x79DC 0x79ED fanfarria_canal_b Sonido 0x9C, canal B

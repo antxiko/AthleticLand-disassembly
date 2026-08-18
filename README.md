@@ -51,7 +51,7 @@ out as what they are.
 | bytes unexplained | **0** |
 | named labels | 296 |
 | anchored comments | 348 |
-| data ranges with an explanation | 165 |
+| data ranges with an explanation | 166 |
 
 ## A few things that turned up
 
