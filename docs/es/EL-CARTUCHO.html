@@ -1,0 +1,115 @@
+<title>El cartucho — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html" style=color:var(--tinta)>El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CARTRIDGE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-cartucho">El cartucho</h1>
+<p>16384 bytes. Sin cargador y sin bloques: el MSX mapea el cartucho en 0x4000-0x7FFF —la página 1— y ese es el mapa de memoria entero, sin solapes: ninguna dirección significa dos cosas distintas en dos momentos distintos.</p>
+<h2 id="por-donde-entra">Por dónde entra</h2>
+<p>Los dieciséis primeros bytes son la cabecera que lee la BIOS:</p>
+<pre><code>41 42 77 40 00 00 00 00 00 00 00 00 00 00 00 00
+&#x27;A&#x27; &#x27;B&#x27;  \_ INIT = 0x4077</code></pre>
+<p>Las dos letras marcan un cartucho ejecutable; de los cuatro vectores solo está puesto INIT —STATEMENT, DEVICE y TEXT, los de BASIC, van a cero—.</p>
+<h2 id="lo-que-hace-el-arranque">Lo que hace el arranque</h2>
+<p>INIT (0x4077), por orden:</p>
+<ul><li><code>di</code>, modo de interrupción 1 y la pila en 0xE400;</li><li>borra 0xE000-0xE3FF de un <code>ldir</code> (0x407D), que es donde va a vivir todo el estado;</li><li>escribe <code>jp 0x4038</code> en el gancho H.KEYI, 0xFD9A —primero el byte 0xC3 y luego la dirección (0x408A-0x4094)—;</li><li>echa el candado de 0xE005 mientras prepara el VDP y el PSG (0x44FD) y carga la fuente (0x4626);</li><li>suelta el candado, <code>ei</code>, y se cae en el <code>jr $</code> de 0x40A7.</li></ul>
+<p>Esos dos bytes son el programa principal. <b>El juego entero corre dentro de la interrupción</b>, cincuenta o sesenta veces por segundo, y el programa ya no vuelve.</p>
+<h2 id="el-candado">El candado</h2>
+<p>Como el juego es la interrupción, un fotograma que se pase de tiempo se reentraría a sí mismo. 0xE005 lo impide: el gancho (0x4038) lee el estado del VDP para bajar la petición, toca el sonido —siempre, antes que nada— y solo entonces mira el candado. Si está echado, eso es todo lo que hace esa interrupción (0x4067): la música sigue y al fotograma que aún corre no se le toca.</p>
+<h2 id="donde-vive-el-estado">Dónde vive el estado</h2>
+<p>Todo lo que el juego guarda cabe en el kilobyte que empieza en 0xE000, con la pila encima, en 0xE400.</p>
+<table><tr><th></th><th></th></tr><tr><td>0xE000 / 0xE001</td><td>el estado del juego, 0 a 19, y su subestado</td></tr><tr><td>0xE002</td><td>las opciones: teclado, dos jugadores, partida en marcha, de quién es el turno</td></tr><tr><td>0xE005</td><td>el candado: la interrupción está dentro</td></tr><tr><td>0xE008 / 0xE009</td><td>lo pulsado el fotograma pasado y este, en formato de joystick</td></tr><tr><td>0xE010-0xE02D</td><td>los tres canales de sonido, diez bytes cada uno</td></tr><tr><td>0xE038-0xE03F</td><td>la copia de los ocho registros del VDP</td></tr><tr><td>0xE040-0xE048</td><td>el récord y los puntos de los dos jugadores, en BCD</td></tr><tr><td>0xE050-0xE06F</td><td>el jugador en juego: vidas, fase, SCENE, tiempo, sentido…</td></tr><tr><td>0xE080-0xE09F</td><td>la copia del otro jugador, que se intercambia en cada turno</td></tr><tr><td>0xE0B0-0xE12F</td><td>los 32 atributos de sprite, que suben enteros cada fotograma</td></tr><tr><td>0xE130-0xE14F</td><td>los contadores y las fases de las lianas y los surtidores</td></tr><tr><td>0xE134-0xE13C</td><td>el jugador: Y, X, pose, hacia dónde mira, su estado</td></tr><tr><td>0xE150-0xE155</td><td>los seis bytes de parámetros que el motor de decorados copia de la ROM</td></tr><tr><td>0xE156 / 0xE158</td><td>los obstáculos fijos de esta pantalla y los que se mueven</td></tr><tr><td>0xE18C-0xE1AE</td><td>las X de los obstáculos y lo que vale cada uno</td></tr><tr><td>0xE200-0xE205</td><td>el salto: qué arco, en qué sentido, cuántos fotogramas</td></tr></table>
+<h2 id="la-pantalla-los-colores-abajo-y-los-patrones-arriba">La pantalla: los colores abajo y los patrones arriba</h2>
+<p>El VDP se programa con una tabla de ocho bytes en 0x4545, que se copia a 0xE038 y se manda registro a registro (0x4528):</p>
+<table><tr><th>registro</th><th>valor</th><th>lo que dice</th></tr><tr><td>0</td><td>0x02</td><td>modo gráfico 2</td></tr><tr><td>1</td><td>0xE2</td><td>16 KB, pantalla encendida, interrupciones, sprites de 16×16</td></tr><tr><td>2</td><td>0x0E</td><td>la tabla de nombres en 0x3800</td></tr><tr><td>3</td><td>0x7F</td><td><b>la tabla de colores en 0x0000</b></td></tr><tr><td>4</td><td>0x07</td><td><b>la tabla de patrones en 0x2000</b></td></tr><tr><td>5</td><td>0x76</td><td>los atributos de sprite en 0x3B00</td></tr><tr><td>6</td><td>0x03</td><td>los patrones de sprite en 0x1800</td></tr><tr><td>7</td><td>0xE1</td><td>el borde</td></tr></table>
+<p>Los colores abajo y los patrones arriba es justo al revés del reparto habitual, y es la razón de que todas las direcciones de este listado parezcan descolocadas si se leen esperando el otro.</p>
+<p>En este modo la pantalla son <b>tres tercios</b>, cada uno con su banco de patrones y de colores, y el juego lo aprovecha: la fuente se carga una vez y se copia a los otros dos tercios (0x4583 y 0x4594), mientras que los tiles del decorado se cargan solo en el tercio donde se van a dibujar. La liana es el caso más claro: su fila de arriba se dibuja con los tiles 0xB0-0xB6, que están en el <b>primer</b> tercio, y todo lo de abajo con los 0x60-0x9B, que están en el <b>de en medio</b>.</p>
+<h2 id="como-estan-guardados-los-dibujos">Cómo están guardados los dibujos</h2>
+<p>Tres maneras, y cada una para lo que le va:</p>
+<ul><li><b>Comprimido</b>, solo para los dos logotipos. El descompresor es 0x4BB3, 37 bytes: un cero termina, un byte por debajo de 0x80 repite el siguiente esas veces, y un byte de 0x80 en adelante copia esos bytes tal cual. Lleva la dirección de destino delante de los datos. Descomprime el logotipo ATHLETIC LAND (0x47FB) y el KONAMI grande (0x4BD8), y nada más.</li><li><b>Tal cual</b>, para todo lo que es un patrón: los 48 glifos de la fuente, los tiles y los 64 sprites van a la memoria de vídeo de una copia seguida (0x454D).</li><li><b>Un motorcito</b>, 0x5F65, para las distribuciones: en vez de guardar una pantalla de números de tile, guarda una lista de cuentas —copia n, o rellena n posiciones con un solo tile— y los tiles que hay que usar. Diecinueve llamadas, y cuatro de ellas escriben la tabla de <b>colores</b> en vez de la de nombres.</li></ul>
+<p>Dos de las llamadas más pequeñas, repetidas aquí: la tira de hierba de la fila 15 (0x5E71) y la tierra de las filas 16 a 19 (0x5CEA). Entre las dos, doce bytes de parámetros y dos listas cortas.</p>
+<p><img src="../imagenes/hierba.png" alt="La tira de hierba de la fila 15"></p>
+<p><img src="../imagenes/tierra.png" alt="La tierra de las filas 16 a 19"></p>
+<p>Las mitades que miran a la izquierda no están guardadas. 0x5A4B le da la vuelta a los bits de un tile y 0x5A09 hace lo mismo cruzando las dos mitades de un sprite de 16×16, y las dos corren al cargar: el cartucho lleva 23 sprites y en la memoria de vídeo hay 46.</p>
+<h2 id="el-reparto-completo">El reparto completo</h2>
+<p>Ni un byte sin dueño: 7.448 de código alcanzados por el trazador y 8.936 de datos, cada uno dentro de un rango declarado con la instrucción que lo lee anotada al lado.</p>
+<table><tr><th></th><th></th></tr><tr><td>0x4000-0x4010</td><td>la cabecera</td></tr><tr><td>0x4010-0x4038</td><td>las primitivas del VDP, y cuatro 0xFF de relleno</td></tr><tr><td>0x4038-0x4077</td><td>la interrupción</td></tr><tr><td>0x4077-0x4149</td><td>INIT, el bucle principal de dos bytes, el despachador, los mandos y un paso del juego</td></tr><tr><td>0x4149-0x4171</td><td>la tabla de veinte estados</td></tr><tr><td>0x4171-0x4468</td><td>los veinte estados: título, menú, demo, partida, muerte, game over, fase superada, cambio de pantalla</td></tr><tr><td>0x4468-0x44C8</td><td>los créditos, en tiles</td></tr><tr><td>0x44C8-0x4626</td><td>partida nueva, arranque del VDP y del PSG, las rutinas de copia y la cortinilla</td></tr><tr><td>0x4626-0x4795</td><td>la carga de la fuente, los puntos, las vidas extra, el récord, el marcador y las vidas</td></tr><tr><td>0x4795-0x47FB</td><td>la pantalla del título y sus columnas</td></tr><tr><td>0x47FB-0x48CE</td><td>el logotipo ATHLETIC LAND, comprimido</td></tr><tr><td>0x48CE-0x4A4E</td><td>los 48 glifos de la fuente</td></tr><tr><td>0x4A4E-0x4B52</td><td>los rótulos del marcador y las cuatro opciones del menú</td></tr><tr><td>0x4B52-0x4BD8</td><td>la carga del logotipo KONAMI y el descompresor</td></tr><tr><td>0x4BD8-0x4C6B</td><td>el logotipo KONAMI, comprimido</td></tr><tr><td>0x4C6B-0x503B</td><td>los tiles del juego y sus colores</td></tr><tr><td>0x503B-0x555B</td><td>los 64 sprites</td></tr><tr><td>0x555B-0x56DD</td><td>la liana: nueve punteros y nueve dibujos</td></tr><tr><td>0x56DD-0x5857</td><td>los surtidores: dieciocho punteros y dieciocho bloques</td></tr><tr><td>0x5857-0x5C32</td><td>el fotograma, los mandos de la demo, la carga de gráficos, los espejos y el montaje de la pantalla</td></tr><tr><td>0x5C32-0x5C72</td><td>las dos tablas de treinta y dos pantallas</td></tr><tr><td>0x5C72-0x5F65</td><td>el decorado: los cielos, el seto, la tierra, el estanque, los obstáculos y la entrada del jugador</td></tr><tr><td>0x5F65-0x5FD2</td><td>el motor de decorados</td></tr><tr><td>0x5FD2-0x66A6</td><td>los contadores y las once cosas que se mueven, el reloj y los puntos</td></tr><tr><td>0x66A6-0x6DD4</td><td>el jugador: diecisiete estados, los choques, sus sprites y los arcos de salto</td></tr><tr><td>0x6DD4-0x70A5</td><td>las listas del decorado y los tiles que usan</td></tr><tr><td>0x70A5-0x714F</td><td>la carga de los patrones y los colores</td></tr><tr><td>0x714F-0x77F8</td><td>las listas de color, los colores y los patrones de los tiles</td></tr><tr><td>0x77F8-0x77FE</td><td>seis bytes sin uso, entre los patrones y el sonido</td></tr><tr><td>0x77FE-0x7960</td><td>el sonido: la petición, el reproductor y los dos formatos</td></tr><tr><td>0x7960-0x7C3E</td><td>los periodos de las notas, la tabla de 34 pistas y las pistas</td></tr><tr><td>0x7C3E-0x8000</td><td>el relleno hasta los 16 KB: 962 bytes, todos 0xFF</td></tr></table>
+<footer><p><em>Athletic Land</em> lo publico Konami en 1984 para MSX; su numero de catalogo es RC-700. El cartucho firma dos veces, y las dos en tiles corrientes: el <b>KONAMI 1984</b> del titulo y del pie del marcador, y los creditos que solo aparecen al superar la fase 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

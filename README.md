@@ -4,6 +4,8 @@ Konami's first MSX cartridge, taken apart byte by byte. All 16,384 bytes are
 bounded and owned: there is no unexplained gap, no "graphics blob", and no
 guessed table.
 
+📖 **[Full documentation](https://antxiko.github.io/AthleticLand-disassembly/)**
+
 [README en castellano](README.es.md)
 
 ---

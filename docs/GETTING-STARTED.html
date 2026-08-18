@@ -1,0 +1,127 @@
+<title>Getting started — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html" style=color:var(--tinta)>Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EMPEZAR.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="getting-started">Getting started</h1>
+<h2 id="what-you-need">What you need</h2>
+<p><code>pasmo</code> and <code>z80dasm</code> to assemble and disassemble, and Python 3 for the tools. No other dependencies.</p>
+<p>The cartridge is not distributed with this repository: you need your own copy, named <code>athletic.rom</code> in the project root. It is exactly 16384 bytes with this sha256:</p>
+<pre><code>7bd280ae4147a5bf5676b15fde310a8106887786c78873344d97a1cd81285485</code></pre>
+<p>With any other dump the listing will not reassemble. <code>make comprueba</code> tells you in one line.</p>
+<h2 id="the-commands">The commands</h2>
+<pre><code>make          # trace, build the listing and check everything
+make verify   # assemble the listing and compare its sha256 with the cartridge
+make sanity   # what reassembly cannot catch
+make test     # the 17 tests over the listing, no cartridge needed
+make web      # the images and these pages</code></pre>
+<p><code>make</code> fails if the listing stops reproducing the cartridge byte for byte, if the tracer walks into an area declared as data, if an entry point falls inside one, or if a single byte of the 16384 is left unaccounted for.</p>
+<h2 id="the-proof-that-decides">The proof that decides</h2>
+<p>A disassembly is trustworthy if assembling it gives back the original. That is <code>make verify</code>:</p>
+<pre><code>ensamblado : 16384 bytes  7bd280ae...81285485
+original   : 16384 bytes  7bd280ae...81285485
+OK: reproducible byte a byte</code></pre>
+<h2 id="the-second-proof">The second proof</h2>
+<p>A listing can reassemble perfectly and still be wrong: if drawings are being read as instructions, the bytes do not change —only what is said about them does—. <code>make sanity</code> crosses the data ranges against the trace and ends with the split:</p>
+<pre><code>  codigo trazado              7448   45.46 %
+  datos identificados         8936   54.54 %
+  sin explicar                   0    0.00 %
+  ==========================================
+  explicado                  16384  100.00 %</code></pre>
+<h2 id="the-third-proof-for-the-graphics">The third proof, for the graphics</h2>
+<p>Neither of those two can catch a tile table read one byte out of step: the bytes still assemble and the range is still declared. So the graphics are checked by drawing them. <code>tools/graficos.py</code> rebuilds video memory by replaying the cartridge&#x27;s own copy calls —same order, same addresses, mirrors and colour substitutions included— and <code>tools/imagenes_web.py</code> then repeats the specific calls that paint each thing. Every picture on this site comes out of that: the title logo, the scenery, the nine vine drawings, the eighteen water-jet blocks, the tile set and the sprites. A mislabelled range comes out as noise.</p>
+<h2 id="without-the-cartridge">Without the cartridge</h2>
+<p>The work is in <code>src/athletic.asm</code> and the notes: 6,882 lines with 296 routines and tables named, 348 line comments anchored to their address and 166 ranges of data with their explanation next to them. The 17 tests run without the binary.</p>
+<h2 id="how-it-is-organised">How it is organised</h2>
+<p>The listing is <b>never edited by hand</b>: it is generated, governed by three files.</p>
+<table><tr><th></th><th></th></tr><tr><td><code>src/athletic.entries</code></td><td>the entry points: where tracing starts</td></tr><tr><td><code>src/athletic.nocode</code></td><td>the areas that are NOT code, and how that is known</td></tr><tr><td><code>src/athletic.notes</code></td><td>the names, the comments and the data ranges</td></tr></table>
+<p>From those, <code>src/athletic.asm</code>. Every note is anchored to its address, so it survives a retrace.</p>
+<p>The <code>.entries</code> file holds 48 entry points because the cartridge declares <b>one single entry point</b> —the BIOS reads the header and calls 0x4077— and everything else arrives by paths no static tracer can follow: the interrupt hook (0x4038), which is where the whole game runs, and the five dispatch tables that the routine at 0x40A9 reads from behind its own <code>call</code>, declared one by one with the instruction that reaches them noted alongside.</p>
+<p>It also carries a directive of its own, <code>!skip 0x5F65 6</code>: the scenery engine takes six bytes of parameters that sit <b>after</b> its <code>call</code>, so the tracer has to step over them instead of executing them. Those 19 blocks of six bytes come out of the trace as data, and each one is declared in the notes.</p>
+<p>The <code>.nocode</code> file is short —5 ranges— and holds the five dispatch tables, which the tracer would otherwise walk straight into.</p>
+<h3 id="how-the-data-blocks-are-laid-out">How the data blocks are laid out</h3>
+<p>Every data range declared in the <code>.notes</code> comes out as a block of its own: its own heading saying what it is for, its own label, and the dump aligned to its first byte, so where one table ends and the next begins is visible at a glance. An optional line gives the block the row width of its real structure, and that is what makes the tables readable in the listing itself:</p>
+<table><tr><th></th><th></th></tr><tr><td><code>F 0x48CE 8</code></td><td>the 48 font glyphs, one glyph per row</td></tr><tr><td><code>F 0x7608 8</code></td><td>the tile patterns, one pattern per row</td></tr><tr><td><code>F 0x6B8A 4</code></td><td>the fourteen player poses, the four sprite patterns of each on its row</td></tr><tr><td><code>F 0x6C06 5</code></td><td>the death poses, five patterns each</td></tr><tr><td><code>F 0x5AAF 4</code></td><td>sprite attributes, one record —Y, X, pattern, colour— per row</td></tr><tr><td><code>F 0x5701 19</code></td><td>the eighteen water-jet blocks: 6×3 tiles and the plank&#x27;s height, one block per row</td></tr><tr><td><code>F 0x700D 6</code> and <code>F 0x707C 3</code></td><td>tile blocks laid out at their true width, six and three columns</td></tr><tr><td><code>F 0x5E54 3,1</code></td><td>the three tiles of the rock on the first row and the 0xFF end marker on its own</td></tr><tr><td><code>F 0x4149 w1</code></td><td>a table of pointers as <code>defw</code>, one per row</td></tr><tr><td><code>F 0x445E w3</code></td><td>the six parameter bytes of a scenery call: three words, which is what they are</td></tr></table>
+<p>Where a pointer lands on a block that has a name, that name is written next to it: the twenty entries of the state table come out reading <code>-&gt; ESTADO_00_ARRANCA</code>, <code>-&gt; ESTADO_01_LOGO</code> and so on, and the six that are 0x0000 are visible for what they are.</p>
+<h2 id="the-tools">The tools</h2>
+<p>In <code>tools/</code>, each with its own header:</p>
+<table><tr><th></th><th></th></tr><tr><td><code>z80trace.py</code></td><td>follows the flow from the entry points, stepping over inline parameters</td></tr><tr><td><code>mkasm.py</code></td><td>builds the listing with the notes anchored</td></tr><tr><td><code>presupuesto.py</code></td><td>the split of the 16384 bytes, and what is left unowned</td></tr><tr><td><code>refs.py</code></td><td>which instructions point into a range, without inventing pointers</td></tr><tr><td><code>quien_apunta.py</code></td><td>for each gap, who reads it from traced code</td></tr><tr><td><code>graficos.py</code></td><td>rebuilds video memory the way the cartridge loads it, and draws it</td></tr><tr><td><code>imagenes_web.py</code></td><td>the pictures on this site, each one a routine replayed</td></tr><tr><td><code>check_datos_como_codigo.py</code></td><td>no declared data range may come out as code</td></tr><tr><td><code>check_entradas.py</code></td><td>no entry point may fall inside one</td></tr><tr><td><code>omsx_*.tcl</code></td><td>the openMSX harnesses used to measure who reads what</td></tr></table>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>

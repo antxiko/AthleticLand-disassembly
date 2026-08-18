@@ -1,0 +1,144 @@
+<title>El código — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html" style=color:var(--tinta)>El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../THE-CODE.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="el-codigo">El código</h1>
+<h2 id="todo-pasa-dentro-de-la-interrupcion">Todo pasa dentro de la interrupción</h2>
+<p>El programa principal son dos bytes: <code>jr $</code> en 0x40A7. El juego corre en el gancho H.KEYI, al que la BIOS llama en cada barrido de pantalla, y que siempre hace las mismas tres cosas (0x4038):</p>
+<pre><code>785D   el sonido, siempre, aunque el fotograma anterior no acabara
+40B3   los mandos, solo con partida en marcha
+412A   un paso del juego: el estado que diga 0xE000</code></pre>
+<p>y nada más. No hay un bucle principal al que volver.</p>
+<h2 id="la-llamada-que-no-vuelve">La llamada que no vuelve</h2>
+<p>Los saltos a direcciones calculadas son aquí una rutina propia, 0x40A9, y usa un truco que aparece por todo el cartucho: **la tabla va pegada detrás de su propio <code>call</code>**.</p>
+<pre><code>DESPACHA:
+    add a,a                   ; 40a9
+    pop hl                    ; 40aa   la direccion de retorno ES la tabla
+    call HL_MAS_A             ; 40ab
+    ld e,(hl)                 ; 40ae
+    inc hl                    ; 40af
+    ld d,(hl)                 ; 40b0
+    ex de,hl                  ; 40b1
+    jp (hl)                   ; 40b2</code></pre>
+<p>El <code>pop hl</code> recoge la dirección de retorno, que es donde empieza la tabla, la indexa y salta. Nunca vuelve al que le llamó. Hay cinco tablas así:</p>
+<table><tr><th>Tabla</th><th>Cuántas</th><th>Lo que elige</th></tr><tr><td>0x4149</td><td>20</td><td>el estado del juego</td></tr><tr><td>0x41F8</td><td>2</td><td>los dos pasos del menú</td></tr><tr><td>0x5C7F</td><td>4</td><td>cuál de los cuatro cielos se pinta</td></tr><tr><td>0x5E85</td><td>4</td><td>qué combinación de copas de árbol va arriba</td></tr><tr><td>0x66C2</td><td>17</td><td>lo que está haciendo el jugador</td></tr></table>
+<p>Como la tabla son datos en mitad del camino del código, un trazador estático se mete de largo. Para eso está <code>src/athletic.nocode</code>: cinco rangos, uno por tabla.</p>
+<h2 id="una-sola-rutina-dibuja-todo-el-decorado">Una sola rutina dibuja todo el decorado</h2>
+<p>0x5F65 es lo único que pone una distribución en pantalla, y coge sus argumentos igual: **seis bytes detrás del <code>call</code>**, dos punteros y una dirección de vídeo.</p>
+<pre><code>MOTOR_DE_ROTULOS:
+    pop hl                    ; 5f65   los seis bytes de parametros
+    ld de,0e150h              ; 5f66
+    ld bc,00006h              ; 5f69
+    ldir                      ; 5f6c
+    push hl                   ; 5f6e   se sigue detras de ellos</code></pre>
+<p>La lista es una tira de cuentas: <em>n</em> copia n tiles de la lista de tiles, <em>n</em> con el bit 7 puesto rellena n posiciones con un solo tile, un 0x80 suelto dice que detrás va una dirección nueva, y un cero termina. Diecinueve llamadas, y <b>cuatro de ellas escriben la tabla de colores</b> en vez de la de nombres (de 0x70F0 en adelante): el mismo motor, apuntando a 0x0000 y no a 0x3800.</p>
+<p>Por eso el trazador necesita la directiva <code>!skip 0x5F65 6</code>: esos seis bytes no son instrucciones, y ejecutarlos descarrilaría todo lo que viene detrás.</p>
+<h2 id="el-fotograma">El fotograma</h2>
+<p>0x585E, por orden: los 128 bytes de atributos de sprite suben a la memoria de vídeo de una sola copia —los 32 sprites, cada fotograma—; justo en el paso veinticuatro se encienden los obstáculos que se mueven; y luego, solo mientras el jugador esté vivo, el reloj, los contadores y las once cosas que se mueven, y al final él.</p>
+<p>Los contadores son el detalle fino. 0xE130 cuenta fotogramas, y encima de él hay cuatro más que corren cada <b>8, 9, 10 y 11</b> fotogramas (0x5FD2). Esos cuatro son las fases: las dos lianas se llevan el de 8 y el de 10, y las cuatro tablas de los surtidores una cada uno, así que las cuatro tablas no suben y bajan nunca a la vez. Y son lo único que sobrevive al borrado de la pantalla (0x5A64): entras en una pantalla nueva y las lianas están donde estaban.</p>
+<h2 id="el-salto-es-una-tabla-leida-de-ida-y-de-vuelta">El salto es una tabla leída de ida y de vuelta</h2>
+<p>No hay una velocidad vertical en ninguna parte. Un salto es una lista de incrementos entre un 0xFE y un 0xFF, recorrida en un sentido <b>restando</b> —hacia arriba, cada vez menos— y en el otro <b>sumando</b> (0x61B7). Al tocar el 0xFF se da la vuelta; al volver al 0xFE se acaba el salto.</p>
+<p>El salto normal son estos dieciséis bytes de 0x6CF5:</p>
+<pre><code>4 4 3 3 3 3 2 2 2 2 1 1 1 1 0 0</code></pre>
+<p>Dieciséis fotogramas de subida y dieciséis de bajada, 32 puntos de altura, y la caída es la subida leída al revés: exactamente simétrica, porque son los mismos bytes. Hay cuatro listas así, y todo lo que se despega del suelo usa una:</p>
+<table><tr><th></th><th></th></tr><tr><td>0x6CF5</td><td>el salto normal, el bote sin botón, y caerse de una tabla o de un poste</td></tr><tr><td>0x63C9</td><td>el bote alto del trampolín, y la bola que bota</td></tr><tr><td>0x63A5</td><td>una bola que rueda dando botes altos</td></tr><tr><td>0x63B7</td><td>una bola que rueda casi plana</td></tr><tr><td>0x6CE3</td><td>hundirse, y una bola a medio camino</td></tr></table>
+<p>El arco del jugador se recorre a un incremento por fotograma, y mientras está en el aire la misma rutina mira además si ha tocado el cabo de una liana (0x6C3C).</p>
+<h2 id="el-jugador-son-cuatro-sprites-y-una-sombra">El jugador son cuatro sprites y una sombra</h2>
+<p>Un sprite del MSX1 es de un color, así que el niño son cuatro: dos arriba —cabeza y cuerpo, rojo y amarillo— y dos abajo —las piernas, magenta y azul—. La pose 0xE136 indexa la tabla de 0x6B8A, catorce registros de cuatro patrones: del 0 al 6 mirando a la derecha, del 7 al 13 los mismos mirando a la izquierda.</p>
+<p>Debajo, el sprite 8: su misma X, patrón 0xD4, negro. Se queda en Y 0x8C mientras él está en el suelo o colgado de una liana, desaparece mientras está en el aire, y le sigue dieciséis puntos por debajo mientras va encima de un trampolín, de una tabla, de un poste o del tronco — que es lo que te dice dónde estás.</p>
+<p>Estos son los 64 patrones de sprite, reconstruidos de la memoria de vídeo tal como la carga el cartucho. Los 23 que miran a la derecha están dibujados en el cartucho, los 23 siguientes son esos mismos espejados bit a bit al cargar, y los 18 últimos son todo lo demás: los peces, las bolas, la araña, la sombra, los rótulos de 50/100/200, las cuatro caras y la fruta. Salen en blanco sobre negro porque el color no está en el patrón: el juego lo escribe en el registro de atributos.</p>
+<p><img src="../imagenes/sprites.png" alt="Los 64 patrones de sprite del cartucho"></p>
+<h2 id="los-tiles-en-tres-tercios">Los tiles, en tres tercios</h2>
+<p>En el modo gráfico 2 cada tercio de la pantalla tiene su propio banco, y el cartucho los usa como tres juegos de tiles distintos. Esta es la tabla de patrones con sus colores, reconstruida repitiendo las copias del propio cartucho: la fuente está en los tres tercios —se carga una vez y se copia dos—, el decorado va donde se va a dibujar, y el tercio de en medio se lleva las lianas y los surtidores.</p>
+<p><img src="../imagenes/tiles.png" alt="Los tres tercios de la tabla de tiles"></p>
+<h2 id="el-surtidor-son-dieciocho-dibujos-y-un-byte-diecinueve">El surtidor son dieciocho dibujos y un byte diecinueve</h2>
+<p>La tabla que sube en el chorro no se mueve: se vuelve a dibujar. 0x56DD es una tabla de dieciocho punteros, y cada uno apunta a diecinueve bytes: un bloque de 6×3 tiles, y luego <b>un byte más, la altura de la tabla</b> —0x52 abajo, 0x32 arriba, de dos en dos—. 0x60B7 pinta el bloque y devuelve ese byte, que es sobre lo que luego se pone el jugador.</p>
+<p>La fase va de 0 a 31: del 18 en adelante se lee hacia atrás, así que dieciocho dibujos hacen una subida y una bajada enteras.</p>
+<p><img src="../imagenes/surtidor.png" alt="Los dieciocho bloques del surtidor, subiendo"></p>
+<h2 id="el-sonido-no-toca-el-chip-mas-de-lo-necesario">El sonido no toca el chip más de lo necesario</h2>
+<p>Tres canales, diez bytes de estado cada uno, desde 0xE010: cuántos fotogramas le quedan a la nota, su duración, qué sonido está sonando, el puntero a su pista, cuántas octavas hacia abajo, y el volumen con su envolvente.</p>
+<p>Pedir un sonido es llamar a 0x77FE con un número. Por debajo de 0x8E es un efecto y se lleva el canal C solo; 0x8E es la música de la partida y se lleva el A y el B; del 0x90 en adelante, los tres. El número es la prioridad: uno nuevo solo desplaza a otro más bajo (0x781C). La tabla de 0x796A tiene 34 punteros, con los canales de cada sonido seguidos.</p>
+<p>El reproductor lee dos formatos, que distingue por el bit 7 del número del sonido:</p>
+<table><tr><th></th><th></th></tr><tr><td>efecto</td><td><code>0x2n</code> fija la duración de las notas, y luego dos bytes: volumen y un periodo de 12 bits</td></tr><tr><td>música</td><td><code>0xFD oo</code> fija la octava y el volumen de arranque, y luego un byte por nota: duración en el nibble alto, nota en el bajo, y el 12 es silencio</td></tr></table>
+<p><code>0xFE</code> vuelve a empezar la pista —así se repite la música de la partida— y <code>0xFF</code> apaga el canal. La envolvente solo la lleva la música: la nota arranca a su volumen, baja tres pasos en tres fotogramas, se mantiene, y baja dos más al acabar.</p>
+<p>Y un sonido se ríe de los demás: <b>el número 6 es una pista que solo contiene 0xFF</b>. Se pide cuando la abeja se va de la pantalla y cuando dejas una pantalla, y lo único que hace es apagar el canal de efectos — que es la única manera de callar el zumbido.</p>
+<footer><p><em>Athletic Land</em> lo publico Konami en 1984 para MSX; su numero de catalogo es RC-700. El cartucho firma dos veces, y las dos en tiles corrientes: el <b>KONAMI 1984</b> del titulo y del pie del marcador, y los creditos que solo aparecen al superar la fase 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

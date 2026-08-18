@@ -19,8 +19,8 @@ from estilo_web import ESTILO  # noqa: E402
 
 
 # Un menu por idioma. La web se publica en ingles en la raiz de docs/ y en
-# castellano bajo docs/es/. Son seis paginas por idioma: de este cartucho hay
-# un solo volcado, asi que aqui no hay pagina de versiones.
+# castellano bajo docs/es/. Son seis paginas por idioma: aqui se desensambla
+# un solo volcado, asi que no hay pagina de versiones.
 NAV_EN = [("index.html", "Home"), ("GETTING-STARTED.html", "Start"),
           ("THE-GAME.html", "The game"), ("THE-CARTRIDGE.html", "The cartridge"),
           ("THE-CODE.html", "The code"), ("FINDINGS.html", "Findings"),
@@ -44,25 +44,28 @@ for _en, _es in _PAREJAS:
     PAREJA[_en] = _es
     PAREJA[_es] = _en
 
-# El pie va en el idioma de la pagina, y dice lo poco que el cartucho firma.
-# De donde sale: de barrer los 16 KB buscando texto y no encontrar ninguno. La
-# fuente que carga el juego son diez digitos, los dos puntos y el blanco, y con
-# eso no se escribe una letra. Lo que parece rotulo -"ACTiViSiON PRESENTS",
-# "PITFALL!" y el "Copyright 1982, 1984" del pie- son DIBUJOS partidos en
-# casillas, no cadenas. Ni un nombre de persona: aqui no se acredito a nadie.
+# El pie va en el idioma de la pagina, y dice lo que el cartucho firma. De
+# donde sale: de leer los tiles. La fuente son 48 glifos (0x48CE) y con ellos
+# estan escritos, dentro del cartucho, el KONAMI del titulo y del pie del
+# marcador (0x4A89, "KONAMI 1984") y los creditos de 0x447E, que solo se
+# pintan al superar la fase 99. No hay ni un nombre completo: son iniciales.
 PIE = {
-    "es": "<em>Pitfall!</em> lo publicó Activision en 1984 para MSX. En el "
-          "cartucho no hay ni una línea de texto, y lo único que firma es el "
-          "<b>Copyright 1982, 1984</b> dibujado al pie de la pantalla: 1982 es "
-          "la fecha del original de Atari 2600 y 1984 la de esta conversión. "
-          "Todos los derechos sobre el juego siguen siendo de sus titulares. "
-          "Este trabajo es de preservación, estudio y documentación.",
-    "en": "<em>Pitfall!</em> was published by Activision in 1984 for the MSX. "
-          "There isn't a single line of text in the cartridge, and the only "
-          "thing it signs is the <b>Copyright 1982, 1984</b> drawn at the foot "
-          "of the screen: 1982 is the date of the Atari 2600 original and 1984 "
-          "that of this conversion. All rights in the game remain with their "
-          "holders. This is preservation, study and documentation work.",
+    "es": "<em>Athletic Land</em> lo publico Konami en 1984 para MSX; su "
+          "numero de catalogo es RC-700. El cartucho firma dos veces, y las "
+          "dos en tiles corrientes: el <b>KONAMI 1984</b> del titulo y del "
+          "pie del marcador, y los creditos que solo aparecen al superar la "
+          "fase 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, "
+          "<b>CG R.S C.K</b>—. Todos los derechos sobre el juego siguen "
+          "siendo de sus titulares. Este trabajo es de preservacion, estudio "
+          "y documentacion.",
+    "en": "<em>Athletic Land</em> was published by Konami in 1984 for the "
+          "MSX; its catalogue number is RC-700. The cartridge signs itself "
+          "twice, both times in plain tiles: the <b>KONAMI 1984</b> on the "
+          "title screen and at the foot of the scoreboard, and the credits "
+          "that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, "
+          "<b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game "
+          "remain with their holders. This is preservation, study and "
+          "documentation work.",
 }
 
 
@@ -87,8 +90,8 @@ def enlinea(t):
 # La web se sirve desde docs/, asi que lo que este fuera de esa carpeta no
 # existe para el navegador: esos enlaces se mandan al repositorio. Se puede
 # cambiar sin tocar el codigo con la variable de entorno.
-REPO = os.environ.get("PITFALL_REPO",
-                      "https://github.com/antxiko/Pitfall-MSX-disassembly")
+REPO = os.environ.get("ATHLETIC_REPO",
+                      "https://github.com/antxiko/AthleticLand-disassembly")
 
 
 def ruta(href):
@@ -216,7 +219,7 @@ def main(docdir, idioma="en"):
         dst = os.path.join(docdir, fn[:-3] + ".html")
         texto = open(src, encoding="utf-8").read()
         m = re.search(r"^#\s+(.*)$", texto, re.M)
-        titulo = (m.group(1) if m else fn[:-3]) + " — Pitfall! (1984)"
+        titulo = (m.group(1) if m else fn[:-3]) + " — Athletic Land (1984)"
         open(dst, "w", encoding="utf-8").write(
             convierte(texto, titulo, fn[:-3] + ".html", idioma))
         print(f"  {fn} -> {os.path.basename(dst)}")

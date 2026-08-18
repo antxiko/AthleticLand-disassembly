@@ -1,0 +1,128 @@
+<title>The game — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html" style=color:var(--tinta)>The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-JUEGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="the-game">The game</h1>
+<p>A boy runs across a park jumping over what is in the way, against a clock. Everything on this page comes from reading the code that does it.</p>
+<h2 id="the-world-is-a-counter-and-a-table-of-thirty-two-screens">The world is a counter and a table of thirty-two screens</h2>
+<p>The screen you are on is the byte at 0xE054, SCENE, and it is a plain counter, not a map. When you walk off the edge, state 16 (0x43C0) steps it: <b>plus one</b> if you left by the side you were heading for, <b>minus one</b> if you turned back. Going down from 1 it sticks at 1 and flips the direction (0x43E0); going up past 255 it drops to <b>56</b> (0x43F2). The scoreboard shows it in BCD at the bottom right.</p>
+<p>What is on that screen does not come from SCENE itself but from <b>SCENE modulo 32</b> (0x5B8F), used as an index into two tables of thirty-two bytes:</p>
+<table><tr><th></th><th></th></tr><tr><td>0x5C32</td><td>the fixed obstacles, one byte per screen, into 0xE156</td></tr><tr><td>0x5C52</td><td>the moving ones, one byte per screen, into 0xE158</td></tr></table>
+<p>That is the whole map of the game: sixty-four bytes.</p>
+<table><tr><th>bit</th><th>0x5C32 — what is built</th><th>0x5C52 — what moves</th></tr><tr><td>0</td><td>five puddles, in a row</td><td>how many balls roll (bits 0-2)</td></tr><tr><td>1</td><td>two vines</td><td></td></tr><tr><td>2</td><td>four trampolines, with a fruit above</td><td></td></tr><tr><td>3</td><td>four water jets with a plank on top</td><td>spiders that drop from above</td></tr><tr><td>4</td><td>the pond of five posts</td><td>fish</td></tr><tr><td>5</td><td>the rock</td><td>the floating log</td></tr><tr><td>6</td><td>the campfire</td><td>the bouncing ball</td></tr><tr><td>7</td><td>the pond</td><td>the bee</td></tr></table>
+<h2 id="every-screen-ending-in-0-4-or-8-comes-out-empty">Every screen ending in 0, 4 or 8 comes out empty</h2>
+<p>The stage number then edits the pair. First 0x5BA4 looks at SCENE in BCD and, if the last digit is 0, 4 or 8, wipes the fixed obstacles and keeps only the bee out of the moving ones. Then the stage (0xE051, kept in BCD):</p>
+<table><tr><th>stage</th><th>what it takes out</th></tr><tr><td>1</td><td>the spiders and the bee</td></tr><tr><td>2</td><td>nothing; and the bee is pinned to the highest of its four heights</td></tr><tr><td>3</td><td>the bee</td></tr><tr><td>4 and up</td><td>nothing; and on an even stage, if the screen came out completely empty, it puts the bee back</td></tr></table>
+<p>The screens whose number ends in 0 get wiped a second time, by 0x5E58, which also draws the <b>CHILD PARK</b> sign: those are the entrance —SCENE 0— and the finishing lines.</p>
+<p><img src="imagenes/child-park.png" alt="The CHILD PARK sign, drawn by 0x5E58"></p>
+<p>The bee&#x27;s height is one of four, at 0x64A4: 0x38, 0x48, 0x58 and 0x72. Which one is not stored anywhere and is not a sequence: every time the bee leaves the screen, 0x6452 reads the <b>Z80&#x27;s own refresh register</b> and keeps two bits of it. Only on stage 2 is it fixed, and then to the highest of the four —the one that flies over your head—.</p>
+<h2 id="the-backdrop-is-picked-by-two-bits-of-scene">The backdrop is picked by two bits of SCENE</h2>
+<p>The obstacles come from the tables; the backdrop does not. Before anything is placed, 0x5BF2 chooses between two. If bit 1 of SCENE is set <b>and</b> the screen has no vines, no trampolines and no spiders, it draws a sky: six rows of bands over a line of hills, one of four picked by bits 2 and 3 (0x5C72).</p>
+<p><img src="imagenes/cielo-azul-amarillo.png" alt="Sky, blue over yellow hills"> <img src="imagenes/cielo-azul-verde.png" alt="Sky, blue over green hills"> <img src="imagenes/cielo-rojo-blanco.png" alt="Sky, red over white hills"> <img src="imagenes/cielo-rojo-verde.png" alt="Sky, red over green hills"></p>
+<p>Otherwise it draws the normal one (0x5E71): a strip of grass on row 15 and, at the top, a canopy of leaves with a trunk on each side. Each half comes in two shapes —sloped or level— and bits 1 and 2 of SCENE pick which pair goes up.</p>
+<p><img src="imagenes/cerros-0.png" alt="Canopy, both halves sloped"> <img src="imagenes/cerros-1.png" alt="Canopy, sloped left and level right"> <img src="imagenes/cerros-2.png" alt="Canopy, both halves level"> <img src="imagenes/cerros-3.png" alt="Canopy, level left and sloped right"></p>
+<p>Either way the ground of rows 16 to 19 goes in afterwards (0x5CEA), and only then are the obstacles placed on top of it, one call each, in the order the bits are read.</p>
+<h2 id="a-stage-is-ten-screens">A stage is ten screens</h2>
+<p>0xE05A holds the goal, in BCD, and it starts at 10. Reaching a SCENE that ends in 0 and matches that goal (0x692C) —crossing X 0xC8 going right, or dropping below X 0x28 going left— sounds the fanfare and hands the player to state 7, which is six half-turns on the spot and then the stage is over.</p>
+<p>Then 0x438B: one more life, the stage plus one in BCD, the goal ten screens further on, and the clock refilled. What is left of the clock is cashed in at <b>200 points a chunk</b>, four frames at a time, while the music finishes (0x435E). Clearing stage 99 wraps it round to 00 (0x4295) and prints ALL STAGE CLEAR with the credits.</p>
+<h2 id="the-moving-obstacles-do-not-start-at-once">The moving obstacles do not start at once</h2>
+<p>They start <b>twenty-four steps in</b>. The frame routine (0x586A) watches the step counter 0xE13B and, exactly when it reaches 24, copies 0xE158 into 0xE159, which is the byte the balls, fish, spiders, bee and bouncing ball actually look at. Walk into a screen and nothing chases you for the first two dozen steps.</p>
+<p>From state 7 upwards the player is dying, and then not one of the eleven obstacle routines is called (0x587A): the screen freezes and only the player moves.</p>
+<h2 id="what-everything-is-worth">What everything is worth</h2>
+<p>Points are cashed by walking past a thing, not by touching it: 0x6623 sweeps a list of X positions and, when the player has left one behind, adds it once and floats the number over his head for thirty frames. They are stored as BCD nibbles —0x05, 0x10, 0x20—:</p>
+<table><tr><th></th><th></th></tr><tr><td>50</td><td>each rolling ball</td></tr><tr><td>100</td><td>each post, each trampoline, each puddle, the campfire, the rock, the bee</td></tr><tr><td>200</td><td>the fruit, each water-jet plank, the floating log</td></tr></table>
+<p>The score is six BCD digits and stops dead at <b>999999</b> (0x4669), and so does the high score. A new life is given at 10000 and then every 20000 (0x4677); once past the last threshold there are no more. Finishing a stage is worth a <b>BONUS SCORE 2000</b> printed on row 12 (0x4299).</p>
+<p>You start with three lives and one is spent each time you go in (0x4271), so a game is three goes. They are drawn twice over: as up to four 2×2 blocks on row 21, and as four face sprites which change expression —normal, worried, happy, crying— through 0x6699.</p>
+<h2 id="the-clock-is-58-chunks-and-it-does-not-kill">The clock is 58 chunks and it does not kill</h2>
+<p>0xE055 starts at 0x3A and drops one chunk every 256 frames (0x65AD). The bar runs from column 30 leftwards along row 1, one tile per four chunks, with three half-full tiles in between. Below 0x10 the four faces turn worried and it beeps every 64 frames.</p>
+<p>And at <b>2 it stops</b> (0x65D1). The clock never runs out on you: it just stays there with the bar empty. Nothing in the code kills the player for running out of time.</p>
+<h2 id="what-kills">What kills</h2>
+<p>Four ways, and only four:</p>
+<ul><li><b>a collision.</b> 0x6A41 checks the player&#x27;s head (sprite 4) and legs (sprite 6) against the fish, the rolling balls, the spiders, the bee and the bouncing ball; the legs are also checked against sprite 31, the invisible box —colour 0x10— that the rock and the campfire put in front of themselves. The fruit (sprite 19) is in the same sweep but is worth 200 points and a sound;</li><li><b>the water.</b> Standing over the pond (0x689B), or landing on the pond of posts or the trampoline pit (0x676A), sinks you: state 15, the crying faces, and the player goes down a step of the sinking curve every eight frames;</li><li><b>stepping into a puddle</b>, which drops you two points further on and into the same sinking (0x68AE);</li><li><b>a fall.</b> Not the height you land at: the height you fell <b>from</b>. See <a href="FINDINGS.html">Findings</a>.</li></ul>
+<p>Dying does not repaint the screen: every obstacle sprite is hidden (0x68DC), the player turns over and over for 128 frames (0x69D8), and the state machine moves on.</p>
+<h2 id="the-controls-and-the-four-ways-to-play">The controls, and the four ways to play</h2>
+<p>Four directions and two buttons, in joystick format in 0xE009, with the previous frame kept in 0xE008 so that &quot;just pressed&quot; can be told from &quot;held&quot;. The keyboard is read straight off the PPI —row 8 for the cursors and the space bar, row 7 for SELECT— and shuffled bit by bit into that same shape (0x40CB), so nothing downstream can tell which you are using.</p>
+<p>On the title screen, keys 1 to 4 pick how to play (0x40F7), through an eight-byte table at 0x4122: one player with joystick, two with joystick, one with keyboard, two with keyboard. With two players, 32 bytes of state are simply swapped when the turn changes (0x4329).</p>
+<h2 id="the-demo-plays-itself-but-it-is-not-recorded">The demo plays itself, but it is not recorded</h2>
+<p>The attract mode runs the game with a handful of rules instead of a recording (0x58B2). On screen 0 it runs right and jumps at X 0x38 and X 0x80. On screen 1 it looks at what the player is doing: walking, it turns round past X 0xB0 and otherwise jumps at random —reseeding the frame counter from the Z80&#x27;s own R register—; hanging from a vine, it lets go when the counter wraps; riding the log, it jumps when it reaches the edge.</p>
+<p>It only has two screens: reaching SCENE 2 sends it back to the title (0x4408).</p>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>

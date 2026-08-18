@@ -4,6 +4,8 @@ El primer cartucho de Konami para MSX, desmontado byte a byte. Los 16.384 bytes
 están acotados y explicados: ni un hueco sin justificar, ni un "bloque de
 gráficos", ni una tabla adivinada.
 
+📖 **[Documentación completa](https://antxiko.github.io/AthleticLand-disassembly/es/)**
+
 [README in English](README.md)
 
 ---

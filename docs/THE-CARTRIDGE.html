@@ -1,0 +1,115 @@
+<title>The cartridge — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html" style=color:var(--tinta)>The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-CARTUCHO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="the-cartridge">The cartridge</h1>
+<p>16384 bytes. No loader, no blocks: the MSX maps the cartridge at 0x4000-0x7FFF —page 1— and that is the whole picture of memory, with no overlays: no address means two different things at two different times.</p>
+<h2 id="where-it-enters">Where it enters</h2>
+<p>The first sixteen bytes are the header the BIOS reads:</p>
+<pre><code>41 42 77 40 00 00 00 00 00 00 00 00 00 00 00 00
+&#x27;A&#x27; &#x27;B&#x27;  \_ INIT = 0x4077</code></pre>
+<p>The two letters mark an executable cartridge; of the four vectors only INIT is set —STATEMENT, DEVICE and TEXT, the BASIC ones, are zero—.</p>
+<h2 id="what-the-boot-does">What the boot does</h2>
+<p>INIT (0x4077), in order:</p>
+<ul><li><code>di</code>, interrupt mode 1, and the stack at 0xE400;</li><li>clears 0xE000-0xE3FF in one <code>ldir</code> (0x407D), which is where the whole state will live;</li><li>writes <code>jp 0x4038</code> into the H.KEYI hook at 0xFD9A —the 0xC3 byte first, then the address (0x408A-0x4094)—;</li><li>shuts the interrupt out with the lock at 0xE005 while it sets up the video chip and the sound chip (0x44FD) and loads the font (0x4626);</li><li>clears the lock, <code>ei</code>, and falls into <code>jr $</code> at 0x40A7.</li></ul>
+<p>Those two bytes are the main program. <b>The whole game runs inside the interrupt</b>, fifty or sixty times a second, and the program never comes back.</p>
+<h2 id="the-lock">The lock</h2>
+<p>Because the game is the interrupt, a frame that overruns would re-enter itself. 0xE005 stops that: the hook (0x4038) reads the video chip&#x27;s status to drop the request, plays the sound —always, before anything else—, and only then looks at the lock. If it is set, that is all this interrupt does (0x4067): the music carries on and the frame that is still running is left alone.</p>
+<h2 id="where-the-state-lives">Where the state lives</h2>
+<p>Everything the game keeps lives in the 1 KB from 0xE000, with the stack on top of it at 0xE400.</p>
+<table><tr><th></th><th></th></tr><tr><td>0xE000 / 0xE001</td><td>the game state, 0 to 19, and its sub-state</td></tr><tr><td>0xE002</td><td>the options: keyboard, two players, game in progress, whose turn</td></tr><tr><td>0xE005</td><td>the lock: the interrupt is inside</td></tr><tr><td>0xE008 / 0xE009</td><td>what was pressed last frame and this one, in joystick format</td></tr><tr><td>0xE010-0xE02D</td><td>the three sound channels, ten bytes each</td></tr><tr><td>0xE038-0xE03F</td><td>the copy of the eight video chip registers</td></tr><tr><td>0xE040-0xE048</td><td>the high score and the two players&#x27; scores, in BCD</td></tr><tr><td>0xE050-0xE06F</td><td>the player in play: lives, stage, SCENE, clock, direction…</td></tr><tr><td>0xE080-0xE09F</td><td>the other player&#x27;s copy of that, swapped on each turn</td></tr><tr><td>0xE0B0-0xE12F</td><td>the 32 sprite attribute records, uploaded whole every frame</td></tr><tr><td>0xE130-0xE14F</td><td>the frame counters and the phases of the vines and water jets</td></tr><tr><td>0xE134-0xE13C</td><td>the player: Y, X, pose, which way he faces, his state</td></tr><tr><td>0xE150-0xE155</td><td>the six parameter bytes the scenery engine copies out of the ROM</td></tr><tr><td>0xE156 / 0xE158</td><td>this screen&#x27;s fixed obstacles and its moving ones</td></tr><tr><td>0xE18C-0xE1AE</td><td>the obstacles&#x27; X positions and what each is worth</td></tr><tr><td>0xE200-0xE205</td><td>the jump: which curve, which way, how many frames</td></tr></table>
+<h2 id="the-screen-colours-below-patterns-above">The screen: colours below, patterns above</h2>
+<p>The video chip is set from an eight-byte table at 0x4545, copied to 0xE038 and sent out register by register (0x4528):</p>
+<table><tr><th>register</th><th>value</th><th>what it says</th></tr><tr><td>0</td><td>0x02</td><td>graphics mode 2</td></tr><tr><td>1</td><td>0xE2</td><td>16 KB, screen on, interrupts on, 16×16 sprites</td></tr><tr><td>2</td><td>0x0E</td><td>the name table at 0x3800</td></tr><tr><td>3</td><td>0x7F</td><td><b>the colour table at 0x0000</b></td></tr><tr><td>4</td><td>0x07</td><td><b>the pattern table at 0x2000</b></td></tr><tr><td>5</td><td>0x76</td><td>the sprite attributes at 0x3B00</td></tr><tr><td>6</td><td>0x03</td><td>the sprite patterns at 0x1800</td></tr><tr><td>7</td><td>0xE1</td><td>the border</td></tr></table>
+<p>Colours below and patterns above is the other way round from the usual layout, and it is why every address in this listing looks displaced if you read it expecting the common one.</p>
+<p>In this mode the screen is <b>three thirds</b>, each with its own pattern and colour bank, and the game uses that on purpose: the font is loaded once and then copied into the other two thirds (0x4583 and 0x4594), while the scenery tiles are loaded only into the third where they are going to be drawn. The vine is the clearest case: its top row is drawn with tiles 0xB0-0xB6, which are loaded into the <b>first</b> third, and everything below it with tiles 0x60-0x9B, loaded into the <b>middle</b> one.</p>
+<h2 id="how-the-drawings-are-stored">How the drawings are stored</h2>
+<p>Three ways, and each one is used for exactly what it suits:</p>
+<ul><li><b>Run-length</b>, for the two logos only. The decompressor is 0x4BB3, 37 bytes: a zero ends, a byte under 0x80 repeats the next one that many times, and a byte from 0x80 up copies that many literally. It carries the destination address in front of the data. It unpacks the ATHLETIC LAND logo (0x47FB) and the big KONAMI (0x4BD8), and nothing else.</li><li><b>Raw</b>, for everything that is a pattern: the 48 font glyphs, the tiles and the 64 sprites go to video memory with a straight <code>ldir</code>-style copy (0x454D).</li><li><b>A little engine</b>, 0x5F65, for the layouts: instead of storing a screenful of tile numbers, it stores a list of counts —copy n, or fill n positions with a single tile— and the tiles to use. Nineteen calls, and four of them write the <b>colour</b> table rather than the name table.</li></ul>
+<p>Two of the smallest calls, replayed: the strip of grass on row 15 (0x5E71) and the ground of rows 16 to 19 (0x5CEA). Between them, twelve bytes of parameters and two short lists.</p>
+<p><img src="imagenes/hierba.png" alt="The strip of grass on row 15"></p>
+<p><img src="imagenes/tierra.png" alt="The ground of rows 16 to 19"></p>
+<p>The left-facing halves are not stored at all. 0x5A4B reverses the bits of a tile and 0x5A09 does the same across the two halves of a 16×16 sprite, and both run at load time: the cartridge carries 23 sprites and puts 46 in video memory.</p>
+<h2 id="the-full-split">The full split</h2>
+<p>Not one byte unaccounted for: 7,448 of code reached by the tracer and 8,936 of data, each inside a declared range with the instruction that reads it noted alongside.</p>
+<table><tr><th></th><th></th></tr><tr><td>0x4000-0x4010</td><td>the header</td></tr><tr><td>0x4010-0x4038</td><td>the video chip primitives, and four 0xFF of padding</td></tr><tr><td>0x4038-0x4077</td><td>the interrupt</td></tr><tr><td>0x4077-0x4149</td><td>INIT, the two-byte main loop, the dispatcher, the controls, one game step</td></tr><tr><td>0x4149-0x4171</td><td>the table of twenty states</td></tr><tr><td>0x4171-0x4468</td><td>the twenty states: title, menu, demo, play, death, game over, stage cleared, screen change</td></tr><tr><td>0x4468-0x44C8</td><td>the credits, in tiles</td></tr><tr><td>0x44C8-0x4626</td><td>new game, video and sound setup, the copy routines and the wipe</td></tr><tr><td>0x4626-0x4795</td><td>the font loader, the score, the extra lives, the high score, the scoreboard and the lives</td></tr><tr><td>0x4795-0x47FB</td><td>the title screen and its columns</td></tr><tr><td>0x47FB-0x48CE</td><td>the ATHLETIC LAND logo, compressed</td></tr><tr><td>0x48CE-0x4A4E</td><td>the 48 font glyphs</td></tr><tr><td>0x4A4E-0x4B52</td><td>the scoreboard labels and the four menu options</td></tr><tr><td>0x4B52-0x4BD8</td><td>the KONAMI logo loader and the run-length decompressor</td></tr><tr><td>0x4BD8-0x4C6B</td><td>the KONAMI logo, compressed</td></tr><tr><td>0x4C6B-0x503B</td><td>the game&#x27;s tiles and their colours</td></tr><tr><td>0x503B-0x555B</td><td>the 64 sprites</td></tr><tr><td>0x555B-0x56DD</td><td>the vine: nine pointers and nine drawings</td></tr><tr><td>0x56DD-0x5857</td><td>the water jets: eighteen pointers and eighteen blocks</td></tr><tr><td>0x5857-0x5C32</td><td>the frame, the demo&#x27;s input, the graphics loader, the mirrors, and building a screen</td></tr><tr><td>0x5C32-0x5C72</td><td>the two tables of thirty-two screens</td></tr><tr><td>0x5C72-0x5F65</td><td>the scenery: the skies, the hedge, the ground, the pond, the obstacles and the player&#x27;s entrance</td></tr><tr><td>0x5F65-0x5FD2</td><td>the scenery engine</td></tr><tr><td>0x5FD2-0x66A6</td><td>the counters and the eleven moving things, the clock and the scoring</td></tr><tr><td>0x66A6-0x6DD4</td><td>the player: seventeen states, the collisions, his sprites and the jump curves</td></tr><tr><td>0x6DD4-0x70A5</td><td>the scenery lists and the tiles they use</td></tr><tr><td>0x70A5-0x714F</td><td>the loader for the patterns and colours</td></tr><tr><td>0x714F-0x77F8</td><td>the colour lists, the colours and the tile patterns</td></tr><tr><td>0x77F8-0x77FE</td><td>six bytes with no use, between the patterns and the sound</td></tr><tr><td>0x77FE-0x7960</td><td>the sound: the request, the player and the two formats</td></tr><tr><td>0x7960-0x7C3E</td><td>the note periods, the table of 34 tracks, and the tracks</td></tr><tr><td>0x7C3E-0x8000</td><td>the padding up to 16 KB: 962 bytes, all 0xFF</td></tr></table>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>

@@ -1,0 +1,144 @@
+<title>The code — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html" style=color:var(--tinta)>The code</a><a href="FINDINGS.html">Findings</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/EL-CODIGO.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="the-code">The code</h1>
+<h2 id="everything-happens-inside-the-interrupt">Everything happens inside the interrupt</h2>
+<p>The main program is two bytes: <code>jr $</code> at 0x40A7. The game runs in the H.KEYI hook, which the BIOS calls on every screen refresh, and which always does the same three things (0x4038):</p>
+<pre><code>785D   the sound, always, even if the last frame never finished
+40B3   the controls, only with a game in progress
+412A   one step of the game: the state in 0xE000</code></pre>
+<p>and nothing else. There is no main loop to come back to.</p>
+<h2 id="the-call-that-never-comes-back">The call that never comes back</h2>
+<p>Jumps to computed addresses are a routine of their own here, 0x40A9, and it uses a trick that shows up all over the cartridge: **the table sits right behind its own <code>call</code>**.</p>
+<pre><code>DESPACHA:
+    add a,a                   ; 40a9
+    pop hl                    ; 40aa   the return address IS the table
+    call HL_MAS_A             ; 40ab
+    ld e,(hl)                 ; 40ae
+    inc hl                    ; 40af
+    ld d,(hl)                 ; 40b0
+    ex de,hl                  ; 40b1
+    jp (hl)                   ; 40b2</code></pre>
+<p>The <code>pop hl</code> takes the return address, which is where the table starts, indexes it and jumps. It never returns to whoever called it. Five tables are used that way:</p>
+<table><tr><th>Table</th><th>How many</th><th>What it picks</th></tr><tr><td>0x4149</td><td>20</td><td>the state of the game</td></tr><tr><td>0x41F8</td><td>2</td><td>the two steps of the menu</td></tr><tr><td>0x5C7F</td><td>4</td><td>which of the four skies is drawn</td></tr><tr><td>0x5E85</td><td>4</td><td>which combination of treetops goes on top</td></tr><tr><td>0x66C2</td><td>17</td><td>what the player is doing</td></tr></table>
+<p>Because the table is data sitting in the middle of the code path, a static tracer walks straight into it. That is what <code>src/athletic.nocode</code> is for: five ranges, one per table.</p>
+<h2 id="one-routine-draws-all-the-scenery">One routine draws all the scenery</h2>
+<p>0x5F65 is the only thing that puts a layout on screen, and it takes its arguments the same way: **six bytes after the <code>call</code>**, two pointers and a video address.</p>
+<pre><code>MOTOR_DE_ROTULOS:
+    pop hl                    ; 5f65   the six bytes of parameters
+    ld de,0e150h              ; 5f66
+    ld bc,00006h              ; 5f69
+    ldir                      ; 5f6c
+    push hl                   ; 5f6e   carry on after them</code></pre>
+<p>The list is a run of counts: <em>n</em> copies n tiles from the tile list, <em>n</em> with bit 7 set fills n positions with a single tile, a lone 0x80 says a new video address follows, and a zero ends. Nineteen calls, and <b>four of them write the colour table</b> instead of the name table (0x70F0 onwards): the same engine, pointed at 0x0000 rather than 0x3800.</p>
+<p>That is why the tracer needs the <code>!skip 0x5F65 6</code> directive: those six bytes are not instructions, and executing them would derail everything after the call.</p>
+<h2 id="the-frame">The frame</h2>
+<p>0x585E, in order: the 128 bytes of sprite attributes go to video memory in one copy —all 32 sprites, every frame—; at exactly the twenty-fourth step the moving obstacles are switched on; and then, only while the player is alive, the clock, the counters and the eleven things that move, followed by the player himself.</p>
+<p>The counters are the small clever thing. 0xE130 counts frames, and on top of it four more tick every <b>8, 9, 10 and 11</b> frames (0x5FD2). Those four are the phases: the two vines take the 8 and the 10, and the four water-jet planks take one each, so the four planks never rise and fall together. And they are the only thing that survives the screen wipe (0x5A64): walk into a new screen and the vines are wherever they were.</p>
+<h2 id="the-jump-is-a-table-read-forwards-and-then-backwards">The jump is a table read forwards and then backwards</h2>
+<p>There is no vertical speed anywhere. A jump is a list of deltas between a 0xFE and a 0xFF, walked in one direction <b>subtracting</b> —going up, less and less each frame— and in the other <b>adding</b> (0x61B7). Hitting the 0xFF turns it round; coming back to the 0xFE ends the jump.</p>
+<p>The normal jump is these sixteen bytes at 0x6CF5:</p>
+<pre><code>4 4 3 3 3 3 2 2 2 2 1 1 1 1 0 0</code></pre>
+<p>Sixteen frames up and sixteen down, 32 pixels of rise, and the fall is the rise read the other way: exactly symmetrical, because it is the same bytes. There are four such lists, and everything that leaves the ground uses one:</p>
+<table><tr><th></th><th></th></tr><tr><td>0x6CF5</td><td>the normal jump, a bounce with no button, falling off a plank or a post</td></tr><tr><td>0x63C9</td><td>the high bounce off a trampoline, and the bouncing ball</td></tr><tr><td>0x63A5</td><td>a ball that rolls in high hops</td></tr><tr><td>0x63B7</td><td>a ball that rolls almost flat</td></tr><tr><td>0x6CE3</td><td>sinking, and a ball in between</td></tr></table>
+<p>The player&#x27;s curve is walked one delta per frame, and while he is in the air the same routine also checks whether he has touched the end of a vine (0x6C3C).</p>
+<h2 id="the-player-is-four-sprites-and-a-shadow">The player is four sprites and a shadow</h2>
+<p>An MSX1 sprite is one colour, so the boy is four: two on top —head and body, in red and yellow— and two underneath —the legs, in magenta and blue—. The pose 0xE136 indexes the table at 0x6B8A, fourteen records of four patterns: 0 to 6 facing right, 7 to 13 the same facing left.</p>
+<p>Under him, sprite 8: the same X, pattern 0xD4, black. It sits at Y 0x8C while he is on the ground or hanging from a vine, disappears while he is in the air, and follows sixteen points under him while he is up on a trampoline, a plank, a post or the log — which is what tells you where you are.</p>
+<p>Here are the 64 sprite patterns, rebuilt from video memory as the cartridge loads it. The right-facing 23 are drawn in the cartridge and the next 23 are those same ones mirrored bit by bit at load time; the last 18 are everything else — the fish, the balls, the spider, the shadow, the 50/100/200 labels, the four faces and the fruit. They come out white on black because the colour is not in the pattern: the game writes it into the attribute record.</p>
+<p><img src="imagenes/sprites.png" alt="The 64 sprite patterns of the cartridge"></p>
+<h2 id="the-tiles-three-thirds-of-them">The tiles, three thirds of them</h2>
+<p>In graphics mode 2 each third of the screen has its own bank, and the cartridge uses them as three different tile sets. This is the pattern table with its colours, rebuilt by replaying the cartridge&#x27;s own copies: the font sits in all three thirds —it is loaded once and copied twice—, the scenery goes wherever it is going to be drawn, and the middle third carries the vines and the water jets.</p>
+<p><img src="imagenes/tiles.png" alt="The three thirds of the tile table"></p>
+<h2 id="the-water-jet-is-eighteen-drawings-and-a-nineteenth-byte">The water jet is eighteen drawings and a nineteenth byte</h2>
+<p>The plank that rides the water jet is not moved: it is redrawn. 0x56DD is a table of eighteen pointers, and each one points at nineteen bytes: a block of 6×3 tiles, and then <b>one more byte, the height of the plank</b> — 0x52 at the bottom down to 0x32 at the top, two at a time. 0x60B7 draws the block and returns that byte, which is what the player then stands on.</p>
+<p>The phase runs 0 to 31: from 18 upwards it is read backwards, so eighteen drawings make a full up-and-down.</p>
+<p><img src="imagenes/surtidor.png" alt="The eighteen blocks of the water jet, rising"></p>
+<h2 id="the-sound-never-touches-the-chip-more-than-it-must">The sound never touches the chip more than it must</h2>
+<p>Three channels, ten bytes of state each, from 0xE010: how many frames of the note are left, its length, which sound is playing, the pointer into its track, how many octaves down, and the volume with its envelope.</p>
+<p>Asking for a sound is calling 0x77FE with a number. Under 0x8E it is an effect and takes channel C alone; 0x8E is the in-game music and takes A and B; from 0x90 up it takes all three. The number itself is the priority: a new sound only displaces a lower one (0x781C). The table at 0x796A holds 34 pointers, the channels of each sound side by side.</p>
+<p>The player reads two formats, told apart by bit 7 of the sound number:</p>
+<table><tr><th></th><th></th></tr><tr><td>effect</td><td><code>0x2n</code> sets the note length, then two bytes: volume and a 12-bit period</td></tr><tr><td>music</td><td><code>0xFD oo</code> sets the octave and the starting volume, then one byte per note: length in the high nibble, note in the low one, 12 meaning silence</td></tr></table>
+<p><code>0xFE</code> restarts the track —that is how the in-game music loops— and <code>0xFF</code> switches the channel off. Only the music carries an envelope: the note starts at its volume, drops three steps in three frames, holds, and drops two more at the end.</p>
+<p>One sound is a joke on the rest: <b>number 6 is a track that only contains 0xFF</b>. It is asked for when the bee flies off the screen and when you leave a screen, and all it does is switch the effects channel off — the only way to stop the buzzing.</p>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>

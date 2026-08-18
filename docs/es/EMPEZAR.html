@@ -1,0 +1,127 @@
+<title>Empezar — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html" style=color:var(--tinta)>Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html">Hallazgos</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../GETTING-STARTED.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="empezar">Empezar</h1>
+<h2 id="lo-que-hace-falta">Lo que hace falta</h2>
+<p><code>pasmo</code> y <code>z80dasm</code> para ensamblar y desensamblar, y Python 3 para las herramientas. No hay más dependencias.</p>
+<p>El cartucho no se distribuye con este repositorio: hace falta tu propia copia, con el nombre <code>athletic.rom</code> en la raíz del proyecto. Son 16384 bytes exactos con este sha256:</p>
+<pre><code>7bd280ae4147a5bf5676b15fde310a8106887786c78873344d97a1cd81285485</code></pre>
+<p>Con otro volcado el listado no reensamblará. <code>make comprueba</code> lo dice en una línea.</p>
+<h2 id="las-ordenes">Las órdenes</h2>
+<pre><code>make          # traza, genera el listado y lo comprueba todo
+make verify   # ensambla el listado y compara el sha256 con el cartucho
+make sanity   # lo que el reensamblado no puede cazar
+make test     # los 17 tests del listado, que no necesitan el cartucho
+make web      # las imágenes y estas páginas</code></pre>
+<p><code>make</code> falla si el listado deja de reproducir el cartucho byte a byte, si el trazador se mete en una zona declarada como datos, si un punto de entrada cae dentro de una, o si queda un byte de los 16384 sin dueño.</p>
+<h2 id="la-prueba-que-decide">La prueba que decide</h2>
+<p>Un desensamblado es fiable si al ensamblarlo vuelve a salir el original. Eso es <code>make verify</code>:</p>
+<pre><code>ensamblado : 16384 bytes  7bd280ae...81285485
+original   : 16384 bytes  7bd280ae...81285485
+OK: reproducible byte a byte</code></pre>
+<h2 id="la-segunda-prueba">La segunda prueba</h2>
+<p>Un listado puede reensamblar perfecto y estar mal: si unos dibujos se leen como instrucciones, los bytes no cambian —solo cambia lo que se dice de ellos—. <code>make sanity</code> cruza los rangos de datos contra el trazado y termina con el reparto:</p>
+<pre><code>  codigo trazado              7448   45.46 %
+  datos identificados         8936   54.54 %
+  sin explicar                   0    0.00 %
+  ==========================================
+  explicado                  16384  100.00 %</code></pre>
+<h2 id="la-tercera-prueba-la-de-los-graficos">La tercera prueba, la de los gráficos</h2>
+<p>Ninguna de las dos anteriores caza una tabla de tiles leída con un byte de desfase: los bytes siguen ensamblando y el rango sigue declarado. Así que los gráficos se comprueban dibujándolos. <code>tools/graficos.py</code> reconstruye la memoria de vídeo repitiendo las copias del propio cartucho —en el mismo orden, a las mismas direcciones, con sus espejos por bits y sus sustituciones de color— y <code>tools/imagenes_web.py</code> repite encima las llamadas concretas que pintan cada cosa. De ahí salen todas las imágenes de esta web: el rótulo del título, los decorados, los nueve dibujos de la liana, los dieciocho bloques del surtidor, los tiles y los sprites. Un rango mal etiquetado saldría ruido.</p>
+<h2 id="sin-el-cartucho">Sin el cartucho</h2>
+<p>El trabajo está en <code>src/athletic.asm</code> y en las notas: 6.882 líneas con 296 rutinas y tablas bautizadas, 348 comentarios anclados a su dirección y 166 rangos de datos con su explicación al lado. Los 17 tests corren sin el binario.</p>
+<h2 id="como-esta-organizado">Cómo está organizado</h2>
+<p>El listado <b>no se toca a mano</b>: se genera, y lo gobiernan tres ficheros.</p>
+<table><tr><th></th><th></th></tr><tr><td><code>src/athletic.entries</code></td><td>los puntos de entrada: por dónde empieza el trazado</td></tr><tr><td><code>src/athletic.nocode</code></td><td>las zonas que NO son código, y cómo se sabe</td></tr><tr><td><code>src/athletic.notes</code></td><td>los nombres, los comentarios y los rangos de datos</td></tr></table>
+<p>De ahí sale <code>src/athletic.asm</code>. Cada nota está anclada a su dirección, así que sobrevive a un retrazado.</p>
+<p>El <code>.entries</code> tiene 48 puntos de entrada porque el cartucho declara <b>uno solo</b> —la BIOS lee la cabecera &quot;AB&quot; y llama a 0x4077— y todo lo demás se alcanza por caminos que ningún trazador estático puede seguir: el gancho de interrupción (0x4038), que es donde corre el juego entero, y las cinco tablas del despachador, que 0x40A9 lee de detrás de su propio <code>call</code>, declaradas una a una con la instrucción que las alcanza anotada al lado.</p>
+<p>Lleva además una directiva propia, <code>!skip 0x5F65 6</code>: el motor de decorados coge seis bytes de parámetros que van <b>detrás</b> de su <code>call</code>, así que el trazador tiene que saltárselos en vez de ejecutarlos. Esos 19 bloques de seis bytes salen del trazado como datos, y cada uno está declarado en las notas.</p>
+<p>El <code>.nocode</code> es corto —5 rangos— y son las cinco tablas del despachador, por las que el trazador se metería de largo.</p>
+<h2 id="como-salen-los-bloques-de-datos">Cómo salen los bloques de datos</h2>
+<p>Cada rango de datos declarado en el <code>.notes</code> sale como un bloque aparte: su cabecera diciendo para qué sirve, su etiqueta y el volcado alineado a su primer byte, de modo que se ve de un golpe dónde acaba una tabla y empieza la siguiente. Una línea opcional le da al bloque la anchura de fila de su estructura real, y eso es lo que hace legibles las tablas en el propio listado:</p>
+<table><tr><th></th><th></th></tr><tr><td><code>F 0x48CE 8</code></td><td>los 48 glifos de la fuente, un glifo por fila</td></tr><tr><td><code>F 0x7608 8</code></td><td>los patrones de los tiles, un patrón por fila</td></tr><tr><td><code>F 0x6B8A 4</code></td><td>las catorce poses del jugador, los cuatro patrones de cada una en su fila</td></tr><tr><td><code>F 0x6C06 5</code></td><td>las poses de muerte, de cinco patrones</td></tr><tr><td><code>F 0x5AAF 4</code></td><td>atributos de sprite, un registro —Y, X, patrón, color— por fila</td></tr><tr><td><code>F 0x5701 19</code></td><td>los dieciocho bloques del surtidor: 6×3 tiles y la altura de la tabla, un bloque por fila</td></tr><tr><td><code>F 0x700D 6</code> y <code>F 0x707C 3</code></td><td>bloques de tiles a su anchura de verdad, seis y tres columnas</td></tr><tr><td><code>F 0x5E54 3,1</code></td><td>los tres tiles de la piedra en la primera fila y el 0xFF de fin en la suya</td></tr><tr><td><code>F 0x4149 w1</code></td><td>una tabla de punteros como <code>defw</code>, uno por fila</td></tr><tr><td><code>F 0x445E w3</code></td><td>los seis bytes de parámetros de una llamada al motor: tres palabras, que es lo que son</td></tr></table>
+<p>Y cuando un puntero cae en un bloque que tiene nombre, ese nombre se escribe al lado: las veinte entradas de la tabla de estados salen con su <code>-&gt; ESTADO_00_ARRANCA</code>, <code>-&gt; ESTADO_01_LOGO</code> y así, y las seis que valen 0x0000 se ven por lo que son.</p>
+<h2 id="las-herramientas">Las herramientas</h2>
+<p>En <code>tools/</code>, cada una con su cabecera:</p>
+<table><tr><th></th><th></th></tr><tr><td><code>z80trace.py</code></td><td>sigue el flujo desde los puntos de entrada, saltándose los parámetros en línea</td></tr><tr><td><code>mkasm.py</code></td><td>monta el listado con las notas ancladas</td></tr><tr><td><code>presupuesto.py</code></td><td>el reparto de los 16384 bytes, y lo que queda sin dueño</td></tr><tr><td><code>refs.py</code></td><td>qué instrucciones apuntan a un rango, sin inventar punteros</td></tr><tr><td><code>quien_apunta.py</code></td><td>para cada hueco, quién lo lee desde código trazado</td></tr><tr><td><code>graficos.py</code></td><td>reconstruye la memoria de vídeo como la carga el cartucho, y la dibuja</td></tr><tr><td><code>imagenes_web.py</code></td><td>las imágenes de esta web, cada una una rutina repetida</td></tr><tr><td><code>check_datos_como_codigo.py</code></td><td>ningún rango declarado como datos puede salir como código</td></tr><tr><td><code>check_entradas.py</code></td><td>ningún punto de entrada puede caer dentro de uno</td></tr><tr><td><code>omsx_*.tcl</code></td><td>los arneses de openMSX con los que se midió quién lee qué</td></tr></table>
+<footer><p><em>Athletic Land</em> lo publico Konami en 1984 para MSX; su numero de catalogo es RC-700. El cartucho firma dos veces, y las dos en tiles corrientes: el <b>KONAMI 1984</b> del titulo y del pie del marcador, y los creditos que solo aparecen al superar la fase 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

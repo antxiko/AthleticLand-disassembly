@@ -1,0 +1,130 @@
+<title>Hallazgos — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Portada</a><a href="EMPEZAR.html">Empezar</a><a href="EL-JUEGO.html">El juego</a><a href="EL-CARTUCHO.html">El cartucho</a><a href="EL-CODIGO.html">El código</a><a href="HALLAZGOS.html" style=color:var(--tinta)>Hallazgos</a><a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a><a href="../FINDINGS.html" style="margin-left:auto;color:var(--oro)">English</a></nav>
+<h1 id="hallazgos">Hallazgos</h1>
+<p>Lo que ha salido al desmontar el cartucho, con la prueba al lado. Lo que no está cerrado está en <a href="PREGUNTAS-ABIERTAS.html">Preguntas abiertas</a>.</p>
+<h2 id="lo-que-mata-no-es-la-altura-a-la-que-caes-es-la-altura-desde-la-que-caiste">Lo que mata no es la altura a la que caes: es la altura desde la que caíste</h2>
+<p>No hay daño por caída ni altura mínima en ninguna parte. Lo que hay es un byte: 0xE13A, que se escribe <b>en el momento de pulsar el botón</b> (0x6DAA).</p>
+<p>Normalmente es la Y desde la que saltaste más dieciséis —dieciséis puntos más abajo en la pantalla, que saltando desde el suelo es el suelo mismo—. Pero si saltas estando encima de una de las dos tablas centrales de los surtidores, con la X entre 0x48 y 0x9F, es la altura de esa tabla, sin sumarle nada.</p>
+<p>De ahí en adelante hay dos comprobaciones contra ese byte. Andando, 0x6960 te mata si tu Y menos 0x11 ha llegado a él; aterrizando en una tabla, 0x656C hace lo mismo con 0x10. Así que el mismo aterrizaje es inofensivo o mortal según desde dónde empezara el salto, y saltar desde una tabla alta deja el suelo a una distancia que mata.</p>
+<h2 id="el-mundo-son-sesenta-y-cuatro-bytes">El mundo son sesenta y cuatro bytes</h2>
+<p>Ni un mapa ni un generador: dos tablas de treinta y dos bytes, en 0x5C32 y 0x5C52, indexadas por <b>SCENE módulo 32</b>. Una dice con qué obstáculos fijos se construye la pantalla y la otra qué se mueve en ella.</p>
+<pre><code>5C32  03 82 20 04 88 00 01 20 41 10 C0 00 88 40 88 20
+      01 04 50 80 50 40 10 20 10 82 00 05 41 88 01 50
+
+5C52  80 A0 08 08 08 0C 80 0C 10 08 60 08 00 80 18 02
+      10 08 48 A0 40 C0 08 09 08 00 01 10 58 10 18 40</code></pre>
+<p>El SCENE, en 0xE054, es un contador pelado que sube o baja de uno en uno y, al pasar de 255, cae a <b>56</b> (0x43F2) —no a 0, y no a 1—. Por el otro lado se queda en 1 y te da la vuelta. Pasadas treinta y dos pantallas el parque se repite; lo que no se repite es el número de fase, que retoca la pareja antes de usarla.</p>
+<h2 id="la-liana-son-nueve-dibujos-no-una-animacion">La liana son nueve dibujos, no una animación</h2>
+<p>No hay interpolación, ni péndulo, ni trigonometría. 0x555B es una tabla de nueve punteros, y cada uno es un dibujito: tile, tile, y luego 0xFE, 0xFD o 0xFC para bajar una fila —una columna a la izquierda, la misma, o una a la derecha— y 0xFF para terminar. Ese es el balanceo entero.</p>
+<p><img src="../imagenes/liana.png" alt="Los nueve dibujos de la liana"></p>
+<p>El contador de fase va de 0 a 15, y del 9 en adelante se niega y se lee hacia atrás (0x60D9), así que nueve dibujos hacen la ida y la vuelta. Se pintan dos lianas por pantalla, doce columnas más allá una de otra, con dos contadores que corren a ritmos distintos —cada 8 y cada 10 fotogramas—, y por eso no van nunca a la vez.</p>
+<p>Y detrás del 0xFF de cada dibujo van <b>tres bytes más</b>: la Y y las dos X del cabo. Es el único sitio donde el juego sabe dónde acaba la cuerda, y es contra lo que se comprueban tus manos (0x6C3C).</p>
+<h2 id="la-liana-esta-dibujada-a-caballo-de-dos-bancos-de-tiles-a-proposito">La liana está dibujada a caballo de dos bancos de tiles, a propósito</h2>
+<p>En el modo gráfico 2 la pantalla son tres tercios y cada uno tiene sus propios patrones. La liana cuelga desde la fila 6 y llega a la 12, así que cruza la costura entre el primer tercio y el de en medio — y el cartucho carga sus tiles en consecuencia: el <b>remate de arriba</b> de una liana son los tiles 0xB0-0xB6, copiados al primer tercio (0x594C), y todo lo que va de la fila 8 hacia abajo son los tiles 0x60-0x9B, copiados al de en medio (0x5940). Ninguno de los dos juegos existe en el otro banco.</p>
+<p>Eso no se ve jugando; sale de poner las direcciones del cargador al lado de los números de tile de los dibujos.</p>
+<h2 id="los-creditos-estan-dentro-del-cartucho-en-tiles-corrientes">Los créditos están dentro del cartucho, en tiles corrientes</h2>
+<p>En 0x447E, a la vista, con el código de tile siendo el ASCII de la letra:</p>
+<pre><code>ALL STAGE CLEAR
+PROGRAM  A.H  Y.I
+SOUND  Y.O
+CG  R.S  C.K</code></pre>
+<p>Se pintan en un solo sitio: 0x445B, cuando el contador de fase da la vuelta de 99 a 00. La lista de distribución que va delante (0x4468) tiene seis entradas —una raya de 18 tiles en la fila 5, el ALL STAGE CLEAR en la 6, otra raya en la 7, y las tres líneas de créditos en las filas 16, 17 y 18—.</p>
+<p>Ni un nombre completo: solo iniciales, y en el cartucho no hay más firma que el KONAMI 1984 del título y del pie del marcador.</p>
+<h2 id="dos-bytes-que-son-una-nota-y-un-puntero-a-la-vez">Dos bytes que son una nota y un puntero a la vez</h2>
+<p>El reproductor de sonido tiene una tabla de periodos de nota en 0x7960 —diez bytes— y, pegada detrás, una tabla de 34 punteros a pista en 0x796A. Las dos se solapan a propósito: la undécima y la duodécima nota, los periodos 60 y 56, son los bytes <code>3C 38</code>, y esos mismos dos bytes son <b>la entrada 0 de la tabla de punteros</b>, que se lee como la dirección 0x383C.</p>
+<p>La entrada 0 no se pide nunca —los números de sonido empiezan en 1—, así que no rompe nada. Se ahorran dos bytes.</p>
+<h2 id="un-sonido-que-ocupa-un-byte">Un sonido que ocupa un byte</h2>
+<p>El sonido 6 se pide cada vez que la abeja se va de la pantalla y cada vez que dejas una pantalla, y lo único que hace es callar el canal de efectos: es la única manera de parar el zumbido de la abeja, que se repite con un 0xFE.</p>
+<p>Su pista es el único byte 0xFF de <b>0x79DB</b> — que no es una pista: es el 0xFF con el que acaba el canal A de la fanfarria. Nueve de las 34 entradas de la tabla apuntan a ese byte: el sonido 6 y los canales que no usa cada sonido de tres canales.</p>
+<h2 id="la-tabla-del-surtidor-lleva-su-propia-altura">La tabla del surtidor lleva su propia altura</h2>
+<p>Los dieciocho bloques del surtidor (0x5701) son diecinueve bytes cada uno: 6×3 tiles de dibujo, y luego un byte que no se dibuja — la altura a la que queda la tabla, de 0x52 abajo a 0x32 arriba, de dos en dos.</p>
+<p>0x60B7 pinta el bloque y devuelve ese byte, y 0x604B guarda los cuatro en 0xE148-0xE14B. Cuando el jugador aterriza, 0x650E compara su Y contra esos cuatro números. El dibujo y la física salen de los mismos diecinueve bytes, así que no se pueden desajustar.</p>
+<h2 id="el-rotulo-del-titulo-se-va-destapando-columna-a-columna">El rótulo del título se va destapando columna a columna</h2>
+<p>El logotipo ATHLETIC LAND no es una imagen que se suba entera. Son 34 tiles, del 0x40 al 0x61, que el descompresor desempaqueta una vez, y luego a 0x47CB se le llama una vez por fotograma y cada llamada coloca <b>una columna</b>: dos tiles, en las filas 5 y 6, en la columna 8 más las que ya hayan entrado.</p>
+<p><img src="../imagenes/logo.png" alt="El rótulo del título, reconstruido del cartucho"></p>
+<p>Diecisiete llamadas dibujan el logotipo, y el contador sigue hasta 52: las llamadas de la diecisiete en adelante pintan el KONAMI 1984 de debajo y luego avisan de que ya no queda nada.</p>
+<h2 id="lo-que-sobra-dentro-del-cartucho">Lo que sobra dentro del cartucho</h2>
+<p>Cosas que están y no se usan. Ninguna es una suposición: todas se han buscado.</p>
+<ul><li><b>Seis entradas a cero</b> en la tabla de estados del jugador (0x66C2). Los estados 9 a 14 son <code>0000</code>, y saltar ahí reiniciaría la máquina. Ninguna instrucción escribe un 9 a 14 en 0xE138.</li><li><b>Cinco bytes de código que no llama nadie</b>, en 0x4523: pondrían A en el registro 7 del VDP —el borde— y remandarían los ocho registros. Está justo delante de la rutina que hace lo mismo sin tocar el borde, y no lo alcanza nada.</li><li><b>Seis bytes</b> en 0x77F8, entre el último patrón de tile y el código del sonido.</li><li><b>962 bytes de 0xFF</b> desde 0x7C3E hasta el final: el relleno hasta los 16 KB, y 0xFF en vez de 0x00.</li></ul>
+<footer><p><em>Athletic Land</em> lo publico Konami en 1984 para MSX; su numero de catalogo es RC-700. El cartucho firma dos veces, y las dos en tiles corrientes: el <b>KONAMI 1984</b> del titulo y del pie del marcador, y los creditos que solo aparecen al superar la fase 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. Todos los derechos sobre el juego siguen siendo de sus titulares. Este trabajo es de preservacion, estudio y documentacion.</p></footer></div>

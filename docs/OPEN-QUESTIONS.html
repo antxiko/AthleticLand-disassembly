@@ -1,0 +1,113 @@
+<title>Open questions — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html">Findings</a><a href="OPEN-QUESTIONS.html" style=color:var(--tinta)>Open questions</a><a href="es/PREGUNTAS-ABIERTAS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="open-questions">Open questions</h1>
+<p>Every byte of the cartridge is accounted for, the listing gives back the original byte for byte, and its 296 labels have names. That does not mean everything is understood. This page says what the figures mean and what remains unknown.</p>
+<h2 id="199-jump-destinations-still-carry-their-address-as-a-name">199 jump destinations still carry their address as a name</h2>
+<p>The listing has 296 named labels and 199 that are still <code>L_XXXX</code>. Those 199 are <b>destinations of jumps inside a routine</b> —the far side of a <code>jr nz</code>, the tail of a loop—, and none of them is the target of a <code>call</code>: there is a test that fails if a routine reached by <code>call</code> is left unnamed.</p>
+<p>So nothing is unidentified there; what is missing is a good name for each branch. Anyone carrying on has a clear, mechanical job waiting.</p>
+<h2 id="six-states-that-do-not-exist">Six states that do not exist</h2>
+<p>The player&#x27;s state table (0x66C2) has seventeen entries and six of them are <code>0000</code>: states 9 to 14. Jumping there would run whatever sits at address zero and restart the machine.</p>
+<p>No traced instruction writes a 9 to 14 into 0xE138, and the states that do get written are 0 to 8, 15 and 16. The reading that fits is that the table was left with a gap so that 15 and 16 could keep their numbers, but <b>that is a reading, not a measurement</b>: what is proven is that they are never used.</p>
+<h2 id="five-bytes-of-code-with-no-caller">Five bytes of code with no caller</h2>
+<p>0x4523 sets video chip register 7 —the border colour— from A and then resends all eight registers. It is well formed, it is three instructions long, and nothing in the cartridge reaches it: it was declared as an entry point by hand, with that noted, because otherwise the tracer would never see it.</p>
+<p>What it was for cannot be told from the binary.</p>
+<h2 id="some-names-come-from-the-pictures-not-from-the-code">Some names come from the pictures, not from the code</h2>
+<p>The obstacles were named by rebuilding video memory and looking at the result (<code>tools/graficos.py</code>), which is solid for shapes but not for intentions. The round things with eight legs that drop from the top of the screen are called spiders in this listing <b>because of what they look like</b>; the code only calls them a sprite pattern.</p>
+<p>The same caution applies to the top band of the screen: the listing&#x27;s names for its two halves are internal, and what the pictures show is a canopy of leaves with a trunk on each side, in two shapes.</p>
+<h2 id="the-reconstruction-has-not-been-checked-against-a-capture">The reconstruction has not been checked against a capture</h2>
+<p>Every picture on this site comes from replaying the cartridge&#x27;s own copies and draw calls. That catches a mislabelled range —it would come out as noise— but it has not been compared pixel by pixel with a photograph of the running game.</p>
+<p>Two things are known to be missing from it on purpose: the sprites come out white on black, because an MSX1 sprite&#x27;s colour is not in its pattern but in the attribute record the game writes at run time; and the pictures are the pieces the routines paint, not whole screens with their obstacles placed.</p>
+<p>What the video chip is told, though, was measured: the eight registers were read in the emulator with the game running, and they are the eight bytes at 0x4545.</p>
+<h2 id="the-other-dump">The other dump</h2>
+<p>There is a second dump of this game, a different build: sha256 <code>ed5b214fdf7272a509f0fcb0496550cf766fff3b2c39cfc9ba37609da8f3447e</code>, also 16384 bytes, which differs from this one in 14823 of them. It is <b>not</b> disassembled here, and nothing on this site says anything about it.</p>
+<h2 id="what-backs-each-figure-and-what-does-not">What backs each figure, and what does not</h2>
+<ul><li><b>It reassembles byte for byte.</b> The published listing assembles and the sha256 is the cartridge&#x27;s.</li><li><b>Not one byte unexplained.</b> The 16384 split into 7,448 of code reached by the tracer and 8,936 inside declared ranges, each with the instruction that reads it noted alongside.</li><li><b>No data area is read as code.</b> A separate check from reassembly, which cannot catch that: if drawings are read as instructions, the bytes do not change.</li><li><b>No entry point falls inside a data area.</b> Seeding the tracer with a wrongly deduced address would inflate coverage with no alarm.</li></ul>
+<p>What the 100 % does <b>not</b> mean: that the purpose of every byte is known. It means every byte sits in a named range, and that name comes from reading the instruction that consumes it. The cases in the sections above are the exceptions, which is why they are written down.</p>
+<p>The listing&#x27;s comments are verified by sampling, not line by line.</p>
+<h2 id="four-warnings-for-whoever-carries-on">Four warnings for whoever carries on</h2>
+<p><b>A period is not a speed.</b> The code says frames per tick —8, 9, 10, 11 for the phases, 256 for a chunk of the clock—; how long that lasts depends on whether the machine interrupts fifty or sixty times a second, and the two are easily confused.</p>
+<p><b>Poking 0xE054 repaints nothing.</b> SCENE is only read when a screen is built, and the only path that builds one is state 17 (0x43F9), through 0x5A64 and 0x5AE3. To walk the park in the emulator, let the game change screen on its own.</p>
+<p><b>Sampling the program counter from power-on lies.</b> Before the BIOS maps the cartridge, page 1 holds the BASIC ROM, and a sampler started too early reports addresses inside this cartridge&#x27;s range that are not this cartridge at all. Arm anything you measure from INIT (0x4077) onwards, never from the reset.</p>
+<p><b>Brute-force pointer hunting lies.</b> A run of repeated bytes looks like a pointer, and reading an operand from the middle of an instruction gives plausible addresses that do not exist. Every lead from there is confirmed against the listing; that is why this repository&#x27;s tools walk instruction starts only.</p>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>

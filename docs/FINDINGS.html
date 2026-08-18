@@ -1,0 +1,130 @@
+<title>Findings — Athletic Land (1984)</title>
+<style>
+:root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
+  --rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+@media (prefers-color-scheme:light){:root{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;
+  --panel:#f7f6f2;--linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}}
+:root[data-theme="dark"]{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;
+  --linea:#23262e;--rojo:#ff897d;--cyan:#65dbef;--verde:#3eb849;--oro:#ded087}
+:root[data-theme="light"]{--tinta:#191a1e;--suave:#5a5d66;--fondo:#e9e7e1;--panel:#f7f6f2;
+  --linea:#d0cdc5;--rojo:#b23f34;--cyan:#1c6b7c;--verde:#2b7734;--oro:#8a7420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--tinta);padding:0 1.25rem 6rem;
+  font:15px/1.7 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.w{max-width:1120px;margin:0 auto}
+.n{max-width:68ch}
+h1,h2,h3,h4{font-weight:400;text-wrap:balance}
+a{color:var(--cyan)}
+img{image-rendering:pixelated;max-width:100%;height:auto;display:block}
+header.top{display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+  padding:4rem 0 2rem;text-align:center}
+header.top img{width:min(100%,642px)}
+.claim{max-width:60ch;color:var(--suave);font-size:1.05rem}
+.claim b{color:var(--tinta);font-weight:400}
+.ficha{display:flex;flex-wrap:wrap;justify-content:center;gap:0 1.5rem;width:100%;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--suave);
+  border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);padding:.85rem 0}
+.ficha b{color:var(--rojo);font-weight:400}
+nav{display:flex;flex-wrap:wrap;gap:1.25rem;justify-content:center;padding:1.25rem 0;
+  font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+nav a{color:var(--suave);text-decoration:none;border-bottom:1px solid transparent}
+nav a:hover,nav a:focus{color:var(--tinta);border-bottom-color:var(--rojo)}
+nav.docs{border-top:1px solid var(--linea);border-bottom:1px solid var(--linea);
+  margin-bottom:1rem}
+section{margin-top:4.5rem;scroll-margin-top:1rem}
+section>h2{font-size:1rem;letter-spacing:.1em;text-transform:uppercase;
+  border-left:3px solid var(--rojo);padding-left:.9rem;margin:0 0 1.5rem}
+.cifras{display:grid;gap:1px;background:var(--linea);border:1px solid var(--linea);
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.cifra{background:var(--panel);padding:1.1rem}
+.cifra b{display:block;font-size:1.7rem;color:var(--oro);font-weight:400;
+  font-variant-numeric:tabular-nums;line-height:1.2}
+.cifra span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--suave)}
+.hall{border-top:1px solid var(--linea);padding-top:1.75rem;margin-top:2.5rem}
+.hall:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.hall h3{margin:0 0 .75rem;font-size:1.15rem;color:var(--rojo)}
+.hall h4{color:var(--oro);margin:1.5rem 0 .5rem;font-size:.95rem}
+.hall p{margin:0 0 1rem}
+pre.asm{background:var(--panel);border-left:2px solid var(--verde);margin:1.25rem 0;
+  padding:1rem 1.1rem;overflow-x:auto;font-size:13px;line-height:1.6;color:var(--tinta)}
+.par{display:grid;gap:1.25rem;grid-template-columns:1fr}
+@media(min-width:820px){.par{grid-template-columns:1fr 1fr}}
+.par figure{margin:0}
+table{border-collapse:collapse;width:100%;margin:1.25rem 0;font-size:13px;display:block;
+  overflow-x:auto}
+th,td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--linea)}
+th{color:var(--suave);font-weight:400;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums;color:var(--oro)}
+.nivel{margin-top:2rem}
+.nivel h3{margin:0 0 .9rem;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase}
+.nivel em{color:var(--cyan);font-style:normal}
+.sep{color:var(--suave);margin:0 .6rem}
+.rejilla{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.rejilla figure{margin:0;background:var(--panel);box-shadow:0 0 0 1px var(--linea)}
+.rejilla figcaption{display:flex;justify-content:space-between;padding:.45rem .65rem;
+  font-size:11px;color:var(--suave);border-top:1px solid var(--linea)}
+.dir{font-variant-numeric:tabular-nums;color:var(--verde)}
+footer{margin-top:5rem;padding-top:1.5rem;border-top:1px solid var(--linea);
+  color:var(--suave);font-size:12px}
+
+/* Aviso de trabajo en curso: tiene que verse antes que las cifras, porque un
+   100% mal leido hace mas dano que no ponerlo. */
+.aviso{background:#3a2a10;border-left:3px solid var(--oro);margin:1.5rem auto;
+  padding:1rem 1.2rem;max-width:900px;border-radius:4px}
+.aviso p{margin:0;color:var(--tinta);font-size:15px;line-height:1.65}
+.galeria{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1.5rem;margin:1.5rem 0}
+.galeria figure{margin:0}
+.galeria img{width:100%;height:auto;image-rendering:pixelated;
+  border:1px solid var(--linea);border-radius:3px}
+.galeria figcaption{color:var(--suave);font-size:13px;margin-top:.5rem}
+audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
+</style>
+<div class="w"><nav class="top"><a href="index.html">Home</a><a href="GETTING-STARTED.html">Start</a><a href="THE-GAME.html">The game</a><a href="THE-CARTRIDGE.html">The cartridge</a><a href="THE-CODE.html">The code</a><a href="FINDINGS.html" style=color:var(--tinta)>Findings</a><a href="OPEN-QUESTIONS.html">Open questions</a><a href="es/HALLAZGOS.html" style="margin-left:auto;color:var(--oro)">Castellano</a></nav>
+<h1 id="findings">Findings</h1>
+<p>What turned up when the cartridge was taken apart, with the evidence next to it. What is not settled is in <a href="OPEN-QUESTIONS.html">Open questions</a>.</p>
+<h2 id="what-kills-you-is-not-the-height-you-fall-to-it-is-the-height-you-fell-from">What kills you is not the height you fall to: it is the height you fell from</h2>
+<p>There is no fall damage and no minimum height anywhere. What there is, is one byte: 0xE13A, written <b>at the moment you press the button</b> (0x6DAA).</p>
+<p>Normally it is the Y you jumped from plus sixteen —sixteen points lower on the screen, which from the ground is just the ground—. But if you jump while standing on one of the two middle water-jet planks, with X between 0x48 and 0x9F, it is that plank&#x27;s height, with nothing added.</p>
+<p>From then on, two checks compare against it. Walking, 0x6960 kills you if your Y minus 0x11 has reached it; landing on a plank, 0x656C does the same with 0x10. So the very same landing is harmless or fatal depending on where the jump started, and jumping off a high plank means the ground itself is a fatal distance away.</p>
+<h2 id="the-world-is-sixty-four-bytes">The world is sixty-four bytes</h2>
+<p>Not a map, not a generator: two tables of thirty-two bytes, at 0x5C32 and 0x5C52, indexed by <b>SCENE modulo 32</b>. One says which fixed obstacles the screen is built with and the other which things move in it.</p>
+<pre><code>5C32  03 82 20 04 88 00 01 20 41 10 C0 00 88 40 88 20
+      01 04 50 80 50 40 10 20 10 82 00 05 41 88 01 50
+
+5C52  80 A0 08 08 08 0C 80 0C 10 08 60 08 00 80 18 02
+      10 08 48 A0 40 C0 08 09 08 00 01 10 58 10 18 40</code></pre>
+<p>SCENE itself, at 0xE054, is a plain counter that goes up or down by one and, on passing 255, drops back to <b>56</b> (0x43F2) —not to 0, and not to 1—. Going the other way it sticks at 1 and turns you round. Beyond thirty-two screens the park repeats; what does not repeat is the stage number, which edits the pair before it is used.</p>
+<h2 id="the-vine-is-nine-drawings-not-an-animation">The vine is nine drawings, not an animation</h2>
+<p>There is no interpolation, no pendulum and no trigonometry. 0x555B is a table of nine pointers, and each one is a small drawing: tile, tile, then 0xFE, 0xFD or 0xFC to drop a row —one column left, the same, or one right— and 0xFF to finish. That is the whole swing.</p>
+<p><img src="imagenes/liana.png" alt="The nine drawings of the vine"></p>
+<p>The phase counter runs 0 to 15, and from 9 upwards it is negated and read backwards (0x60D9), so nine drawings make a full swing out and back. Two vines are drawn per screen, twelve columns apart, on two counters that tick at different rates —every 8 and every 10 frames—, which is why they are never in step.</p>
+<p>And behind each drawing&#x27;s 0xFF come <b>three more bytes</b>: the Y and the two X of the tip. That is the only place the game knows where the rope ends, and it is what your hands are checked against (0x6C3C).</p>
+<h2 id="the-vine-is-drawn-across-two-tile-banks-on-purpose">The vine is drawn across two tile banks, on purpose</h2>
+<p>In graphics mode 2 the screen is three thirds and each one has its own patterns. The vine hangs from row 6 and reaches row 12, so it straddles the seam between the first third and the middle one — and the cartridge loads its tiles accordingly: the <b>top</b> of a vine is tiles 0xB0-0xB6, copied into the first third (0x594C), and everything from row 8 down is tiles 0x60-0x9B, copied into the middle one (0x5940). Neither set exists in the other bank.</p>
+<p>That is not something playing shows you; it falls out of putting the loader&#x27;s addresses next to the drawings&#x27; tile numbers.</p>
+<h2 id="the-credits-are-inside-the-cartridge-in-ordinary-tiles">The credits are inside the cartridge, in ordinary tiles</h2>
+<p>At 0x447E, in plain sight, the tile codes being the ASCII of the letters:</p>
+<pre><code>ALL STAGE CLEAR
+PROGRAM  A.H  Y.I
+SOUND  Y.O
+CG  R.S  C.K</code></pre>
+<p>They are painted in one place only: 0x445B, when the stage counter wraps from 99 back to 00. The layout list in front of them (0x4468) is six entries long —a rule of 18 tiles on row 5, the ALL STAGE CLEAR on row 6, another rule on row 7, and the three credit lines on rows 16, 17 and 18—.</p>
+<p>No full names: initials only, and nothing else in the cartridge is signed except the KONAMI 1984 on the title screen and at the foot of the scoreboard.</p>
+<h2 id="two-bytes-that-are-a-note-and-a-pointer-at-the-same-time">Two bytes that are a note and a pointer at the same time</h2>
+<p>The sound player has a table of note periods at 0x7960 —ten bytes— and, right after it, a table of 34 track pointers at 0x796A. The two overlap by design: the eleventh and twelfth notes, periods 60 and 56, are the bytes <code>3C 38</code>, and those same two bytes are <b>entry 0 of the pointer table</b>, reading as the address 0x383C.</p>
+<p>Entry 0 is never asked for —sound numbers start at 1— so nothing is broken by it. It saves two bytes.</p>
+<h2 id="a-sound-that-is-one-byte-long">A sound that is one byte long</h2>
+<p>Sound 6 is asked for every time the bee leaves the screen and every time you leave a screen, and all it does is shut the effects channel up: it is the only way to stop the bee&#x27;s buzz, which loops on a 0xFE.</p>
+<p>Its track is the single byte 0xFF at <b>0x79DB</b> — which is not a track at all: it is the 0xFF that ends the fanfare&#x27;s channel A. Nine of the 34 entries in the table point at that one byte: sound 6, and the unused channels of every three-channel sound.</p>
+<h2 id="the-plank-carries-its-own-height">The plank carries its own height</h2>
+<p>The eighteen blocks of the water jet (0x5701) are nineteen bytes each: 6×3 tiles of drawing, and then one byte that is not drawn at all — the height at which the plank ends up, from 0x52 at the bottom to 0x32 at the top, two at a time.</p>
+<p>0x60B7 draws the block and returns that byte, and 0x604B stores the four of them in 0xE148-0xE14B. When the player lands, 0x650E compares his Y against those four numbers. The picture and the physics come out of the same nineteen bytes, so they cannot drift apart.</p>
+<h2 id="the-title-logo-is-revealed-one-column-at-a-time">The title logo is revealed one column at a time</h2>
+<p>The ATHLETIC LAND logo is not a picture that gets uploaded. It is 34 tiles, 0x40 to 0x61, unpacked once by the run-length decompressor, and then 0x47CB is called once per frame and each call places <b>one column</b>: two tiles, on rows 5 and 6, at column 8 plus however many columns have already gone in.</p>
+<p><img src="imagenes/logo.png" alt="The title logo, rebuilt from the cartridge"></p>
+<p>Seventeen calls draw the logo, and the counter keeps going to 52: the calls after the seventeenth paint the KONAMI 1984 underneath and then say there is nothing left.</p>
+<h2 id="what-was-left-over-inside-the-cartridge">What was left over inside the cartridge</h2>
+<p>Things that are there and go unused. None is a guess; each was looked for.</p>
+<ul><li><b>Six null entries</b> in the player&#x27;s state table (0x66C2). States 9 to 14 are <code>0000</code>, and jumping there would restart the machine. No instruction writes a 9 to 14 into 0xE138.</li><li><b>Five bytes of code nobody calls</b>, at 0x4523: it would put A into video chip register 7 —the border— and resend all eight registers. It sits immediately before the routine that does the same thing without touching the border, and is reached by nothing.</li><li><b>Six bytes</b> at 0x77F8, between the last tile pattern and the sound code.</li><li><b>962 bytes of 0xFF</b> from 0x7C3E to the end: the padding up to 16 KB, and 0xFF rather than 0x00.</li></ul>
+<footer><p><em>Athletic Land</em> was published by Konami in 1984 for the MSX; its catalogue number is RC-700. The cartridge signs itself twice, both times in plain tiles: the <b>KONAMI 1984</b> on the title screen and at the foot of the scoreboard, and the credits that only show up after stage 99 —<b>PROGRAM A.H Y.I</b>, <b>SOUND Y.O</b>, <b>CG R.S C.K</b>—. All rights in the game remain with their holders. This is preservation, study and documentation work.</p></footer></div>
