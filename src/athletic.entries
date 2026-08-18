@@ -1,0 +1,72 @@
+# Puntos de entrada de Athletic Land (Konami, RC-700, 1984). ROM de 16 KB en 0x4000.
+#
+# El unico punto de entrada que declara el cartucho: la BIOS lee la cabecera
+# "AB" y llama a INIT despues de inicializar la maquina. Todo lo demas tiene
+# que salir de seguir el flujo desde aqui, o de medirlo en el emulador.
+0x4077   # INIT, declarado en la cabecera del cartucho
+
+0x4038   # la rutina de interrupcion. INIT escribe `jp 0x4038` en el gancho
+         # H.KEYI (0xFD9A): `ld a,0C3h / ld (0FD9Ah),a / ld hl,4038h /
+         # ld (0FD9Bh),hl` en 0x408A-0x4094. La BIOS llama al gancho en cada
+         # interrupcion; y como INIT acaba en `jr $` (0x40A7), TODO el juego
+         # corre desde aqui.
+
+# --- El despachador de estados. 0x40A9 es el "call seguido de tabla" de Konami:
+# `add a,a / pop hl / call 402Ah (hl += a) / ld e,(hl) / inc hl / ld d,(hl) /
+# ex de,hl / jp (hl)`. En 0x4136-0x4146 el indice es (0xE000), que llega como
+# mucho a 0x13 (`cp 012h` justo antes), y la tabla va de 0x4149 hasta 0x4171,
+# donde empieza el primer destino: 20 palabras.
+0x4171   # estado 0 de la tabla de 0x4149
+0x4174   # estado 1 de la tabla de 0x4149
+0x4188   # estado 2 de la tabla de 0x4149
+0x419A   # estado 3 de la tabla de 0x4149
+0x41A5   # estado 4 de la tabla de 0x4149
+0x41B8   # estado 5 de la tabla de 0x4149
+0x41C0   # estado 6 de la tabla de 0x4149
+0x41D3   # estado 7 de la tabla de 0x4149
+0x41F2   # estado 8 de la tabla de 0x4149
+0x4265   # estado 9 de la tabla de 0x4149
+0x42AA   # estado 10 de la tabla de 0x4149
+0x42CE   # estado 11 de la tabla de 0x4149
+0x42EE   # estado 12 de la tabla de 0x4149
+0x4329   # estado 13 de la tabla de 0x4149
+0x4340   # estado 14 de la tabla de 0x4149
+0x435E   # estado 15 de la tabla de 0x4149
+0x43C0   # estados 16, 18 de la tabla de 0x4149
+0x43F9   # estado 17 de la tabla de 0x4149
+0x4408   # estado 19 de la tabla de 0x4149
+
+# --- Mas despachos con el mismo 0x40A9 (call + tabla de palabras detras).
+# El tamano de cada tabla es la distancia hasta su destino mas bajo, que es
+# donde vuelve a empezar el codigo.
+0x41FC   # tabla de 0x41F8 (despacho de 0x41F5), entrada 0
+0x421C   # tabla de 0x41F8 (despacho de 0x41F5), entrada 1
+0x5C87   # tabla de 0x5C7F (despacho de 0x5C7C), entrada 0
+0x5C9B   # tabla de 0x5C7F (despacho de 0x5C7C), entrada 1
+0x5CA7   # tabla de 0x5C7F (despacho de 0x5C7C), entrada 3
+0x5CAC   # tabla de 0x5C7F (despacho de 0x5C7C), entrada 2
+0x5E8D   # tabla de 0x5E85 (despacho de 0x5E82), entrada 0
+0x5E92   # tabla de 0x5E85 (despacho de 0x5E82), entrada 1
+0x5E97   # tabla de 0x5E85 (despacho de 0x5E82), entrada 2
+0x5E9C   # tabla de 0x5E85 (despacho de 0x5E82), entrada 3
+# (las entradas 9 a 14 de la tabla de 0x66C2 son 0x0000: estados sin usar; saltar ahi reiniciaria la maquina)
+0x66E4   # tabla de 0x66C2 (despacho de 0x66BF), entrada 1
+0x67E0   # tabla de 0x66C2 (despacho de 0x66BF), entrada 3
+0x6847   # tabla de 0x66C2 (despacho de 0x66BF), entrada 4
+0x6873   # tabla de 0x66C2 (despacho de 0x66BF), entrada 5
+0x6888   # tabla de 0x66C2 (despacho de 0x66BF), entrada 6
+0x689B   # tabla de 0x66C2 (despacho de 0x66BF), entrada 0
+0x6987   # tabla de 0x66C2 (despacho de 0x66BF), entrada 7
+0x69B3   # tabla de 0x66C2 (despacho de 0x66BF), entrada 8
+0x69D8   # tabla de 0x66C2 (despacho de 0x66BF), entrada 16
+0x6A05   # tabla de 0x66C2 (despacho de 0x66BF), entrada 15
+0x6D06   # tabla de 0x66C2 (despacho de 0x66BF), entrada 2
+
+# --- Parametros en linea. 0x5F65 empieza por `pop hl` y copia con ldir los SEIS
+# bytes que siguen al call a 0xE150 (tres palabras: dos punteros a listas de
+# rotulos y una direccion), y vuelve detras de ellos. Sin esta regla el trazador
+# se comia los parametros como codigo en los 19 sitios que la llaman.
+!skip 0x5F65 6
+
+# Codigo al que no llega nadie (buscado: ni call/jp/jr ni la palabra cruda):
+0x4523   # `ld (0E03Fh),a / jr 4535h`: entrada alternativa a la rutina de 0x4528 que nadie usa (sin llamadas)

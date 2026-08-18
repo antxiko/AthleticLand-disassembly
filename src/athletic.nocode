@@ -1,0 +1,10 @@
+# Zonas que el trazador NO debe leer como codigo. Las cinco tablas de palabras
+# del despachador 0x40A9 van justo DETRAS de su `call`, y un trazador que siga
+# de largo tras el call se las come como instrucciones (paso: cobertura falsa
+# al 100 % en las dos grandes). El tamano de cada una es la distancia hasta su
+# destino mas bajo, donde vuelve a empezar el codigo.
+0x4149 0x4170   tabla de 20 palabras del despachador de estados (call 0x40A9 en 0x4146)
+0x41F8 0x41FB   tabla de 2 palabras (call 0x40A9 en 0x41F5)
+0x5C7F 0x5C86   tabla de 4 palabras (call 0x40A9 en 0x5C7C)
+0x5E85 0x5E8C   tabla de 4 palabras (call 0x40A9 en 0x5E82)
+0x66C2 0x66E3   tabla de 17 palabras (call 0x40A9 en 0x66BF)
