@@ -2445,120 +2445,120 @@ L_5B48:
 	ld hl,05ad7h		;5b4a
 	ld de,0e11ch		;5b4d
 L_5B50:
-	ld bc,00003h		;5b50
+	ld bc,00003h		;5b50   ; Tres bytes por cara: Y, X y patron
 	ldir		;5b53
-	inc de			;5b55
+	inc de			;5b55   ; El cuarto, el color, se salta: es el que dice si la vida se ve, y lo pone PINTA_VIDAS
 	dec a			;5b56
 	jr nz,L_5B50		;5b57
-	call PINTA_VIDAS		;5b59
+	call PINTA_VIDAS		;5b59   ; Y ahi se decide cuales de las cuatro caras llevan color y cuales quedan a cero
 	ld a,(0e158h)		;5b5c   ; Arco de las bolas que ruedan: medio con el bit 1 de E158, alto con el bit 0, plano si no
-	ld b,a			;5b5f
-	ld hl,06ce3h		;5b60
+	ld b,a			;5b5f   ; B guarda E158 entero: el bit 1 se mira ahora y el 0 despues
+	ld hl,06ce3h		;5b60   ; Bit 1 puesto: el arco de 0x6CE3, que sube dieciseis puntos
 	and 002h		;5b63
 	jr nz,L_5B72		;5b65
 	ld a,b			;5b67
 	and 001h		;5b68
-	ld hl,063a5h		;5b6a
+	ld hl,063a5h		;5b6a   ; Solo el bit 0: el de 0x63A5, que sube cuarenta y ocho
 	jr nz,L_5B72		;5b6d
-	ld hl,063b7h		;5b6f
+	ld hl,063b7h		;5b6f   ; Ninguno de los dos: el de 0x63B7, que solo sube tres: la bola casi no despega
 L_5B72:
-	ld (0e160h),hl		;5b72
+	ld (0e160h),hl		;5b72   ; E160, por donde va la primera bola dentro de su arco
 	ld a,00eh		;5b75   ; La segunda bola arranca 14 bytes mas alla del arco
 	call HL_MAS_A		;5b77
-	ld (0e162h),hl		;5b7a
+	ld (0e162h),hl		;5b7a   ; E162: en las tres tablas el byte 14 es el penultimo delta, asi que la segunda bola entra por la punta del arco y no bota a la vez que la primera
 	ld hl,063c9h		;5b7d   ; El arco de salto para la bola que bota y los tres peces
 	ld (0e173h),hl		;5b80
-	ld (0e169h),hl		;5b83
+	ld (0e169h),hl		;5b83   ; E169, E16B y E16D: los tres peces arrancan todos al principio del mismo arco
 	ld (0e16bh),hl		;5b86
 	ld (0e16dh),hl		;5b89
-	jp COLOCA_JUGADOR		;5b8c
+	jp COLOCA_JUGADOR		;5b8c   ; Con los sprites ya puestos, el jugador entra por su lado
 FLAGS_DE_PANTALLA:		; E156 y E158 = la pareja de la tabla 0x5C32 para SCENE modulo 32, retocada por la fase y por el SCENE
 	ld a,(0e054h)		;5b8f
-	and 01fh		;5b92
-	ld hl,05c32h		;5b94
+	and 01fh		;5b92   ; Modulo 32: de la pantalla 32 en adelante se repiten las mismas
+	ld hl,05c32h		;5b94   ; La tabla de los obstaculos fijos
 	call HL_MAS_A		;5b97
-	ld b,(hl)			;5b9a
-	ld a,020h		;5b9b
+	ld b,(hl)			;5b9a   ; B, los fijos de esta pantalla
+	ld a,020h		;5b9b   ; Los moviles estan 32 bytes mas alla, con el mismo indice
 	call HL_MAS_A		;5b9d
-	ld c,(hl)			;5ba0
-	ld a,(0e059h)		;5ba1
+	ld c,(hl)			;5ba0   ; C, los moviles
+	ld a,(0e059h)		;5ba1   ; E059, el mismo numero de pantalla pero en BCD, que es el que se lee en el marcador
 	and 003h		;5ba4   ; SCENE acabado en 0, 4 u 8 (BCD): sin obstaculos fijos, y de los moviles solo la abeja
 	jr nz,L_5BAD		;5ba6
-	ld b,a			;5ba8
+	ld b,a			;5ba8   ; A vale 0: ni un obstaculo fijo
 	ld a,c			;5ba9
-	and 080h		;5baa
+	and 080h		;5baa   ; Y de los moviles solo queda en pie el bit 7, la abeja
 	ld c,a			;5bac
 L_5BAD:
-	ld a,(0e051h)		;5bad
+	ld a,(0e051h)		;5bad   ; La fase, tambien en BCD
 	cp 001h		;5bb0   ; Fase 1: sin aranas ni abeja
 	jr nz,L_5BB9		;5bb2
 	ld a,c			;5bb4
-	and 077h		;5bb5
+	and 077h		;5bb5   ; Fuera los bits 3 y 7 de los moviles
 	jr L_5BC4		;5bb7
 L_5BB9:
 	cp 004h		;5bb9   ; Fases 4 y siguientes...
-	jr nc,L_5BC7		;5bbb
+	jr nc,L_5BC7		;5bbb   ; De la fase 4 en adelante no se quita nada: se anade
 	cp 002h		;5bbd   ; Fase 2: como esta
 	jr z,L_5BD1		;5bbf
 	ld a,c			;5bc1   ; Fase 3: sin abeja
-	and 07fh		;5bc2
+	and 07fh		;5bc2   ; Fuera el bit 7
 L_5BC4:
 	ld c,a			;5bc4
 	jr L_5BD1		;5bc5
 L_5BC7:
 	bit 0,a		;5bc7   ; ...pares y con la pantalla vacia: al menos la abeja
-	jr nz,L_5BD1		;5bc9
+	jr nz,L_5BD1		;5bc9   ; Fase impar: lo que diga la tabla
 	ld a,c			;5bcb
-	or b			;5bcc
+	or b			;5bcc   ; Ni fijos ni moviles
 	jr nz,L_5BD1		;5bcd
-	ld c,080h		;5bcf
+	ld c,080h		;5bcf   ; Una pantalla vacia en fase par no se queda en nada: al menos la abeja
 L_5BD1:
-	ld hl,0e156h		;5bd1
+	ld hl,0e156h		;5bd1   ; E156, los fijos
 	ld (hl),b			;5bd4
-	inc hl			;5bd5
+	inc hl			;5bd5   ; E157 queda en medio y aqui se salta: lo escribe 0x5C79 con el cielo y no lo lee nadie en todo el cartucho
 	inc hl			;5bd6
-	ld (hl),c			;5bd7
+	ld (hl),c			;5bd7   ; E158, los moviles
 	ld a,(0e051h)		;5bd8   ; Fase 2: la abeja baja al primer nivel; en las demas al cuarto
 	cp 002h		;5bdb
-	ld a,003h		;5bdd
+	ld a,003h		;5bdd   ; 3 es el cuarto de los cuatro niveles de 0x64A4; solo vale para la primera salida, porque al esconderse se sortea otro (0x6452)
 	jr nz,L_5BE2		;5bdf
 	xor a			;5be1
 L_5BE2:
 	ld (0e179h),a		;5be2
 	ld a,c			;5be5   ; Con bolas: 50 puntos por pasar cada una
-	and 007h		;5be6
+	and 007h		;5be6   ; Bits 0-2: si esta pantalla lleva bolas rodando
 	jr z,L_5BF2		;5be8
-	ld hl,0e19ch		;5bea
-	ld (hl),005h		;5bed
+	ld hl,0e19ch		;5bea   ; E19C y E19D, lo que valen las dos
+	ld (hl),005h		;5bed   ; 0x05 son 50 puntos: COBRA_PUNTOS parte el byte en dos cifras BCD y les pega un cero (0x6652)
 	inc hl			;5bef
 	ld (hl),005h		;5bf0
 L_5BF2:
 	ld a,(0e054h)		;5bf2   ; Bit 1 del SCENE, sin liana ni trampolines ni aranas: decorado con cielo (5C72)
 	bit 1,a		;5bf5
 	jr z,L_5C0C		;5bf7
-	ld a,(0e156h)		;5bf9
+	ld a,(0e156h)		;5bf9   ; Bits 1 y 2: liana o trampolines, algo de lo que colgarse o sobre lo que botar
 	and 006h		;5bfc
 	jr nz,L_5C0C		;5bfe
-	ld a,(0e158h)		;5c00
+	ld a,(0e158h)		;5c00   ; Bit 3 de los moviles: aranas
 	and 008h		;5c03
 	jr nz,L_5C0C		;5c05
-	call DECORADO_CON_CIELO		;5c07
+	call DECORADO_CON_CIELO		;5c07   ; Con la pantalla despejada se ve el fondo del cielo
 	jr L_5C0F		;5c0a
 L_5C0C:
 	call DECORADO_NORMAL		;5c0c   ; El decorado normal: suelo y los cerros de arriba (5E71)
 L_5C0F:
 	call PINTA_TIERRA		;5c0f   ; La tierra, el rotulo del CHILD PARK si toca, el estanque, los postes, los trampolines, los charcos, la hoguera y la piedra
-	call ROTULO_CHILD_PARK		;5c12
+	call ROTULO_CHILD_PARK		;5c12   ; En las pantallas acabadas en 0 esta llamada pone E156 y E158 a cero: por eso va delante de los seis pintores, que asi se vuelven todos por donde han venido
 	call PINTA_ESTANQUE		;5c15
-	call PINTA_CHARCOS		;5c18
+	call PINTA_CHARCOS		;5c18   ; Los charcos antes que los trampolines: en la unica pantalla que lleva las dos cosas, los trampolines les pisan las X
 	call PINTA_POSTES		;5c1b
 	call PINTA_TRAMPOLINES		;5c1e
-	call PREPARA_HOGUERA		;5c21
-	call PINTA_PIEDRA		;5c24
+	call PREPARA_HOGUERA		;5c21   ; La hoguera y la piedra se reparten el sprite 31; ninguna de las 32 pantallas lleva las dos (los bits 5 y 6 nunca coinciden en 0x5C32)
+	call PINTA_PIEDRA		;5c24   ; Y si alguna llevara las dos, la piedra pisaria a la hoguera: va la ultima
 	ld b,004h		;5c27   ; 200 puntos por cada obstaculo de la lista E18C
-	ld hl,0e18ch		;5c29
+	ld hl,0e18ch		;5c29   ; E18C-E18F, lo que se cobra por colgarse de una liana
 L_5C2C:
-	ld (hl),020h		;5c2c
+	ld (hl),020h		;5c2c   ; 0x20 son 200 puntos, y se ponen los cuatro aunque la pantalla no tenga lianas
 	inc hl			;5c2e
 	djnz L_5C2C		;5c2f
 	ret			;5c31
@@ -2588,11 +2588,11 @@ DATA_moviles_por_pantalla:
 
 DECORADO_CON_CIELO:		; Cuatro cielos segun los bits 2-3 del SCENE (E157), por el despachador
 	ld a,(0e054h)		;5c72
-	and 00ch		;5c75
-	rrca			;5c77
+	and 00ch		;5c75   ; Bits 2-3 del numero de pantalla
+	rrca			;5c77   ; A 0..3: el indice de la tabla de cielos
 	rrca			;5c78
 	ld (0e157h),a		;5c79
-	call DESPACHA		;5c7c
+	call DESPACHA		;5c7c   ; Los cuatro destinos van pegados detras del CALL
 
 ; ----------------------------------------------------------------------
 ; DATOS tabla_de_cielos: Los cuatro decorados con cielo: 0x5C87, 0x5C9B,
@@ -2610,13 +2610,13 @@ DATA_tabla_de_cielos:
 
 
 CIELO_0:		; Cielo azul con cerros amarillos; el seto salvo con surtidores o postes (entonces solo la hierba)
-	call CIELO_AZUL_AMARILLO		;5c87
+	call CIELO_AZUL_AMARILLO		;5c87   ; Primero el fondo de las filas 3-8...
 CIELO_SETO:		; El seto de la fila 10 salvo con surtidores o postes (bits 3-4 de E156)
 	ld a,(0e156h)		;5c8a
-	and 018h		;5c8d
-	jr nz,$+41		;5c8f
+	and 018h		;5c8d   ; Bits 3-4 de los fijos: surtidores o postes
+	jr nz,$+41		;5c8f   ; Con ellos el seto taparia la fila 10, por donde salen: solo la hierba (0x5CB8)
 PINTA_SETO:		; El seto verde de las filas 10-12 y la hierba
-	call MOTOR_DE_ROTULOS		;5c91
+	call MOTOR_DE_ROTULOS		;5c91   ; ...y encima el seto y la hierba
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5C91: Lista 0x6DDF, tiles 0x6F27, VRAM 0x3940 (fila 10)
@@ -2633,20 +2633,20 @@ DATA_parametros_de_5C91:
 CIELO_1:		; Cielo azul con cerros verdes y el seto; con surtidores o postes se pinta en cambio el cielo 0 sin seto (0x5C87)
 	ld a,(0e156h)		;5c9b
 	and 018h		;5c9e
-	jr nz,$-25		;5ca0
+	jr nz,$-25		;5ca0   ; Con surtidores o postes se cambia de cielo entero: el 0, que ya vuelve a mirar estos mismos bits
 	call CIELO_AZUL_VERDE		;5ca2
-	jr $-20		;5ca5
+	jr $-20		;5ca5   ; Y al seto directamente, sin repetir la comprobacion
 CIELO_3:		; Cielo rojo con cerros blancos; el seto salvo con surtidores o postes
 	call CIELO_ROJO_BLANCO		;5ca7
-	jr $-32		;5caa
+	jr $-32		;5caa   ; Al seto de 0x5C8A, que si la hace: el cielo 3 se pinta tambien desde el 2
 CIELO_2:		; Cielo rojo con cerros verdes y el seto; con surtidores o postes se pinta en cambio el cielo 3 sin seto (0x5CA7)
 	ld a,(0e156h)		;5cac
 	and 018h		;5caf
-	jr nz,CIELO_3		;5cb1
+	jr nz,CIELO_3		;5cb1   ; El cielo 2 y el 3 llevan el mismo rojo; lo que cambia es el color de los cerros
 	call CIELO_ROJO_VERDE		;5cb3
 	jr $-37		;5cb6
 PINTA_HIERBA:		; Solo la hierba de la fila 15
-	call MOTOR_DE_ROTULOS		;5cb8
+	call MOTOR_DE_ROTULOS		;5cb8   ; Arranca en la misma VRAM que el seto (0x3940), pero su lista solo llega a la fila de la hierba
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CB8: Lista 0x6DDB, tiles 0x6F24, VRAM 0x3940
@@ -2661,7 +2661,7 @@ DATA_parametros_de_5CB8:
 
 	ret			;5cc1
 CIELO_AZUL_AMARILLO:		; Filas 3-8: franjas azules y cerros amarillos
-	call MOTOR_DE_ROTULOS		;5cc2
+	call MOTOR_DE_ROTULOS		;5cc2   ; Los cuatro cielos comparten la lista 0x6DD4; lo unico que cambia son los tiles
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CC2: Lista 0x6DD4, tiles 0x6E90, VRAM 0x3860 (fila 3)
@@ -2676,7 +2676,7 @@ DATA_parametros_de_5CC2:
 
 	ret			;5ccb
 CIELO_AZUL_VERDE:		; Filas 3-8: franjas azules y cerros verdes
-	call MOTOR_DE_ROTULOS		;5ccc
+	call MOTOR_DE_ROTULOS		;5ccc   ; Otro bloque de tiles 0x25 bytes mas alla: mismo azul, cerros verdes
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CCC: Lista 0x6DD4, tiles 0x6EB5, VRAM 0x3860
@@ -2691,7 +2691,7 @@ DATA_parametros_de_5CCC:
 
 	ret			;5cd5
 CIELO_ROJO_BLANCO:		; Filas 3-8: franjas rojas y cerros blancos
-	call MOTOR_DE_ROTULOS		;5cd6
+	call MOTOR_DE_ROTULOS		;5cd6   ; Otros 0x25: rojo con cerros blancos
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CD6: Lista 0x6DD4, tiles 0x6EDA, VRAM 0x3860
@@ -2706,7 +2706,7 @@ DATA_parametros_de_5CD6:
 
 	ret			;5cdf
 CIELO_ROJO_VERDE:		; Filas 3-8: franjas rojas y cerros verdes
-	call MOTOR_DE_ROTULOS		;5ce0
+	call MOTOR_DE_ROTULOS		;5ce0   ; Y otros 0x25: rojo con cerros verdes
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CE0: Lista 0x6DD4, tiles 0x6EFF, VRAM 0x3860
@@ -2721,7 +2721,7 @@ DATA_parametros_de_5CE0:
 
 	ret			;5ce9
 PINTA_TIERRA:		; La tierra de las filas 16-19
-	call MOTOR_DE_ROTULOS		;5cea
+	call MOTOR_DE_ROTULOS		;5cea   ; La tierra se pinta siempre, lleve la pantalla lo que lleve
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CEA: Lista 0x6DE4, tiles 0x6F8B, VRAM 0x3A00 (fila 16)
@@ -2737,9 +2737,9 @@ DATA_parametros_de_5CEA:
 	ret			;5cf3
 PINTA_ESTANQUE:		; Bit 7 de E156: el estanque de las filas 16-18, columnas 9-22
 	ld a,(0e156h)		;5cf4
-	and 080h		;5cf7
-	ret z			;5cf9
-	call MOTOR_DE_ROTULOS		;5cfa
+	and 080h		;5cf7   ; Bit 7
+	ret z			;5cf9   ; Sin estanque la fila 16 se queda con la tierra que acaba de pintar 0x5CEA
+	call MOTOR_DE_ROTULOS		;5cfa   ; Y el estanque encima, en las mismas filas
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5CFA: Lista 0x6DE8, tiles 0x6F8E, VRAM 0x3A09
@@ -2755,31 +2755,31 @@ DATA_parametros_de_5CFA:
 	ret			;5d03
 PINTA_TRAMPOLINES:		; Bit 2: cuatro trampolines de 2x2 en la fila 16 (columnas 9, 13, 17, 21), sus X en E1A5 (100 puntos cada uno) y la fruta (sprite 19) arriba en una X al azar
 	ld a,(0e156h)		;5d04
-	and 004h		;5d07
+	and 004h		;5d07   ; Bit 2
 	ret z			;5d09
-	ld de,03a09h		;5d0a
+	ld de,03a09h		;5d0a   ; Fila 16, columna 9: el primero
 L_5D0D:
 	ld hl,06fabh		;5d0d   ; El trampolin (tiles 0xD1-0xD4) cada cuatro columnas
-	ld bc,00202h		;5d10
-	push de			;5d13
+	ld bc,00202h		;5d10   ; Dos filas por dos columnas
+	push de			;5d13   ; PINTA_BLOQUE deja DE al final de la ultima fila, asi que la de partida se guarda
 	call PINTA_BLOQUE		;5d14
 	pop de			;5d17
-	ld a,004h		;5d18
+	ld a,004h		;5d18   ; Cuatro columnas hasta el siguiente
 	call DE_MAS_A		;5d1a
 	ld a,e			;5d1d
-	cp 019h		;5d1e
+	cp 019h		;5d1e   ; Columna 25: ya estan los cuatro
 	jr nz,L_5D0D		;5d20
 	ld hl,05fcdh		;5d22   ; X de los trampolines: 0x48, 0x68, 0x88, 0xA8 (misma tabla desde el otro lado)
-	ld a,(0e058h)		;5d25
+	ld a,(0e058h)		;5d25   ; Por donde ha entrado el jugador
 	cp 008h		;5d28
 	jr z,L_5D2F		;5d2a
-	ld hl,05fd0h		;5d2c
+	ld hl,05fd0h		;5d2c   ; La otra mitad de la tabla; para los trampolines las dos dan el mismo 0x48
 L_5D2F:
-	ld de,0e1a5h		;5d2f
+	ld de,0e1a5h		;5d2f   ; E1A5-E1A8, las X con que se cobran
 	ld b,004h		;5d32
-	call RELLENA_CADA_32		;5d34
+	call RELLENA_CADA_32		;5d34   ; 0x48, 0x68, 0x88 y 0xA8: justo las cuatro columnas que se acaban de pintar
 	ld b,004h		;5d37
-	ld hl,0e195h		;5d39
+	ld hl,0e195h		;5d39   ; E195-E198, los puntos aun sin cobrar
 L_5D3C:
 	ld (hl),010h		;5d3c   ; 100 puntos cada uno
 	inc hl			;5d3e
@@ -2787,48 +2787,48 @@ L_5D3C:
 	ld a,020h		;5d41   ; 200 por la fruta
 	ld (0e19eh),a		;5d43
 	ld hl,0e0fch		;5d46   ; La fruta: sprite 19 en Y=0x20, X = 0x48 + 32 al azar, patron 0xFC, amarilla
-	ld (hl),a			;5d49
+	ld (hl),a			;5d49   ; El 0x20 vale de paso como Y: la fruta se queda arriba del todo
 	inc hl			;5d4a
-	ld a,r		;5d4b
-	and 003h		;5d4d
-	rla			;5d4f
+	ld a,r		;5d4b   ; El registro de refresco hace de azar
+	and 003h		;5d4d   ; Uno de cuatro
+	rla			;5d4f   ; Por 32...
 	rla			;5d50
 	rla			;5d51
 	rla			;5d52
 	rla			;5d53
-	add a,048h		;5d54
+	add a,048h		;5d54   ; ...y desde 0x48: la fruta cae en la vertical de uno de los cuatro trampolines
 	ld (hl),a			;5d56
 	inc hl			;5d57
-	ld (hl),0fch		;5d58
+	ld (hl),0fch		;5d58   ; Patron 0xFC
 	inc hl			;5d5a
-	ld (hl),00ah		;5d5b
+	ld (hl),00ah		;5d5b   ; Color 0x0A, amarillo claro
 	ret			;5d5d
 PINTA_CHARCOS:		; Bit 0: cinco charcos de dos tiles en la fila 17 (columnas 7, 11, 15, 19, 23), sus X en E1A5 (100 puntos cada uno)
 	ld a,(0e156h)		;5d5e
-	and 001h		;5d61
+	and 001h		;5d61   ; Bit 0
 	ret z			;5d63
-	ld de,03a27h		;5d64
-	ld b,005h		;5d67
+	ld de,03a27h		;5d64   ; Fila 17, columna 7: una fila por debajo de los trampolines
+	ld b,005h		;5d67   ; Cinco
 L_5D69:
 	push bc			;5d69
 	ld hl,06fafh		;5d6a   ; Los dos tiles del charco (0xCF 0xD0)
-	ld bc,00002h		;5d6d
+	ld bc,00002h		;5d6d   ; Dos tiles seguidos, sin PINTA_BLOQUE: el charco es una sola fila
 	call COPIA_A_VRAM		;5d70
-	ld a,004h		;5d73
+	ld a,004h		;5d73   ; Cuatro columnas hasta el siguiente
 	call DE_MAS_A		;5d75
 	pop bc			;5d78
 	djnz L_5D69		;5d79
-	ld hl,05fceh		;5d7b
+	ld hl,05fceh		;5d7b   ; La tercera X de la tabla: 0x40 entrando por la izquierda
 	ld a,(0e058h)		;5d7e
 	cp 008h		;5d81
 	jr z,L_5D88		;5d83
-	ld hl,05fd1h		;5d85
+	ld hl,05fd1h		;5d85   ; 0x30 entrando por la derecha, porque yendo hacia la izquierda se cobra al bajar de la X y no al pasarla
 L_5D88:
-	ld de,0e1a5h		;5d88
+	ld de,0e1a5h		;5d88   ; Los mismos cinco huecos que los trampolines: la pantalla 27 es la unica que lleva las dos cosas (0x5C32 vale 0x05) y estas X pisan las que dejo 0x5D2F
 	ld b,005h		;5d8b
 	call RELLENA_CADA_32		;5d8d
 	ld b,005h		;5d90
-	ld hl,0e195h		;5d92
+	ld hl,0e195h		;5d92   ; Y los mismos cinco contadores de puntos
 L_5D95:
 	ld (hl),010h		;5d95
 	inc hl			;5d97
@@ -2836,94 +2836,94 @@ L_5D95:
 	ret			;5d9a
 PINTA_POSTES:		; Bit 4: los cinco postes del estanque, sus X en E1A0 (100 puntos), dos bajos de 3x2 en la fila 15 y tres altos de 4x2 en la 14
 	ld a,(0e156h)		;5d9b
-	and 010h		;5d9e
+	and 010h		;5d9e   ; Bit 4
 	ret z			;5da0
 	ld hl,05fcch		;5da1   ; X de los postes: 0x30, 0x50, 0x70, 0x90, 0xB0
-	ld a,(0e058h)		;5da4
+	ld a,(0e058h)		;5da4   ; Por donde ha entrado
 	cp 008h		;5da7
 	jr z,L_5DAE		;5da9
-	ld hl,05fcfh		;5dab
+	ld hl,05fcfh		;5dab   ; Entrando por la derecha las X van 0x18 por delante de los postes: al caer encima de uno se esta como mucho a 15 puntos de su X (0x6726), y el cp de COBRA_AL_PASAR la exige estrictamente menor
 L_5DAE:
-	ld de,0e1a0h		;5dae
+	ld de,0e1a0h		;5dae   ; E1A0-E1A4
 	ld b,005h		;5db1
-	call RELLENA_CADA_32		;5db3
+	call RELLENA_CADA_32		;5db3   ; Cinco X separadas 32, las mismas que la tabla de 0x6746
 	ld b,005h		;5db6
-	ld hl,0e190h		;5db8
+	ld hl,0e190h		;5db8   ; E190-E194
 L_5DBB:
-	ld (hl),010h		;5dbb
+	ld (hl),010h		;5dbb   ; 0x10 son 100 puntos por poste
 	inc hl			;5dbd
 	djnz L_5DBB		;5dbe
 	ld hl,06fb1h		;5dc0   ; Poste verde de la izquierda, en la fila 15
-	ld de,039e7h		;5dc3
+	ld de,039e7h		;5dc3   ; Fila 15, columna 7
 	call PINTA_BLOQUE_3x2		;5dc6
 	ld hl,06fb7h		;5dc9   ; Los tres altos: azul, verde y rojo, en la fila 14
-	ld de,039cbh		;5dcc
+	ld de,039cbh		;5dcc   ; Fila 14, columna 11
 	call PINTA_BLOQUE_4x2		;5dcf
-	ld hl,06fbfh		;5dd2
+	ld hl,06fbfh		;5dd2   ; El verde, columna 15
 	ld de,039cfh		;5dd5
 	call PINTA_BLOQUE_4x2		;5dd8
-	ld hl,06fc7h		;5ddb
+	ld hl,06fc7h		;5ddb   ; El rojo, columna 19
 	ld de,039d3h		;5dde
 	call PINTA_BLOQUE_4x2		;5de1
 	ld hl,06fb1h		;5de4   ; Poste verde de la derecha
-	ld de,039f7h		;5de7
+	ld de,039f7h		;5de7   ; Fila 15, columna 23: el mismo dibujo que el de la izquierda
 PINTA_BLOQUE_3x2:		; Bloque de 3 filas por 2 columnas
-	ld bc,00302h		;5dea
+	ld bc,00302h		;5dea   ; El quinto poste cae aqui por su propio pie: ni CALL ni RET
 	jp PINTA_BLOQUE		;5ded
 PINTA_BLOQUE_4x2:		; Bloque de 4 filas por 2 columnas
 	ld bc,00402h		;5df0
 	jp PINTA_BLOQUE		;5df3
 PREPARA_HOGUERA:		; Bit 6: la hoguera al fondo de la pantalla (X=0xDC o 0x14, segun por donde se entre) y su caja invisible, el sprite 31 en Y=0x7C
 	ld a,(0e156h)		;5df6
-	and 040h		;5df9
+	and 040h		;5df9   ; Bit 6
 	ret z			;5dfb
-	ld hl,0e1aah		;5dfc
+	ld hl,0e1aah		;5dfc   ; E1AA, la X con la que se cobra la hoguera
 	ld a,(0e058h)		;5dff
-	cp 008h		;5e02
+	cp 008h		;5e02   ; 8 = ha entrado por la izquierda
 	ld (hl),0dch		;5e04   ; Entrando por la izquierda esta a la derecha, X=0xDC
-	ld a,0d0h		;5e06
+	ld a,0d0h		;5e06   ; Y la caja de choque doce puntos a la izquierda de esa X
 	jr z,L_5E0E		;5e08
-	ld (hl),014h		;5e0a
+	ld (hl),014h		;5e0a   ; Entrando por la derecha, la hoguera al otro lado
 	ld a,020h		;5e0c
 L_5E0E:
 	ld hl,0e12ch		;5e0e   ; Sprite 31: Y=0x7C, X=0xD0 o 0x20, color 0x10 (invisible): la caja de choque
-	ld (hl),07ch		;5e11
+	ld (hl),07ch		;5e11   ; Y=0x7C son los pies del jugador, que anda con Y=0x6C
 	inc hl			;5e13
 	ld (hl),a			;5e14
 	inc hl			;5e15
-	inc hl			;5e16
+	inc hl			;5e16   ; El patron ni se toca: con color 0 el sprite no se ve, solo choca
 	ld a,010h		;5e17   ; 100 puntos por saltarla
-	ld (hl),a			;5e19
-	ld (0e19ah),a		;5e1a
+	ld (hl),a			;5e19   ; El color del sprite 31
+	ld (0e19ah),a		;5e1a   ; El mismo 0x10 sirve dos veces: color del sprite y cien puntos en E19A
 	ret			;5e1d
 PINTA_PIEDRA:		; Bit 5: la piedra con matojo (tiles 0x19-0x1B) en la fila 17, columna 18 o 10, y su caja invisible (sprite 31, Y=0x80)
 	ld a,(0e156h)		;5e1e
-	and 020h		;5e21
+	and 020h		;5e21   ; Bit 5
 	ret z			;5e23
-	ld hl,0e1abh		;5e24
+	ld hl,0e1abh		;5e24   ; E1AB, la X con la que se cobra la piedra
 	ld a,(0e058h)		;5e27
 	cp 008h		;5e2a
 	ld (hl),0a0h		;5e2c   ; X de la piedra para los puntos: 0xA0 o 0x48
-	ld de,03a32h		;5e2e
-	ld a,094h		;5e31
+	ld de,03a32h		;5e2e   ; Fila 17, columna 18
+	ld a,094h		;5e31   ; Y la caja invisible en X=0x94, cuatro a la derecha del primer tile
 	jr z,L_5E3C		;5e33
-	ld de,03a2ah		;5e35
+	ld de,03a2ah		;5e35   ; Entrando por la derecha, fila 17 columna 10
 	ld (hl),048h		;5e38
-	ld a,054h		;5e3a
+	ld a,054h		;5e3a   ; Y la caja en X=0x54
 L_5E3C:
-	ld hl,05e54h		;5e3c
-	push af			;5e3f
+	ld hl,05e54h		;5e3c   ; Los tres tiles y el 0xFF que los cierra
+	push af			;5e3f   ; PINTA_LISTA_TILES se lleva A por delante
 	call PINTA_LISTA_TILES		;5e40
 	pop af			;5e43
-	ld hl,0e12ch		;5e44
-	ld (hl),080h		;5e47
+	ld hl,0e12ch		;5e44   ; El sprite 31, el mismo de la hoguera
+	ld (hl),080h		;5e47   ; Y=0x80, cuatro mas abajo que la caja de la hoguera: la piedra es mas baja
 	inc hl			;5e49
 	ld (hl),a			;5e4a
 	inc hl			;5e4b
 	inc hl			;5e4c
-	ld a,010h		;5e4d
-	ld (hl),a			;5e4f
-	ld (0e19bh),a		;5e50
+	ld a,010h		;5e4d   ; Otra vez el 0x10 doble: color invisible y cien puntos
+	ld (hl),a			;5e4f   ; El color del 31, otra vez invisible
+	ld (0e19bh),a		;5e50   ; E19B, el ultimo de los siete que repasa 0x6C67
 	ret			;5e53
 
 ; ----------------------------------------------------------------------
@@ -2941,14 +2941,14 @@ DATA_tiles_de_la_piedra:
 
 ROTULO_CHILD_PARK:		; En el SCENE 0 y en los acabados en 0: sin obstaculos ninguno (E156 = E158 = 0) y el rotulo CHILD PARK en ladrillo rojo
 	ld a,(0e059h)		;5e58
-	or a			;5e5b
+	or a			;5e5b   ; La pantalla 0, la de salida
 	jr z,L_5E61		;5e5c
 	and 00fh		;5e5e   ; SCENE 0, 10, 20...: la entrada y las metas
 	ret nz			;5e60
 L_5E61:
-	ld (0e156h),a		;5e61
-	ld (0e158h),a		;5e64
-	call MOTOR_DE_ROTULOS		;5e67
+	ld (0e156h),a		;5e61   ; A vale 0: se borran los obstaculos que acaba de elegir 0x5B8F
+	ld (0e158h),a		;5e64   ; Y los moviles: en la entrada y en las metas no hay nada que esquivar
+	call MOTOR_DE_ROTULOS		;5e67   ; El cartel, fila 9 columna 9
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5E67: Lista 0x6DF8, tiles 0x6FCF, VRAM 0x3929 (fila 9,
@@ -2963,8 +2963,8 @@ DATA_parametros_de_5E67:
 
 
 	ret			;5e70
-DECORADO_NORMAL:		; La hierba de la fila 15 y los cerros de arriba: cuatro combinaciones por los bits 1-2 del SCENE
-	call MOTOR_DE_ROTULOS		;5e71
+DECORADO_NORMAL:		; La hierba de la fila 15 y los cerros de arriba: cuatro combinaciones por el bit 0 y el bit 2 del SCENE
+	call MOTOR_DE_ROTULOS		;5e71   ; La hierba de la fila 15 va siempre, haya cerro o meseta
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5E71: Lista 0x6DE2, tiles 0x6F8A, VRAM 0x39E0 (fila 15)
@@ -2980,7 +2980,7 @@ DATA_parametros_de_5E71:
 	ld a,(0e054h)		;5e7a
 	rra			;5e7d   ; Bits 1-2 del SCENE
 	rra			;5e7e
-	rlca			;5e7f
+	rlca			;5e7f   ; El rlca devuelve al bit 0 el bit que se habia ido al acarreo: el indice acaba siendo el bit 0 mas dos veces el bit 2 del numero de pantalla, no los bits 1-2
 	and 003h		;5e80
 	call DESPACHA		;5e82
 
@@ -3001,18 +3001,18 @@ DATA_tabla_de_cerros:
 
 CERROS_0:		; Cerro con pendiente a la izquierda y cerro con pendiente a la derecha
 	call CERRO_IZQUIERDA		;5e8d
-	jr $+57		;5e90
+	jr $+57		;5e90   ; Y a la derecha, otro cerro (0x5EC9)
 CERROS_1:		; Cerro con pendiente a la izquierda y meseta a la derecha
 	call CERRO_IZQUIERDA		;5e92
-	jr $+108		;5e95
+	jr $+108		;5e95   ; A la derecha, meseta (0x5F01)
 CERROS_2:		; Meseta a la izquierda y meseta a la derecha
 	call MESETA_IZQUIERDA		;5e97
-	jr $+103		;5e9a
+	jr $+103		;5e9a   ; Las dos mesetas
 CERROS_3:		; Meseta a la izquierda y cerro con pendiente a la derecha
 	call MESETA_IZQUIERDA		;5e9c
-	jr $+42		;5e9f
+	jr $+42		;5e9f   ; Meseta a la izquierda y cerro a la derecha
 CERRO_IZQUIERDA:		; Filas 2-4, columnas 0-15: el cerro con pendiente, y sus dos bloques de tiles
-	call MOTOR_DE_ROTULOS		;5ea1
+	call MOTOR_DE_ROTULOS		;5ea1   ; El perfil del cerro, filas 2-4 y columnas 0-15
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5EA1: Lista 0x6E2A, tiles 0x6FF9, VRAM 0x3840 (fila 2)
@@ -3025,14 +3025,14 @@ DATA_parametros_de_5EA1:
 ; ======================================================================
 
 
-	ld hl,0700dh		;5eaa
+	ld hl,0700dh		;5eaa   ; Encima del cerro, la copa del arbol: 3 filas por 6 en la fila 5
 	ld de,038a0h		;5ead
 	call PINTA_BLOQUE_3x6		;5eb0
-	ld hl,0701fh		;5eb3
+	ld hl,0701fh		;5eb3   ; Y su tronco, 8 por 4 desde la fila 8 columna 1
 	ld de,03901h		;5eb6
 PINTA_BLOQUE_8x4:		; Bloque de 8 filas por 4 columnas
 	ld bc,00804h		;5eb9
-	jr L_5EC6		;5ebc
+	jr L_5EC6		;5ebc   ; Los tres tamanos acaban en el mismo salto
 PINTA_BLOQUE_3x6:		; Bloque de 3 filas por 6 columnas
 	ld bc,00306h		;5ebe
 	jr L_5EC6		;5ec1
@@ -3041,7 +3041,7 @@ PINTA_BLOQUE_3x8:		; Bloque de 3 filas por 8 columnas
 L_5EC6:
 	jp PINTA_BLOQUE		;5ec6
 CERRO_DERECHA:		; Filas 2-4, columnas 16-31: el cerro con pendiente
-	call MOTOR_DE_ROTULOS		;5ec9
+	call MOTOR_DE_ROTULOS		;5ec9   ; Su gemelo de la derecha, con lista y tiles propios
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5EC9: Lista 0x6E44, tiles 0x703F, VRAM 0x3850 (fila 2,
@@ -3055,14 +3055,14 @@ DATA_parametros_de_5EC9:
 ; ======================================================================
 
 
-	ld hl,0700dh		;5ed2
+	ld hl,0700dh		;5ed2   ; El mismo arbol del cerro, ahora en la columna 26
 	ld de,038bah		;5ed5
 	call PINTA_BLOQUE_3x6		;5ed8
 	ld hl,0701fh		;5edb
-	ld de,0391bh		;5ede
-	jr $-40		;5ee1
+	ld de,0391bh		;5ede   ; Y su tronco, columna 27
+	jr $-40		;5ee1   ; Vuelve al 8x4 del cerro de la izquierda
 MESETA_IZQUIERDA:		; Filas 2-5, columnas 0-15: la meseta
-	call MOTOR_DE_ROTULOS		;5ee3
+	call MOTOR_DE_ROTULOS		;5ee3   ; La meseta llega una fila mas abajo que el cerro
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5EE3: Lista 0x6E5E, tiles 0x7054, VRAM 0x3840
@@ -3075,16 +3075,16 @@ DATA_parametros_de_5EE3:
 ; ======================================================================
 
 
-	ld hl,07064h		;5eec
+	ld hl,07064h		;5eec   ; La meseta lleva otro arbol: copa de 3 por 8 en la fila 5
 	ld de,038a0h		;5eef
 	call PINTA_BLOQUE_3x8		;5ef2
-	ld hl,0707ch		;5ef5
+	ld hl,0707ch		;5ef5   ; Y tronco de 8 por 3 desde la fila 8, columna 3
 	ld de,03903h		;5ef8
 PINTA_BLOQUE_8x3:		; Bloque de 8 filas por 3 columnas
 	ld bc,00803h		;5efb
 	jp PINTA_BLOQUE		;5efe
 MESETA_DERECHA:		; Filas 2-5, columnas 16-31: la meseta
-	call MOTOR_DE_ROTULOS		;5f01
+	call MOTOR_DE_ROTULOS		;5f01   ; Y la meseta de la derecha
 
 ; ----------------------------------------------------------------------
 ; DATOS parametros_de_5F01: Lista 0x6E77, tiles 0x7094, VRAM 0x3850
@@ -3097,20 +3097,20 @@ DATA_parametros_de_5F01:
 ; ======================================================================
 
 
-	ld hl,07064h		;5f0a
+	ld hl,07064h		;5f0a   ; El arbol de meseta, columna 24
 	ld de,038b8h		;5f0d
 	call PINTA_BLOQUE_3x8		;5f10
-	ld hl,0707ch		;5f13
+	ld hl,0707ch		;5f13   ; Su tronco en la columna 27...
 	ld de,0391bh		;5f16
-	jr $-30		;5f19
+	jr $-30		;5f19   ; ...con el 8x3 de la meseta de la izquierda
 COLOCA_JUGADOR:		; Sprites 0-3 fuera, colores de los cuatro sprites del jugador, Y=0x6C, X y mirada segun por donde entra (E058), y sus sprites
-	ld hl,05f61h		;5f1b
-	call CUATRO_SPRITES_IGUALES		;5f1e
-	ld hl,0e0c3h		;5f21
+	ld hl,05f61h		;5f1b   ; Y=0x90, patron 0 y color 0: los sprites 0-3 no pintan nada
+	call CUATRO_SPRITES_IGUALES		;5f1e   ; Los sprites 0-3, los cuatro iguales
+	ld hl,0e0c3h		;5f21   ; E0C3 es el color del sprite 4: el jugador son los sprites 4-7 uno encima de otro
 	ld de,05f4ch		;5f24   ; Rojo, amarillo, magenta y azul: los cuatro sprites del jugador
-	ld b,004h		;5f27
+	ld b,004h		;5f27   ; Los cuatro colores
 L_5F29:
-	ld a,(de)			;5f29
+	ld a,(de)			;5f29   ; Solo el color, saltando de cuatro en cuatro; Y, X y patron los pone PINTA_JUGADOR
 	ld (hl),a			;5f2a
 	inc de			;5f2b
 	inc hl			;5f2c
@@ -3119,19 +3119,19 @@ L_5F29:
 	inc hl			;5f2f
 	djnz L_5F29		;5f30
 	ld hl,0e134h		;5f32   ; Y del suelo
-	ld (hl),06ch		;5f35
+	ld (hl),06ch		;5f35   ; Y=0x6C, de pie en el suelo
 	inc hl			;5f37
 	ld a,(0e058h)		;5f38   ; X de entrada: 8 por la izquierda, 0xE8 por la derecha
-	ld (hl),a			;5f3b
+	ld (hl),a			;5f3b   ; E135, la X
 	cp 008h		;5f3c
 	ld a,008h		;5f3e   ; Mira hacia donde va: 8 derecha, 4 izquierda
 	jr z,L_5F43		;5f40
-	rrca			;5f42
+	rrca			;5f42   ; El 8 pasa a 4 con un solo rrca: mirando a la izquierda
 L_5F43:
 	inc hl			;5f43
-	ld (hl),000h		;5f44
-	ld (0e139h),a		;5f46
-	jp PINTA_JUGADOR		;5f49
+	ld (hl),000h		;5f44   ; E136, la pose: de pie
+	ld (0e139h),a		;5f46   ; E139, hacia donde mira
+	jp PINTA_JUGADOR		;5f49   ; Y a pintarlo ya, sin esperar al fotograma siguiente
 
 ; ----------------------------------------------------------------------
 ; DATOS colores_del_jugador: Los colores de los sprites 4-7: 8 rojo, 0xB
@@ -3147,11 +3147,11 @@ DATA_colores_del_jugador:
 
 CUATRO_SPRITES_IGUALES:		; Copia los 4 bytes de HL a los sprites 0-3
 	ld de,0e0b0h		;5f50
-	ld bc,00404h		;5f53
+	ld bc,00404h		;5f53   ; B = 4 sprites, C = 4 bytes cada uno
 L_5F56:
 	push hl			;5f56
 	push bc			;5f57
-	ld b,000h		;5f58
+	ld b,000h		;5f58   ; B a cero para que BC sean 4 en el ldir; el djnz recupera el suyo del push
 	ldir		;5f5a
 	pop bc			;5f5c
 	pop hl			;5f5d
@@ -3184,62 +3184,62 @@ DATA_sprite_fuera:
 ; ----------------------------------------------------------------------
 MOTOR_DE_ROTULOS:		; Pinta la lista de tiles que describen los 6 bytes que siguen al CALL
 	pop hl			;5f65   ; HL = los seis bytes de parametros
-	ld de,0e150h		;5f66
-	ld bc,00006h		;5f69
+	ld de,0e150h		;5f66   ; E150 la lista, E152 los tiles, E154 la VRAM
+	ld bc,00006h		;5f69   ; Los seis: dos punteros y una direccion de VRAM
 	ldir		;5f6c
 	push hl			;5f6e   ; Se vuelve detras de los parametros
 ROTULO_ENTRADA:		; Siguiente entrada de la lista
-	ld hl,(0e150h)		;5f6f
-	ld a,(hl)			;5f72
+	ld hl,(0e150h)		;5f6f   ; Por donde va la lista
+	ld a,(hl)			;5f72   ; El byte de la entrada
 	cp 080h		;5f73   ; 0x80: direccion nueva
 	jr nz,L_5F84		;5f75
-	inc hl			;5f77
+	inc hl			;5f77   ; Detras del 0x80 viene la VRAM nueva
 	ld e,(hl)			;5f78
 	inc hl			;5f79
 	ld d,(hl)			;5f7a
 	inc hl			;5f7b
 	ld (0e150h),hl		;5f7c
 	ld (0e154h),de		;5f7f
-	ld a,(hl)			;5f83
+	ld a,(hl)			;5f83   ; Y se sigue con la entrada que venga despues
 L_5F84:
 	or a			;5f84
 	ret z			;5f85   ; 0: fin
-	ld b,a			;5f86
-	and 07fh		;5f87
+	ld b,a			;5f86   ; B se queda el byte con su bit 7
+	and 07fh		;5f87   ; C, la cuenta sin el
 	ld c,a			;5f89
-	xor a			;5f8a
+	xor a			;5f8a   ; El xor va delante del bit para no pisar el flag que decide relleno o copia
 	bit 7,b		;5f8b   ; Bit 7: relleno con un solo tile
 	ld b,a			;5f8d
-	ld hl,(0e152h)		;5f8e
-	ld de,(0e154h)		;5f91
-	jr z,L_5F9F		;5f95
+	ld hl,(0e152h)		;5f8e   ; HL los tiles...
+	ld de,(0e154h)		;5f91   ; ...y DE la VRAM
+	jr z,L_5F9F		;5f95   ; El flag que se mira es el del bit 7, no el del xor de dos instrucciones antes
 	ld a,(hl)			;5f97
 	call RELLENA_VRAM		;5f98   ; Relleno de C posiciones con el tile (HL)
-	ld a,001h		;5f9b
+	ld a,001h		;5f9b   ; El relleno gasta un solo tile de la lista
 	jr ROTULO_AVANZA		;5f9d
 L_5F9F:
 	push bc			;5f9f
 	call COPIA_A_VRAM		;5fa0   ; Copia de C tiles
 	pop bc			;5fa3
-	ld a,c			;5fa4
+	ld a,c			;5fa4   ; La copia gasta C
 ROTULO_AVANZA:		; Avanza los tiles (1 o C) y la VRAM (C)
 	ld hl,(0e152h)		;5fa5
-	call HL_MAS_A		;5fa8
+	call HL_MAS_A		;5fa8   ; El puntero de tiles avanza 1 o C
 	ld (0e152h),hl		;5fab
 	ld hl,(0e150h)		;5fae
 	ld a,(hl)			;5fb1
-	and 07fh		;5fb2
-	inc hl			;5fb4
+	and 07fh		;5fb2   ; La VRAM avanza siempre C, lleve el byte el bit 7 o no
+	inc hl			;5fb4   ; Y la lista, una entrada
 	ld (0e150h),hl		;5fb5
 	ld hl,(0e154h)		;5fb8
 	call HL_MAS_A		;5fbb
 	ld (0e154h),hl		;5fbe
-	jp ROTULO_ENTRADA		;5fc1
+	jp ROTULO_ENTRADA		;5fc1   ; Y a por la entrada siguiente hasta dar con el 0
 RELLENA_CADA_32:		; Escribe B veces (HL) en DE sumando 32 cada vez: las X de una fila de obstaculos
 	ld a,(hl)			;5fc4
 L_5FC5:
 	ld (de),a			;5fc5
-	add a,020h		;5fc6
+	add a,020h		;5fc6   ; 32 puntos de X entre obstaculo y obstaculo: cuatro columnas de tiles
 	inc de			;5fc8
 	djnz L_5FC5		;5fc9
 	ret			;5fcb
@@ -3268,28 +3268,28 @@ DATA_x_de_obstaculos:
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 CONTADORES:		; Los contadores de fases y las esperas de los moviles
-	ld de,0e17bh		;5fd2
+	ld de,0e17bh		;5fd2   ; DE se queda en la espera de la abeja; HL va recorriendo los contadores
 	ld hl,0e130h		;5fd5
-	inc (hl)			;5fd8
+	inc (hl)			;5fd8   ; E130 sube un fotograma
 	ld a,(hl)			;5fd9
 	and 007h		;5fda   ; Cada 8 fotogramas: E131 y la espera de la abeja
-	inc hl			;5fdc
+	inc hl			;5fdc   ; HL a E131
 	jr nz,L_5FE3		;5fdd
-	inc (hl)			;5fdf
-	ex de,hl			;5fe0
+	inc (hl)			;5fdf   ; E131, la fase de una liana y de un surtidor
+	ex de,hl			;5fe0   ; Y al mismo ritmo E17B, lo que le queda a la abeja para salir
 	inc (hl)			;5fe1
 	ex de,hl			;5fe2
 L_5FE3:
-	inc hl			;5fe3
+	inc hl			;5fe3   ; E132, el divisor por 10
 	inc (hl)			;5fe4
 	ld a,(hl)			;5fe5
 	cp 00ah		;5fe6   ; Cada 10: E133 y las tres fases de los aranas
 	jr nz,L_5FF5		;5fe8
 	xor a			;5fea
-	ld (hl),a			;5feb
+	ld (hl),a			;5feb   ; A cero, que es un divisor y no un contador libre como E130
 	inc hl			;5fec
-	inc (hl)			;5fed
-	ex de,hl			;5fee
+	inc (hl)			;5fed   ; E133, la fase de la otra liana y del otro surtidor
+	ex de,hl			;5fee   ; DE seguia en E17B: E17C, E17D y E17E son las tres aranas
 	inc hl			;5fef
 	inc (hl)			;5ff0
 	inc hl			;5ff1
@@ -3297,7 +3297,7 @@ L_5FE3:
 	inc hl			;5ff3
 	inc (hl)			;5ff4
 L_5FF5:
-	ld hl,0e14ch		;5ff5
+	ld hl,0e14ch		;5ff5   ; E14C, el divisor por 9
 	inc (hl)			;5ff8
 	ld a,(hl)			;5ff9
 	cp 009h		;5ffa   ; Cada 9: E14D
@@ -3305,12 +3305,12 @@ L_5FF5:
 	xor a			;5ffe
 	ld (hl),a			;5fff
 	inc hl			;6000
-	inc (hl)			;6001
+	inc (hl)			;6001   ; E14D
 	jr L_6005		;6002
 L_6004:
-	inc hl			;6004
+	inc hl			;6004   ; Sin dar la vuelta HL tiene que llegar igual a E14E
 L_6005:
-	inc hl			;6005
+	inc hl			;6005   ; E14E, el divisor por 11
 	inc (hl)			;6006
 	ld a,(hl)			;6007
 	cp 00bh		;6008   ; Cada 11: E14F
@@ -3318,19 +3318,19 @@ L_6005:
 	xor a			;600c
 	ld (hl),a			;600d
 	inc hl			;600e
-	inc (hl)			;600f
+	inc (hl)			;600f   ; E14F
 L_6010:
 	ld hl,0e176h		;6010   ; Las tres esperas de los peces
-	inc (hl)			;6013
+	inc (hl)			;6013   ; E176, E177 y E178 suben cada fotograma: los peces no llevan divisor
 	inc hl			;6014
 	inc (hl)			;6015
 	inc hl			;6016
 	inc (hl)			;6017
 	ld b,004h		;6018   ; Los cuatro rotulos de puntos, hacia cero
-	ld hl,0e181h		;601a
+	ld hl,0e181h		;601a   ; E181-E184, lo que le queda en pantalla a cada rotulo de puntos
 L_601D:
 	ld a,(hl)			;601d
-	or a			;601e
+	or a			;601e   ; Se para en cero: sin esto daria la vuelta a 0xFF
 	jr z,L_6022		;601f
 	dec (hl)			;6021
 L_6022:
@@ -3339,31 +3339,31 @@ L_6022:
 	ret			;6025
 LIANAS:		; Bit 1 de E156: pinta las dos lianas en su fase (E131 y E133) y guarda donde esta el cabo de cada una (E140-E143)
 	ld a,(0e156h)		;6026
-	and 002h		;6029
+	and 002h		;6029   ; Bit 1
 	ret z			;602b
 	ld de,038cah		;602c   ; Liana 1 en la fila 6, columna 10
-	ld a,(0e131h)		;602f
-	call PINTA_LIANA		;6032
-	ld hl,0e140h		;6035
+	ld a,(0e131h)		;602f   ; Su fase es la del divisor de 8
+	call PINTA_LIANA		;6032   ; Devuelve en B, C y D los tres bytes que van detras del 0xFF del dibujo
+	ld hl,0e140h		;6035   ; E140 la Y del cabo y E141 una de sus dos X
 	ld (hl),b			;6038
 	inc hl			;6039
 	ld (hl),c			;603a
 	ld de,038d6h		;603b   ; Liana 2 en la columna 22, doce columnas mas alla
-	ld a,(0e133h)		;603e
+	ld a,(0e133h)		;603e   ; La otra va con el de 10: asi las dos lianas nunca se balancean a la vez
 	call PINTA_LIANA		;6041
-	ld hl,0e142h		;6044
+	ld hl,0e142h		;6044   ; E142 la Y, y E143 la OTRA X que devuelve el dibujo (D, no C)
 	ld (hl),b			;6047
 	inc hl			;6048
 	ld (hl),d			;6049
 	ret			;604a
 SURTIDORES:		; Bit 3: pinta las cuatro tablas de los surtidores en su fase (fila 10, columnas 8, 12, 17, 21) y guarda la altura de cada una en E148-E14B; y el borde de agua de la fila 16
 	ld a,(0e156h)		;604b
-	and 008h		;604e
+	and 008h		;604e   ; Bit 3
 	ret z			;6050
 	ld de,03948h		;6051   ; Fila 10, columna 8: la tabla de mas a la izquierda
 	ld a,(0e131h)		;6054   ; Su fase es la misma que la de una de las lianas
 	call PINTA_SURTIDOR		;6057
-	ld (0e148h),a		;605a
+	ld (0e148h),a		;605a   ; E148, la altura de la tabla de la izquierda: por ahi se anda por encima
 	ld de,03951h		;605d   ; Fila 10, columna 17
 	ld a,(0e14dh)		;6060
 	call PINTA_SURTIDOR		;6063
@@ -3379,11 +3379,11 @@ SURTIDORES:		; Bit 3: pinta las cuatro tablas de los surtidores en su fase (fila
 	ld hl,060a4h		;6081   ; El agua de la fila 16, columnas 8-24
 	call PINTA_LISTA		;6084
 	ld a,0cbh		;6087   ; Las bases de los cuatro chorros en la fila 17 (columnas 9, 13, 18 y 22)
-	ld de,03a29h		;6089
+	ld de,03a29h		;6089   ; Fila 17, columna 9
 	call VPOKE		;608c
-	ld de,03a36h		;608f
+	ld de,03a36h		;608f   ; Y columna 22: los dos de fuera llevan el mismo tile 0xCB
 	call VPOKE		;6092
-	ld a,0cch		;6095
+	ld a,0cch		;6095   ; Los dos de dentro, el 0xCC
 	ld de,03a2dh		;6097
 	call VPOKE		;609a
 	ld de,03a32h		;609d
@@ -3404,35 +3404,35 @@ DATA_agua_surtidores:
 
 
 PINTA_SURTIDOR:		; Bloque de 6x3 de la fase A (0..31: sube hasta la 17 y baja) en la VRAM DE; devuelve en A la altura de la tabla
-	and 01fh		;60b7
+	and 01fh		;60b7   ; La fase, 0..31
 	cp 012h		;60b9   ; De la 18 a la 31 se repite hacia atras: la tabla sube y baja
 	jr c,L_60C2		;60bb
-	neg		;60bd
+	neg		;60bd   ; 33 menos A: de la 18 a la 31 se recorren los dibujos 15 a 2, y la tabla parece bajar
 	inc a			;60bf
 	and 01fh		;60c0
 L_60C2:
 	ld hl,056ddh		;60c2   ; Tabla de 18 bloques
-	rlca			;60c5
+	rlca			;60c5   ; Por dos: la tabla es de palabras
 	call HL_MAS_A		;60c6
-	push de			;60c9
+	push de			;60c9   ; La VRAM se guarda mientras se saca el puntero al bloque
 	ld e,(hl)			;60ca
 	inc hl			;60cb
 	ld d,(hl)			;60cc
-	ex de,hl			;60cd
+	ex de,hl			;60cd   ; El bloque a HL y la VRAM otra vez a DE
 	pop de			;60ce
-	ld bc,00603h		;60cf
-	call PINTA_BLOQUE		;60d2
+	ld bc,00603h		;60cf   ; Seis filas por tres columnas, 18 bytes
+	call PINTA_BLOQUE		;60d2   ; Y HL queda justo detras de los 18
 	ld a,(hl)			;60d5   ; El byte 19 de cada bloque: la altura de la tabla
 	ret			;60d6
 PINTA_LIANA:		; La liana en la fase A (0..15: 9 dibujos, del 9 en adelante hacia atras) desde DE; devuelve B=Y y C, D = las dos X del cabo
-	and 00fh		;60d7
+	and 00fh		;60d7   ; La fase, 0..15
 	cp 009h		;60d9   ; Del 9 al 15 se repite hacia atras: la liana va y vuelve
 	jr c,L_60E1		;60db
-	neg		;60dd
+	neg		;60dd   ; 16 menos A: del 9 al 15 se repiten los dibujos 7 a 1
 	and 00fh		;60df
 L_60E1:
 	ld hl,0555bh		;60e1   ; Tabla de 9 dibujos
-	rlca			;60e4
+	rlca			;60e4   ; Por dos: palabras otra vez
 	call HL_MAS_A		;60e5
 	push de			;60e8
 	ld e,(hl)			;60e9
@@ -3441,20 +3441,20 @@ L_60E1:
 	ex de,hl			;60ec
 	pop de			;60ed
 PINTA_DIBUJO:		; Un dibujo de tiles: 0xFF fin, 0xFE/0xFD/0xFC bajan una fila (una columna a la izquierda, la misma, una a la derecha), lo demas tiles
-	push de			;60ee
+	push de			;60ee   ; La DE del principio de la fila, que hara falta al bajar
 PINTA_DIBUJO_BUCLE:		; Siguiente byte
 	ld a,(hl)			;60ef
 	inc hl			;60f0
-	ld b,a			;60f1
+	ld b,a			;60f1   ; Los cuatro codigos se prueban sumando uno cada vez
 	inc b			;60f2
 	jr z,PINTA_DIBUJO_FIN		;60f3   ; 0xFF: fin, y detras vienen Y, X1 y X2 del cabo
 	inc b			;60f5
 	jr nz,L_6100		;60f6
 	ld a,01fh		;60f8   ; 0xFE: fila siguiente, una columna a la izquierda
 L_60FA:
-	pop de			;60fa
-	call DE_MAS_A		;60fb
-	jr PINTA_DIBUJO		;60fe
+	pop de			;60fa   ; Vuelve al principio de la fila...
+	call DE_MAS_A		;60fb   ; ...y baja 32, mas o menos una columna
+	jr PINTA_DIBUJO		;60fe   ; Otra vez por el push: la fila nueva pasa a ser el origen
 L_6100:
 	inc b			;6100
 	jr nz,L_6107		;6101
@@ -3466,12 +3466,12 @@ L_6107:
 	ld a,021h		;610a   ; 0xFC: fila siguiente, una a la derecha
 	jr L_60FA		;610c
 L_610E:
-	call VPOKE		;610e
-	inc de			;6111
+	call VPOKE		;610e   ; Lo que no sea codigo es un tile
+	inc de			;6111   ; Y a la columna de al lado
 	jr PINTA_DIBUJO_BUCLE		;6112
 PINTA_DIBUJO_FIN:		; B, C, D = los tres bytes de detras del 0xFF
 	pop de			;6114
-	ld b,(hl)			;6115
+	ld b,(hl)			;6115   ; Y, X1 y X2: donde ha quedado el cabo de la liana
 	inc hl			;6116
 	ld c,(hl)			;6117
 	inc hl			;6118
@@ -3484,78 +3484,78 @@ PINTA_DIBUJO_FIN:		; B, C, D = los tres bytes de detras del 0xFF
 ; otra (sprite 15) cada 32 o 64 fotogramas. Ruedan siempre hacia la
 ; izquierda a un punto por fotograma, dando botes con el arco que eligio
 ; 5B5C (alto 0x63A5, casi plano 0x63B7 o medio 0x6CE3). Al acabar el arco
-; vuelven a Y=0x7E (el suelo) con el sonido 8. 500 puntos por pasarlas.
+; vuelven a Y=0x7E (el suelo) con el sonido 8. 50 puntos por pasarlas.
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 BOLAS_QUE_RUEDAN:		; Bits 0-2 de E159: mueve la bola (y la segunda si toca)
 	ld a,(0e159h)		;611b
-	and 007h		;611e
+	and 007h		;611e   ; Bits 0-2 de E159, la copia de los moviles que solo miran las bolas
 	ret z			;6120
-	ld a,(0e164h)		;6121
+	ld a,(0e164h)		;6121   ; E164, por que mitad del arco va
 	ld b,a			;6124
-	ld de,(0e160h)		;6125
-	ld hl,0e0e8h		;6129
-	ld c,001h		;612c
+	ld de,(0e160h)		;6125   ; E160, en que paso
+	ld hl,0e0e8h		;6129   ; E0E8 es el sprite 14
+	ld c,001h		;612c   ; Bit 0 de C y nada mas: mueve tambien la X, y sin el bit 7 siempre hacia la izquierda, entre por donde entre el jugador
 	call PASO_DE_ARCO		;612e   ; Un paso por el arco: Y y X-1
-	ld (0e160h),hl		;6131
+	ld (0e160h),hl		;6131   ; Por donde ha quedado, para el fotograma que viene
 	ld (0e164h),a		;6134
-	ld a,(0e0e9h)		;6137
+	ld a,(0e0e9h)		;6137   ; E1AC, la X con la que se cobra
 	ld (0e1ach),a		;613a
 	cp 0ffh		;613d   ; Aun sin X: aparece
 	jr nz,L_6146		;613f
-	ld a,005h		;6141
+	ld a,005h		;6141   ; Vuelve a valer 50: cada pasada de la bola se cobra otra vez
 	ld (0e19ch),a		;6143
 L_6146:
-	bit 0,b		;6146
+	bit 0,b		;6146   ; El bit 0 de B llega a 1 al acabarse el arco
 	jr z,L_6150		;6148
-	ld hl,0e0e8h		;614a
+	ld hl,0e0e8h		;614a   ; Otra vez el sprite 14
 	call BOLA_ARRANCA		;614d
 L_6150:
 	ld a,(0e051h)		;6150   ; La segunda bola solo de la fase 3 en adelante
 	cp 003h		;6153
 	ret c			;6155
-	ld hl,0e187h		;6156
+	ld hl,0e187h		;6156   ; E187, los fotogramas que lleva la pantalla
 	inc (hl)			;6159
 	ld b,040h		;615a   ; Espera 64 fotogramas antes de arrancar (32 si la fase no tiene el bit 2: 3, 8-11...); luego siempre
-	bit 2,a		;615c
+	bit 2,a		;615c   ; A sigue siendo la fase
 	jr nz,L_6162		;615e
-	ld b,020h		;6160
+	ld b,020h		;6160   ; 32 fotogramas
 L_6162:
-	ld a,(hl)			;6162
+	ld a,(hl)			;6162   ; E188 a 1 el fotograma justo; a partir de ahi la segunda bola ya no vuelve a esperar
 	inc hl			;6163
 	cp b			;6164
 	jr nz,L_6169		;6165
 	ld (hl),001h		;6167
 L_6169:
-	ld a,(hl)			;6169
+	ld a,(hl)			;6169   ; Sin ese 1 no hay segunda bola
 	and 001h		;616a
 	ret z			;616c
-	ld a,(0e165h)		;616d
+	ld a,(0e165h)		;616d   ; E165 y E162, el sentido y el paso de la segunda
 	ld b,a			;6170
 	ld de,(0e162h)		;6171
-	ld hl,0e0ech		;6175
+	ld hl,0e0ech		;6175   ; E0EC es el sprite 15
 	ld c,001h		;6178
 	call PASO_DE_ARCO		;617a
 	ld (0e162h),hl		;617d
 	ld (0e165h),a		;6180
-	ld a,(0e0edh)		;6183
+	ld a,(0e0edh)		;6183   ; E1AD, su X de cobro
 	ld (0e1adh),a		;6186
 	cp 0ffh		;6189
 	jr nz,L_6192		;618b
-	ld a,005h		;618d
+	ld a,005h		;618d   ; E19D, sus otros 50
 	ld (0e19dh),a		;618f
 L_6192:
-	bit 0,b		;6192
+	bit 0,b		;6192   ; Y aqui se cae en BOLA_ARRANCA sin llamarla
 	ret z			;6194
 	ld hl,0e0ech		;6195
 BOLA_ARRANCA:		; Y=0x7E, patron 0xC4 (la bola grande), rojo, sonido 8
-	ld (hl),07eh		;6198
-	inc hl			;619a
+	ld (hl),07eh		;6198   ; Y=0x7E, rodando por el suelo
+	inc hl			;619a   ; La X no se toca: la bola sigue por donde iba
 	inc hl			;619b
-	ld (hl),0c4h		;619c
+	ld (hl),0c4h		;619c   ; Patron 0xC4
 	inc hl			;619e
-	ld (hl),008h		;619f
-	ld a,008h		;61a1
+	ld (hl),008h		;619f   ; Color 8, rojo
+	ld a,008h		;61a1   ; Sonido 8 cada vez que la bola vuelve al suelo
 	jp SONIDO		;61a3
 
 ; ----------------------------------------------------------------------
@@ -3570,34 +3570,34 @@ BOLA_ARRANCA:		; Y=0x7E, patron 0xC4 (la bola grande), rojo, sonido 8
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 ARCO_X_DERECHA:		; X + 1..3 (bits 1-2 de C)
-	bit 7,c		;61a6
+	bit 7,c		;61a6   ; Sin el bit 7 de C, a la izquierda pase lo que pase
 	jr z,ARCO_X_IZQUIERDA		;61a8
-	bit 1,c		;61aa
+	bit 1,c		;61aa   ; Sin el bit 1, un solo punto
 	jr z,L_61B4		;61ac
-	bit 2,c		;61ae
+	bit 2,c		;61ae   ; Con el bit 2, tres
 	jr z,L_61B3		;61b0
-	inc (hl)			;61b2
+	inc (hl)			;61b2   ; Tres
 L_61B3:
-	inc (hl)			;61b3
+	inc (hl)			;61b3   ; Dos
 L_61B4:
-	inc (hl)			;61b4
+	inc (hl)			;61b4   ; Uno, siempre
 	jr ARCO_AVANZA		;61b5
 PASO_DE_ARCO:		; (HL) += o -= (DE) segun B; opcionalmente X; avanza DE; A = sentido nuevo, B = 1 al terminar
-	bit 0,b		;61b7
-	ld a,(de)			;61b9
+	bit 0,b		;61b7   ; El sentido: a 0 se resta y se sube, a 1 se suma y se baja
+	ld a,(de)			;61b9   ; El delta de este paso; DE apunta al que toca, no al siguiente
 	jr nz,L_61BE		;61ba
 	neg		;61bc   ; Sentido 0: resta (sube)
 L_61BE:
-	add a,(hl)			;61be
+	add a,(hl)			;61be   ; La Y, mas o menos el delta
 	ld (hl),a			;61bf
 	bit 0,c		;61c0   ; Bit 0 de C: mover tambien la X
 	jr z,ARCO_AVANZA		;61c2
-	inc hl			;61c4
+	inc hl			;61c4   ; Ahora (HL) es la X
 	ld a,(0e058h)		;61c5
 	cp 008h		;61c8   ; Con el bit 7 de C, hacia el lado por el que se entro
 	jr nz,ARCO_X_DERECHA		;61ca
 ARCO_X_IZQUIERDA:		; X - 1..3
-	bit 1,c		;61cc
+	bit 1,c		;61cc   ; Lo mismo restando
 	jr z,L_61D6		;61ce
 	bit 2,c		;61d0
 	jr z,L_61D5		;61d2
@@ -3607,30 +3607,30 @@ L_61D5:
 L_61D6:
 	dec (hl)			;61d6
 ARCO_AVANZA:		; Puntero adelante o atras; en 0xFF da la vuelta; en 0xFE devuelve B=1
-	ex de,hl			;61d7
+	ex de,hl			;61d7   ; Y ahora HL es el puntero del arco
 	bit 0,b		;61d8
 	jr nz,L_61DF		;61da
-	inc hl			;61dc
+	inc hl			;61dc   ; Subiendo se avanza...
 	jr L_61E0		;61dd
 L_61DF:
-	dec hl			;61df
+	dec hl			;61df   ; ...y bajando se vuelve
 L_61E0:
-	ld a,(hl)			;61e0
+	ld a,(hl)			;61e0   ; 0xFF cierra la tabla por arriba
 	inc a			;61e1
 	jr nz,ARCO_MARCA_FE		;61e2
 	dec hl			;61e4   ; 0xFF: dos atras y a bajar
-	dec hl			;61e5
+	dec hl			;61e5   ; Dos atras y no una: el delta de la cima ya se ha usado y no se repite al bajar
 	inc a			;61e6
 ARCO_SIGUE:		; B = 0: sigue
-	ld b,000h		;61e7
+	ld b,000h		;61e7   ; B a 0: aun queda arco
 	ret			;61e9
 ARCO_MARCA_FE:		; 0xFE: se acabo el arco (B=1) y el sentido vuelve a 0
-	inc a			;61ea
-	ld a,b			;61eb
+	inc a			;61ea   ; Y un 0xFE la cierra por abajo; como las tablas van pegadas, el 0xFE de una es el byte de detras del 0xFF de la anterior
+	ld a,b			;61eb   ; Sin llegar al 0xFE el sentido no cambia
 	jr nz,ARCO_SIGUE		;61ec
-	inc hl			;61ee
-	xor a			;61ef
-	ld b,001h		;61f0
+	inc hl			;61ee   ; El puntero se deja en el primer delta, listo para el salto siguiente
+	xor a			;61ef   ; Sentido 0: el arco que venga vuelve a subir
+	ld b,001h		;61f0   ; B a 1: quien llamo se entera de que el salto se ha acabado
 	ret			;61f2
 
 ; ----------------------------------------------------------------------

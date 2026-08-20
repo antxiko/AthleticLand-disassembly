@@ -52,7 +52,7 @@ out as what they are.
 | bytes of data | 8,936 |
 | bytes unexplained | **0** |
 | named labels | 296 |
-| anchored comments | 566 |
+| anchored comments | 840 |
 | data ranges with an explanation | 166 |
 
 ## A few things that turned up
