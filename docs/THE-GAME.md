@@ -98,11 +98,15 @@ CLEAR with the credits.
 
 ## The moving obstacles do not start at once
 
-They start **twenty-four steps in**. The frame routine (0x586A) watches the
-step counter 0xE13B and, exactly when it reaches 24, copies 0xE158 into 0xE159,
-which is the byte the balls, fish, spiders, bee and bouncing ball actually
-look at. Walk into a screen and nothing chases you for the first two dozen
-steps.
+The rolling balls start **twenty-four steps in**. The frame routine (0x586A)
+watches the step counter 0xE13B and, exactly when it reaches 24, copies 0xE158
+into 0xE159.
+
+And that needs a correction, because this page had it wrong: **only the rolling
+balls read 0xE159** (0x611B), along with the routine that collects them
+(0x6AF4). The fish (0x61F3), the bouncing ball (0x62DC), the spiders (0x6326),
+the bee (0x6426) and the log (0x64A8) read **0xE158** directly and are out from
+the very first frame. The two-dozen-step truce is with the balls only.
 
 From state 7 upwards the player is dying, and then not one of the eleven
 obstacle routines is called (0x587A): the screen freezes and only the player
@@ -121,8 +125,10 @@ nibbles —0x05, 0x10, 0x20—:
 | 100 | each post, each trampoline, each puddle, the campfire, the rock, the bee |
 | 200 | the fruit, each water-jet plank, the floating log |
 
-The score is six BCD digits and stops dead at **999999** (0x4669), and so does
-the high score. A new life is given at 10000 and then every 20000 (0x4677);
+The score is six BCD digits, and what stops dead at **999999** is the **high
+score**: on overflow, 0x4669 puts three 0x99 bytes into 0xE040-0xE042 with two
+overlapping 16-bit writes. The players’ own scores (0xE043 and 0xE046) are not
+capped: the `daa` wraps round and they carry on from zero. A new life is given at 10000 and then every 20000 (0x4677);
 once past the last threshold there are no more. Finishing a stage is worth a
 **BONUS SCORE 2000** printed on row 12 (0x4299).
 

@@ -908,13 +908,13 @@ COPIA_A_VRAM:		; BC bytes de HL a la VRAM DE
 	res 6,d		;4553
 COPIA_A_VRAM_BUCLE:		; El bucle de salida, con la direccion ya puesta
 	ld a,(hl)			;4555
-	out (098h),a		;4556
+	out (098h),a		;4556   ; El puerto 0x98 va solo: el VDP adelanta la direccion en cada byte
 	inc hl			;4558
 	dec bc			;4559
 	ld a,b			;455a
 	or c			;455b
 	jr nz,COPIA_A_VRAM_BUCLE		;455c
-	ei			;455e
+	ei			;455e   ; El di solo protegia poner la direccion
 	ret			;455f
 RELLENA_VRAM:		; BC bytes de A en la VRAM DE
 	di			;4560
@@ -932,9 +932,9 @@ L_4569:
 	ei			;4571
 	ret			;4572
 COPIA_VRAM_A_VRAM:		; BC bytes de la VRAM DE a la VRAM HL, byte a byte
-	call VPEEK		;4573
+	call VPEEK		;4573   ; Un byte de la VRAM DE...
 	ex de,hl			;4576
-	call VPOKE		;4577
+	call VPOKE		;4577   ; ...a la VRAM HL; VPEEK y VPOKE mandan la direccion cada vez
 	ex de,hl			;457a
 	inc hl			;457b
 	inc de			;457c
@@ -1039,7 +1039,7 @@ PINTA_LISTA_TILES:		; El bucle de tiles con DE ya puesto
 	inc de			;4607
 	jr PINTA_LISTA_TILES		;4608
 INTERCAMBIA:		; Cambia B bytes entre (HL) y (DE)
-	ld c,(hl)			;460a
+	ld c,(hl)			;460a   ; Un byte de cada lado por vuelta, con C de apoyo
 	ld a,(de)			;460b
 	ld (hl),a			;460c
 	ld a,c			;460d
@@ -1049,13 +1049,13 @@ INTERCAMBIA:		; Cambia B bytes entre (HL) y (DE)
 	djnz INTERCAMBIA		;4611
 	ret			;4613
 PUERTO_DEL_JOYSTICK:		; Registro 15 del PSG: joystick 1 para el jugador 1, joystick 2 para el 2 (bit 7 de E002)
-	ld a,00fh		;4614
+	ld a,00fh		;4614   ; Registro 15 del PSG: el que elige que puerto de mando se lee
 	out (0a0h),a		;4616
-	ld a,08fh		;4618
+	ld a,08fh		;4618   ; 0x8F: los dos puertos como entrada y el joystick 1 conectado
 	ld hl,0e002h		;461a
 	bit 7,(hl)		;461d
 	jr z,L_4623		;461f
-	set 6,a		;4621
+	set 6,a		;4621   ; Bit 6: pasa al joystick 2
 L_4623:
 	out (0a1h),a		;4623
 	ret			;4625
@@ -1081,26 +1081,26 @@ SUMA_PUNTOS:		; Suma DE (BCD) a los puntos del jugador que juega; en la demo no;
 	jr nc,L_4654		;4650
 	ld l,046h		;4652
 L_4654:
-	ld a,(hl)			;4654
+	ld a,(hl)			;4654   ; Byte bajo, con daa detras: los puntos estan en BCD
 	add a,e			;4655
 	daa			;4656
 	ld (hl),a			;4657
 	ld e,a			;4658
-	inc l			;4659
+	inc l			;4659   ; inc l y no inc hl: los tres bytes no se salen de la pagina
 	ld a,(hl)			;465a
 	adc a,d			;465b
 	daa			;465c
 	ld (hl),a			;465d
 	ld d,a			;465e
 	jr nc,L_4676		;465f
-	inc hl			;4661
+	inc hl			;4661   ; El tercer byte solo si hubo acarreo
 	ld a,(hl)			;4662
 	adc a,000h		;4663
 	daa			;4665
 	ld (hl),a			;4666
 	jr nc,VIDA_EXTRA		;4667
 	ld bc,09999h		;4669   ; Se pasa de 999999: record a 999999
-	ld (0e040h),bc		;466c
+	ld (0e040h),bc		;466c   ; Dos escrituras de 16 bits solapadas dejan los tres bytes del record a 0x99
 	ld (0e041h),bc		;4670
 	jr PINTA_RECORD		;4674
 L_4676:
@@ -1124,13 +1124,13 @@ L_4686:
 	call SONIDO		;4692
 RECORD:		; Si los puntos superan el record, se copian y se pinta
 	pop hl			;4695
-	ld a,(0e042h)		;4696
-	ld b,(hl)			;4699
+	ld a,(0e042h)		;4696   ; E042, el byte alto del record
+	ld b,(hl)			;4699   ; (HL) es el byte alto de los puntos
 	sub (hl)			;469a
 	ex de,hl			;469b
 	pop de			;469c
-	jr c,RECORD_NUEVO		;469d
-	jr nz,PINTA_PUNTOS		;469f
+	jr c,RECORD_NUEVO		;469d   ; El record se queda corto: hay marca nueva
+	jr nz,PINTA_PUNTOS		;469f   ; Distintos y sin acarreo: el record sigue por delante
 	push hl			;46a1
 	ld hl,(0e040h)		;46a2
 	sbc hl,de		;46a5
@@ -1185,13 +1185,13 @@ PINTA_FASE:		; Dos cifras de E051 en la fila 0, columna 28
 PINTA_1_BYTE_BCD:		; Dos cifras
 	ld b,001h		;470d
 PINTA_BCD:		; B bytes BCD desde HL hacia abajo, dos cifras por byte, en la VRAM DE
-	ld a,(hl)			;470f
+	ld a,(hl)			;470f   ; HL va hacia atras: la cifra menos significativa esta la primera
 	push af			;4710
-	and 00fh		;4711
+	and 00fh		;4711   ; El nibble bajo es la cifra de la derecha; 0x30 es el tile del cero
 	or 030h		;4713
 	ld c,a			;4715
 	pop af			;4716
-	and 0f0h		;4717
+	and 0f0h		;4717   ; El alto, la de la izquierda, que se pinta antes
 	rra			;4719
 	rra			;471a
 	rra			;471b
@@ -1202,7 +1202,7 @@ PINTA_BCD:		; B bytes BCD desde HL hacia abajo, dos cifras por byte, en la VRAM 
 	ld a,c			;4723
 	call VPOKE		;4724
 	dec hl			;4727
-	inc de			;4728
+	inc de			;4728   ; DE hacia delante: dos columnas por byte
 	djnz PINTA_BCD		;4729
 	ret			;472b
 PARPADEA_1P_2P:		; Cada 32 fotogramas borra o repinta el rotulo del jugador que juega (1P en 0x3802, 2P en 0x3822)
@@ -1241,19 +1241,19 @@ L_4766:
 	ld hl,0478bh		;476e   ; Bloque vacio (0x478B)
 VIDA_PINTA_HUECO:		; Un hueco de 2x2 y el color de su cara
 	push bc			;4771
-	ld bc,00202h		;4772
+	ld bc,00202h		;4772   ; Un bloque de 2 por 2 tiles
 	call PINTA_BLOQUE		;4775
-	ld b,(hl)			;4778
-	ld hl,(0e186h)		;4779
+	ld b,(hl)			;4778   ; El quinto byte de la tabla es el color de la cara
+	ld hl,(0e186h)		;4779   ; E186 recorre los colores de los sprites 27-30, las caras de las vidas
 	ld (hl),b			;477c
-	inc hl			;477d
+	inc hl			;477d   ; Cuatro bytes mas alla, el sprite siguiente
 	inc hl			;477e
 	inc hl			;477f
 	inc hl			;4780
 	ld (0e186h),hl		;4781
 	pop bc			;4784
 	pop de			;4785
-	dec de			;4786
+	dec de			;4786   ; Dos columnas a la izquierda: el hueco siguiente
 	dec de			;4787
 	djnz L_4766		;4788
 	ret			;478a
@@ -2043,21 +2043,22 @@ MONTA_PANTALLA:		; Borra el estado de la pantalla (5A64) y la construye (5AE3)
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 ; UN FOTOGRAMA DE PARTIDA. Primero manda los 32 atributos de sprite a la
-; VRAM; a los 24 pasos activa los moviles (E159); mientras el jugador este
-; vivo (estado < 7) corre todo lo de la pantalla: tiempo, contadores,
+; VRAM; a los 24 pasos copia E158 en E159, que solo miran las bolas que
+; ruedan; mientras el jugador este vivo (estado < 7) corre todo lo de la
+; pantalla: tiempo, contadores,
 ; lianas, surtidores, bolas, peces, hoguera, bola que bota, aranas,
 ; abeja y tronco; y siempre el jugador (66A6).
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 FOTOGRAMA_DE_PARTIDA:		; Sprites a la VRAM, los obstaculos y el jugador
-	ld hl,0e0b0h		;585e
+	ld hl,0e0b0h		;585e   ; Los 32 sprites (128 bytes) de la RAM a la VRAM, de una vez por fotograma
 	ld de,03b00h		;5861
 	ld bc,00080h		;5864
 	call COPIA_A_VRAM		;5867
-	ld a,(0e13bh)		;586a
+	ld a,(0e13bh)		;586a   ; E13B, los pasos que lleva andados el jugador
 	cp 018h		;586d   ; A los 24 pasos arrancan los moviles que miran E159
 	jr nz,L_5877		;586f
-	ld hl,0e158h		;5871
+	ld hl,0e158h		;5871   ; E159 solo lo miran las bolas que ruedan (0x611B) y su cobro (0x6AF4); los demas moviles leen E158 y salen desde el primer fotograma
 	ld a,(hl)			;5874
 	inc hl			;5875
 	ld (hl),a			;5876
@@ -2065,7 +2066,7 @@ L_5877:
 	ld a,(0e138h)		;5877
 	cp 007h		;587a   ; Del 7 en adelante el jugador esta muriendo: los obstaculos se paran
 	jr nc,L_589F		;587c
-	call TIEMPO		;587e
+	call TIEMPO		;587e   ; El tiempo y los contadores de fase, antes que los obstaculos
 	call CONTADORES		;5881
 	call LIANAS		;5884
 	call SURTIDORES		;5887
@@ -2077,7 +2078,7 @@ L_5877:
 	call ABEJA		;5899
 	call TRONCO		;589c
 L_589F:
-	call JUGADOR		;589f
+	call JUGADOR		;589f   ; El jugador se pinta siempre, este muriendo o no
 	ret			;58a2
 PREPARA_DEMO:		; Fuente, graficos del juego, partida nueva, marcador y la primera pantalla
 	call CARGA_FUENTE		;58a3
@@ -2247,25 +2248,25 @@ ESPEJA_SPRITES:		; Da la vuelta a 23 sprites de 16x16 bit a bit en E0B0
 	push bc			;5a09
 	ld b,010h		;5a0a
 ESPEJA_SPRITE_FILA:		; Una fila de 16 bits
-	ld a,(de)			;5a0c
+	ld a,(de)			;5a0c   ; DE trae la columna izquierda del patron y HL la derecha, 16 bytes mas alla
 	exx			;5a0d
 	ld h,a			;5a0e
 	exx			;5a0f
 	ld a,(hl)			;5a10
 	exx			;5a11
 	ld l,a			;5a12
-	ld b,010h		;5a13
+	ld b,010h		;5a13   ; Las dos columnas de la fila, 16 bits
 ESPEJA_16_BITS:		; Los 16 bits, uno a uno
-	add hl,hl			;5a15
-	rr (ix+000h)		;5a16
-	rr (ix+010h)		;5a1a
+	add hl,hl			;5a15   ; El bit mas alto de la fila sale al acarreo...
+	rr (ix+000h)		;5a16   ; ...y entra por arriba en el par IX+0 / IX+16, que se desplaza a la derecha: quedan del reves
+	rr (ix+010h)		;5a1a   ; La columna izquierda del espejo recibe el reflejo de la derecha
 	djnz ESPEJA_16_BITS		;5a1e
 	exx			;5a20
 	inc hl			;5a21
 	inc de			;5a22
 	inc ix		;5a23
 	djnz ESPEJA_SPRITE_FILA		;5a25
-	ld c,010h		;5a27
+	ld c,010h		;5a27   ; B ya vale 0, asi que BC son 16: los otros 16 bytes del sprite
 	add hl,bc			;5a29
 	ex de,hl			;5a2a
 	add hl,bc			;5a2b
@@ -2273,7 +2274,7 @@ ESPEJA_16_BITS:		; Los 16 bits, uno a uno
 	add ix,bc		;5a2d
 	pop bc			;5a2f
 	djnz ESPEJA_SPRITES		;5a30
-	ld de,01ae0h		;5a32
+	ld de,01ae0h		;5a32   ; Los 23 espejos (0x2E0 bytes) montados en la RAM se copian a la VRAM
 	ld hl,0e0b0h		;5a35
 	ld bc,002e0h		;5a38
 	call COPIA_A_VRAM		;5a3b
@@ -2289,38 +2290,38 @@ ESPEJA_TILES_BUCLE:		; Un byte
 	ld b,008h		;5a4f
 	ld c,(hl)			;5a51
 ESPEJA_8_BITS:		; Los 8 bits
-	rl c		;5a52
+	rl c		;5a52   ; El bit alto de C sale al acarreo y entra por el alto de A, que baja: A acaba del reves
 	rra			;5a54
 	djnz ESPEJA_8_BITS		;5a55
 	ld (de),a			;5a57
 	inc hl			;5a58
 	inc de			;5a59
 	pop bc			;5a5a
-	dec bc			;5a5b
+	dec bc			;5a5b   ; Un byte menos de los BC
 	ld a,c			;5a5c
 	or b			;5a5d
 	jr nz,ESPEJA_TILES_BUCLE		;5a5e
 	ld hl,0e130h		;5a60
 	ret			;5a63
 BORRA_PANTALLA:		; Pone a cero E130-E330 salvo las cuatro fases de lianas y surtidores, y arranca los tiempos de los peces y la abeja
-	ld a,(0e131h)		;5a64
+	ld a,(0e131h)		;5a64   ; E131 y E133, la fase de las dos lianas
 	ld b,a			;5a67
 	ld a,(0e133h)		;5a68
 	ld c,a			;5a6b
-	ld a,(0e14dh)		;5a6c
+	ld a,(0e14dh)		;5a6c   ; E14D y E14F, la de dos de los surtidores
 	ld d,a			;5a6f
 	ld a,(0e14fh)		;5a70
 	ld e,a			;5a73
 	push bc			;5a74
 	push de			;5a75
-	ld hl,0e130h		;5a76
+	ld hl,0e130h		;5a76   ; De E130 a E330 a cero de un ldir
 	ld de,0e131h		;5a79
 	ld (hl),000h		;5a7c
 	ld bc,00200h		;5a7e
 	ldir		;5a81
 	pop de			;5a83
 	pop bc			;5a84
-	ld a,b			;5a85
+	ld a,b			;5a85   ; Y las cuatro fases vuelven a su sitio
 	ld (0e131h),a		;5a86
 	ld a,c			;5a89
 	ld (0e133h),a		;5a8a
@@ -3359,22 +3360,22 @@ SURTIDORES:		; Bit 3: pinta las cuatro tablas de los surtidores en su fase (fila
 	ld a,(0e156h)		;604b
 	and 008h		;604e
 	ret z			;6050
-	ld de,03948h		;6051
-	ld a,(0e131h)		;6054
+	ld de,03948h		;6051   ; Fila 10, columna 8: la tabla de mas a la izquierda
+	ld a,(0e131h)		;6054   ; Su fase es la misma que la de una de las lianas
 	call PINTA_SURTIDOR		;6057
 	ld (0e148h),a		;605a
-	ld de,03951h		;605d
+	ld de,03951h		;605d   ; Fila 10, columna 17
 	ld a,(0e14dh)		;6060
 	call PINTA_SURTIDOR		;6063
 	ld (0e14ah),a		;6066
-	ld de,0394ch		;6069
+	ld de,0394ch		;6069   ; Fila 10, columna 12
 	ld a,(0e133h)		;606c
 	call PINTA_SURTIDOR		;606f
 	ld (0e149h),a		;6072
-	ld de,03955h		;6075
+	ld de,03955h		;6075   ; Fila 10, columna 21
 	ld a,(0e14fh)		;6078
 	call PINTA_SURTIDOR		;607b
-	ld (0e14bh),a		;607e
+	ld (0e14bh),a		;607e   ; E148-E14B quedan de izquierda a derecha, no en el orden en que se pintan
 	ld hl,060a4h		;6081   ; El agua de la fila 16, columnas 8-24
 	call PINTA_LISTA		;6084
 	ld a,0cbh		;6087   ; Las bases de los cuatro chorros en la fila 17 (columnas 9, 13, 18 y 22)
@@ -3642,19 +3643,19 @@ ARCO_MARCA_FE:		; 0xFE: se acabo el arco (B=1) y el sentido vuelve a 0
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 PECES:		; Los tres peces que saltan de los charcos o del estanque
-	ld a,(0e158h)		;61f3
+	ld a,(0e158h)		;61f3   ; Bit 4 de E158: esta pantalla lleva peces
 	and 010h		;61f6
 	ret z			;61f8
-	ld a,(0e156h)		;61f9
+	ld a,(0e156h)		;61f9   ; Y bits 0 o 7 de E156: hacen falta charcos o estanque de donde salir
 	and 081h		;61fc
 	ret z			;61fe
-	ld a,(0e176h)		;61ff
+	ld a,(0e176h)		;61ff   ; E176, la espera del primer pez
 	cp 01fh		;6202   ; Espera cumplida
 	jr c,PEZ_2		;6204
-	ld a,(0e16fh)		;6206
+	ld a,(0e16fh)		;6206   ; E16F el paso del arco y E169 la posicion
 	ld b,a			;6209
 	ld de,(0e169h)		;620a
-	ld hl,0e0dch		;620e
+	ld hl,0e0dch		;620e   ; E0DC es el sprite 11
 	ld c,000h		;6211
 	call PASO_DE_ARCO		;6213
 	ld (0e169h),hl		;6216
@@ -3675,16 +3676,16 @@ L_6230:
 	jr nc,L_6239		;6235
 	ld b,0c0h		;6237
 L_6239:
-	ld hl,0e0deh		;6239
+	ld hl,0e0deh		;6239   ; E0DE, el byte del patron del sprite
 	ld (hl),b			;623c
 PEZ_2:		; El segundo pez (sprite 12)
-	ld a,(0e177h)		;623d
+	ld a,(0e177h)		;623d   ; E177, la espera del segundo
 	cp 01fh		;6240
 	jr c,PEZ_3		;6242
 	ld a,(0e170h)		;6244
 	ld b,a			;6247
 	ld de,(0e16bh)		;6248
-	ld hl,0e0e0h		;624c
+	ld hl,0e0e0h		;624c   ; E0E0 es el sprite 12
 	ld c,000h		;624f
 	call PASO_DE_ARCO		;6251
 	ld (0e16bh),hl		;6254
@@ -3705,16 +3706,16 @@ L_626E:
 	jr nc,L_6277		;6273
 	ld b,0c0h		;6275
 L_6277:
-	ld hl,0e0e2h		;6277
+	ld hl,0e0e2h		;6277   ; Su patron
 	ld (hl),b			;627a
 PEZ_3:		; El tercero (sprite 13)
-	ld a,(0e178h)		;627b
+	ld a,(0e178h)		;627b   ; E178, la del tercero
 	cp 01fh		;627e
 	ret c			;6280
 	ld a,(0e171h)		;6281
 	ld b,a			;6284
 	ld de,(0e16dh)		;6285
-	ld hl,0e0e4h		;6289
+	ld hl,0e0e4h		;6289   ; E0E4 es el sprite 13
 	ld c,000h		;628c
 	call PASO_DE_ARCO		;628e
 	ld (0e16dh),hl		;6291
@@ -3735,23 +3736,23 @@ L_62AB:
 	jr nc,L_62B4		;62b0
 	ld b,0c0h		;62b2
 L_62B4:
-	ld hl,0e0e6h		;62b4
+	ld hl,0e0e6h		;62b4   ; Y su patron
 	ld (hl),b			;62b7
 	ret			;62b8
 PEZ_SALTA:		; Espera a cero, Y=0x8C, X al azar de la tabla, rojo claro y sonido 7
-	ld (hl),000h		;62b9
+	ld (hl),000h		;62b9   ; La espera vuelve a cero
 	ex de,hl			;62bb
-	ld (hl),08ch		;62bc
+	ld (hl),08ch		;62bc   ; Y=0x8C: asomando por el agua
 	inc hl			;62be
 	ld de,062d4h		;62bf
-	ld a,r		;62c2
+	ld a,r		;62c2   ; El registro de refresco hace de azar: una de las ocho X
 	and 007h		;62c4
 	call DE_MAS_A		;62c6
 	ld a,(de)			;62c9
 	ld (hl),a			;62ca
 	inc hl			;62cb
 	inc hl			;62cc
-	ld (hl),009h		;62cd
+	ld (hl),009h		;62cd   ; El cuarto byte del sprite, el color
 	ld a,007h		;62cf
 	jp SONIDO		;62d1
 
@@ -3840,13 +3841,13 @@ L_6346:
 	ld a,058h		;6346
 	call ARANA_APARECE		;6348
 ARANA_2:		; La segunda (sprite 17, X=0x78)
-	ld hl,0e0f4h		;634b
-	ld a,(0e17dh)		;634e
+	ld hl,0e0f4h		;634b   ; E0F4 es el sprite 17
+	ld a,(0e17dh)		;634e   ; E17D, la fase de la segunda
 	cp 008h		;6351
 	jr z,L_6365		;6353
 	call ARANA_MUEVE		;6355
 	jr c,ARANA_3		;6358
-	xor a			;635a
+	xor a			;635a   ; Al tocar el suelo: fase 0 y escondida en Y=0x90
 	ld (0e17dh),a		;635b
 	ld a,090h		;635e
 	ld (0e0f4h),a		;6360
@@ -3855,8 +3856,8 @@ L_6365:
 	ld a,078h		;6365
 	call ARANA_APARECE		;6367
 ARANA_3:		; La tercera (sprite 18, X=0x98)
-	ld hl,0e0f8h		;636a
-	ld a,(0e17eh)		;636d
+	ld hl,0e0f8h		;636a   ; E0F8 es el sprite 18
+	ld a,(0e17eh)		;636d   ; E17E, la de la tercera
 	cp 008h		;6370
 	jr z,ARANA_APARECE_3		;6372
 	call ARANA_MUEVE		;6374
@@ -3869,25 +3870,25 @@ ARANA_3:		; La tercera (sprite 18, X=0x98)
 ARANA_APARECE_3:		; Y=0x28, X=0x98
 	ld a,098h		;6382
 ARANA_APARECE:		; Y=0x28, X=A, patron 0xCC, blanca
-	ld (hl),028h		;6384
+	ld (hl),028h		;6384   ; Y=0x28: cuelga desde arriba del todo
 	inc hl			;6386
 	ld (hl),a			;6387
 	inc hl			;6388
-	ld (hl),0cch		;6389
+	ld (hl),0cch		;6389   ; Patron 0xCC, color 15 (blanco)
 	inc hl			;638b
 	ld (hl),00fh		;638c
 	ret			;638e
 ARANA_MUEVE:		; Fase < 15: se balancea (X+1 o X-1 segun el bit 0 de la fase, acarreo); si no cae 2 y devuelve acarreo mientras no llegue a 0x8C
-	cp 00fh		;638f
+	cp 00fh		;638f   ; Por debajo de la fase 15 solo se balancea colgada
 	jr c,L_6399		;6391
-	inc (hl)			;6393
+	inc (hl)			;6393   ; Baja dos puntos por fotograma
 	inc (hl)			;6394
 	ld a,(hl)			;6395
-	cp 08ch		;6396
+	cp 08ch		;6396   ; Acarreo mientras no llegue al suelo (Y=0x8C)
 	ret			;6398
 L_6399:
-	inc hl			;6399
-	bit 0,a		;639a
+	inc hl			;6399   ; HL a la X del sprite
+	bit 0,a		;639a   ; Fase impar a la derecha, par a la izquierda
 	jr z,L_63A1		;639c
 	inc (hl)			;639e
 	scf			;639f
@@ -4017,7 +4018,7 @@ ABEJA:		; La abeja
 L_6456:
 	ld (0e179h),a		;6456
 ABEJA_SPRITES:		; El sprite 21 copia Y y X del 20; patrones 0xD8 amarillo y 0xDC negro
-	ld hl,0e100h		;6459
+	ld hl,0e100h		;6459   ; E100 es el sprite 20 y E104 el 21: el mismo bicho en dos colores
 	ld de,0e104h		;645c
 	ld a,(hl)			;645f
 	ld (de),a			;6460
@@ -4025,41 +4026,41 @@ ABEJA_SPRITES:		; El sprite 21 copia Y y X del 20; patrones 0xD8 amarillo y 0xDC
 	inc de			;6462
 	ld a,(hl)			;6463
 	ld (de),a			;6464
-	ld (0e1aeh),a		;6465
+	ld (0e1aeh),a		;6465   ; E1AE se queda con la X: por ahi se mira si el jugador la ha dejado atras
 	inc hl			;6468
 	inc de			;6469
-	ld (hl),0d8h		;646a
+	ld (hl),0d8h		;646a   ; Patron 0xD8 en color 11 (amarillo claro)
 	inc hl			;646c
 	ld (hl),00bh		;646d
 	ex de,hl			;646f
-	ld (hl),0dch		;6470
+	ld (hl),0dch		;6470   ; Y encima el 0xDC en color 1 (negro): las rayas
 	inc hl			;6472
 	ld (hl),001h		;6473
 	ret			;6475
 ABEJA_APARECE:		; Y=0x28, X=0xD8, 100 puntos por pasarla, sonido 5
-	ld a,010h		;6476
+	ld a,010h		;6476   ; E19E = 0x10 en BCD: cien puntos por dejarla atras
 	ld (0e19eh),a		;6478
-	ld (hl),028h		;647b
+	ld (hl),028h		;647b   ; Y=0x28, X=0xD8: entra por arriba a la derecha
 	inc hl			;647d
 	ld (hl),0d8h		;647e
 	ld a,005h		;6480
 	call SONIDO		;6482
 	jr ABEJA_SPRITES		;6485
 ABEJA_MUEVE:		; Escondida: nada. Por encima de su altura: baja 2. Si no, X-2; acarreo al pasar de X=8
-	ld a,0c8h		;6487
+	ld a,0c8h		;6487   ; Y=0xC8 es la abeja escondida
 	cp (hl)			;6489
 	jr z,L_64A2		;648a
-	ld a,(0e179h)		;648c
+	ld a,(0e179h)		;648c   ; E179 elige una de las cuatro alturas de 0x64A4
 	ld de,064a4h		;648f
 	call DE_MAS_A		;6492
 	ld a,(de)			;6495
-	cp (hl)			;6496
+	cp (hl)			;6496   ; Aun por encima de su altura: baja dos
 	jr nc,L_64A0		;6497
-	inc hl			;6499
+	inc hl			;6499   ; Ya a su altura: dos puntos a la izquierda
 	dec (hl)			;649a
 	dec (hl)			;649b
 	ld a,(hl)			;649c
-	cp 008h		;649d
+	cp 008h		;649d   ; Acarreo al llegar a X=8: se sale por el borde
 	ret			;649f
 L_64A0:
 	inc (hl)			;64a0
@@ -4090,23 +4091,23 @@ DATA_alturas_de_la_abeja:
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 TRONCO:		; El tronco que flota en el estanque
-	ld a,(0e158h)		;64a8
+	ld a,(0e158h)		;64a8   ; Bit 5 de E158: esta pantalla lleva tronco
 	and 020h		;64ab
 	ret z			;64ad
-	ld a,(0e156h)		;64ae
+	ld a,(0e156h)		;64ae   ; Y bit 3 de E156: con surtidores no hay tronco
 	and 008h		;64b1
 	ret nz			;64b3
 	ld hl,0e003h		;64b4
-	bit 0,(hl)		;64b7
+	bit 0,(hl)		;64b7   ; Un fotograma de cada dos: medio punto por fotograma
 	ret z			;64b9
 	ld a,(0e138h)		;64ba
 	cp 00fh		;64bd   ; Con el jugador cayendo al agua, quieto
 	ret z			;64bf
 	cp 005h		;64c0   ; Estado 5: el jugador va montado y se mueve con el
-	ld a,(0e17ah)		;64c2
+	ld a,(0e17ah)		;64c2   ; E17A, hacia donde va el tronco
 	ld b,a			;64c5
 	jr nz,L_64D2		;64c6
-	ld hl,0e135h		;64c8
+	ld hl,0e135h		;64c8   ; Montado encima, la X del jugador se mueve con el
 	or a			;64cb
 	jr nz,L_64D1		;64cc
 	dec (hl)			;64ce
@@ -4114,7 +4115,7 @@ TRONCO:		; El tronco que flota en el estanque
 L_64D1:
 	inc (hl)			;64d1
 L_64D2:
-	ld hl,0e0d5h		;64d2
+	ld hl,0e0d5h		;64d2   ; E0D5 es la X del sprite 9, la mitad izquierda del tronco
 	ld a,b			;64d5
 	or a			;64d6
 	jr nz,L_64DC		;64d7
@@ -4123,7 +4124,7 @@ L_64D2:
 L_64DC:
 	inc (hl)			;64dc
 L_64DD:
-	ld a,(hl)			;64dd
+	ld a,(hl)			;64dd   ; El sprite 10 va 16 a la derecha: ese es el borde
 	add a,010h		;64de
 	ld (0e0d9h),a		;64e0
 	cp 058h		;64e3   ; Con el borde derecho (X+16) en 0x58, da la vuelta hacia la derecha
@@ -4138,21 +4139,21 @@ L_64ED:
 	xor a			;64f0
 	jr TRONCO_SENTIDO		;64f1
 CHOCA_CON_SPRITE:		; El jugador contra el sprite (HL): NC si sus 16x16 se solapan (Y+8 y X)
-	ld de,0e134h		;64f3
+	ld de,0e134h		;64f3   ; E134 y E135, la Y y la X del jugador
 	ld a,(de)			;64f6
-	add a,008h		;64f7
+	add a,008h		;64f7   ; Y del jugador mas 8, menos la del sprite: solapan si cae entre 0 y 15
 	sub (hl)			;64f9
 	jr c,NO_CHOCA		;64fa
 	cp 010h		;64fc
 	jr nc,NO_CHOCA		;64fe
 	inc de			;6500
 	inc hl			;6501
-	ld a,(de)			;6502
+	ld a,(de)			;6502   ; Lo mismo con las X, estas sin desplazar
 	sub (hl)			;6503
 	jr c,NO_CHOCA		;6504
 	cp 010h		;6506
 	jr nc,NO_CHOCA		;6508
-	or a			;650a
+	or a			;650a   ; Sin acarreo: se tocan
 	ret			;650b
 NO_CHOCA:		; Acarreo: no
 	scf			;650c
@@ -4167,15 +4168,15 @@ NO_CHOCA:		; Acarreo: no
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 CAE_SOBRE_SURTIDOR:		; NC y estado 4 si aterriza en una tabla; acarreo si la caida mata
-	ld de,0e148h		;650e
+	ld de,0e148h		;650e   ; E148-E14B, la altura de las cuatro tablas
 	ld hl,0e134h		;6511
-	ld a,(0e135h)		;6514
+	ld a,(0e135h)		;6514   ; La X del jugador se compara con los cuatro tramos; el primero, de 0x38 a 0x50
 	ld b,a			;6517
 	cp 038h		;6518
 	jr c,L_652C		;651a
 	cp 051h		;651c
 	jr nc,L_652C		;651e
-	ld a,(de)			;6520
+	ld a,(de)			;6520   ; Su altura mas 4 menos la Y del jugador: vale de 0 a 8, o sea hasta 8 por encima
 	add a,004h		;6521
 	sub (hl)			;6523
 	jr c,L_652C		;6524
@@ -4183,9 +4184,9 @@ CAE_SOBRE_SURTIDOR:		; NC y estado 4 si aterriza en una tabla; acarreo si la cai
 	jr nc,L_652C		;6528
 	jr SOBRE_SURTIDOR		;652a
 L_652C:
-	inc de			;652c
+	inc de			;652c   ; La altura de la segunda tabla
 	ld a,b			;652d
-	cp 058h		;652e
+	cp 058h		;652e   ; Segundo tramo, de 0x58 a 0x70
 	jr c,L_6542		;6530
 	cp 071h		;6532
 	jr nc,L_6542		;6534
@@ -4199,7 +4200,7 @@ L_652C:
 L_6542:
 	inc de			;6542
 	ld a,b			;6543
-	cp 080h		;6544
+	cp 080h		;6544   ; Tercero, de 0x80 a 0x98
 	jr c,L_6558		;6546
 	cp 099h		;6548
 	jr nc,L_6558		;654a
@@ -4213,7 +4214,7 @@ L_6542:
 L_6558:
 	inc de			;6558
 	ld a,b			;6559
-	cp 0a0h		;655a
+	cp 0a0h		;655a   ; Y cuarto, de 0xA0 a 0xB8
 	jr c,CAE_AL_VACIO		;655c
 	cp 0b9h		;655e
 	jr nc,CAE_AL_VACIO		;6560
@@ -4225,44 +4226,44 @@ L_6558:
 	jr nc,CAE_AL_VACIO		;656a
 SOBRE_SURTIDOR:		; Estado 4; acarreo si Y-16 >= la altura desde la que salto
 	ld a,004h		;656c
-	ld (0e138h),a		;656e
+	ld (0e138h),a		;656e   ; Estado 4: encaramado a la tabla
 	ld a,(0e134h)		;6571
-	ld hl,0e13ah		;6574
+	ld hl,0e13ah		;6574   ; E13A es la Y desde la que empezo a caer
 	sub 010h		;6577
 	cp (hl)			;6579
 	jr c,CAE_AL_VACIO		;657a
 	scf			;657c
 	ret			;657d
-CAE_AL_VACIO:		; NC: no ha caido en ninguna
+CAE_AL_VACIO:		; Sin acarreo: o no ha dado en ninguna tabla, o ha dado y la caida no mata
 	or a			;657e
 	ret			;657f
 CHOCAN_SPRITES:		; NC si los sprites B y C se solapan (16x16, con 8 de margen en Y y en X)
-	ld a,b			;6580
+	ld a,b			;6580   ; Cuatro bytes por sprite en E0B0: Y, X, patron y color
 	rlca			;6581
 	rlca			;6582
 	ld hl,0e0b0h		;6583
 	call HL_MAS_A		;6586
-	ex de,hl			;6589
+	ex de,hl			;6589   ; DE al sprite B
 	ld a,c			;658a
 	rlca			;658b
 	rlca			;658c
 	ld hl,0e0b0h		;658d
-	call HL_MAS_A		;6590
+	call HL_MAS_A		;6590   ; HL al sprite C
 	ld a,(de)			;6593
-	add a,008h		;6594
+	add a,008h		;6594   ; Yb mas 8 menos Yc: solapan si cae entre 0 y 15
 	sub (hl)			;6596
 	jr c,L_65AB		;6597
 	cp 010h		;6599
 	jr nc,L_65AB		;659b
 	inc de			;659d
 	inc hl			;659e
-	ld a,(de)			;659f
+	ld a,(de)			;659f   ; Con las X la ventana es de 0 a 16, un punto mas ancha
 	add a,008h		;65a0
 	sub (hl)			;65a2
 	jr c,L_65AB		;65a3
 	cp 011h		;65a5
 	jr nc,L_65AB		;65a7
-	or a			;65a9
+	or a			;65a9   ; Sin acarreo: se tocan
 	ret			;65aa
 L_65AB:
 	scf			;65ab
@@ -4364,7 +4365,7 @@ L_662A:
 	djnz L_662A		;6633
 	ret			;6635
 COBRA_AL_PASAR_IZQ:		; Lo mismo yendo hacia la izquierda
-	ld a,(0e135h)		;6636
+	ld a,(0e135h)		;6636   ; Entrando por la derecha se anda hacia la izquierda: los pasados son los que quedan a la derecha
 	cp (hl)			;6639
 	call c,COBRA_PUNTOS		;663a
 	inc c			;663d
@@ -4398,20 +4399,20 @@ COBRA_PUNTOS:		; Cobra los puntos E18C+C si aun no estan cobrados: los suma, y s
 	ld c,000h		;6666
 	ld hl,0e181h		;6668   ; El primer rotulo libre de los cuatro (sprites 23-26)
 L_666B:
-	ld a,(hl)			;666b
+	ld a,(hl)			;666b   ; E181-E184: los fotogramas que le quedan a cada rotulo; a cero esta libre
 	or a			;666c
 	jr z,L_6673		;666d
 	inc c			;666f
 	inc hl			;6670
 	djnz L_666B		;6671
 L_6673:
-	push hl			;6673
+	push hl			;6673   ; C es el numero de rotulo libre; por cuatro, los bytes del sprite
 	ld a,c			;6674
 	add a,a			;6675
 	add a,a			;6676
-	ld hl,0e10ch		;6677
+	ld hl,0e10ch		;6677   ; E10C es el sprite 23, el primero de los cuatro rotulos
 	call HL_MAS_A		;667a
-	ld bc,0e134h		;667d
+	ld bc,0e134h		;667d   ; E134 y E135: el rotulo sale 16 por encima del jugador
 	ld a,(bc)			;6680
 	sub 010h		;6681
 	ld (hl),a			;6683
@@ -4426,7 +4427,7 @@ L_6673:
 	add a,0e0h		;668c
 	ld (hl),a			;668e
 	inc hl			;668f
-	ld (hl),00fh		;6690
+	ld (hl),00fh		;6690   ; Color 15, blanco
 	ld a,01eh		;6692   ; 30 fotogramas a la vista
 	pop hl			;6694
 	ld (hl),a			;6695
@@ -4438,7 +4439,7 @@ CARAS_DE_LAS_VIDAS:		; Pone el patron A en las cuatro caras: 0xF4 normal, 0xF8 p
 	ld b,004h		;6699
 	ld hl,0e11eh		;669b
 L_669E:
-	ld (hl),a			;669e
+	ld (hl),a			;669e   ; Cuatro bytes por sprite: solo se toca el patron
 	inc hl			;669f
 	inc hl			;66a0
 	inc hl			;66a1
@@ -4993,34 +4994,34 @@ ESTADO_8_FASE_SUPERADA:		; E00D = 1: la fase esta superada (lo recoge el estado 
 	ld (0e00dh),a		;69b5
 	ret			;69b8
 LE_HAN_DADO:		; Caras llorando, obstaculos fuera, sonido 0x96, pose 16, estado 16 y el contador de fotogramas a cero
-	ld a,0f0h		;69b9
+	ld a,0f0h		;69b9   ; 0xF0: el patron de la cara llorando en la fila de las vidas
 	call CARAS_DE_LAS_VIDAS		;69bb
 	call ESCONDE_OBSTACULOS		;69be
-	ld a,096h		;69c1
+	ld a,096h		;69c1   ; Sonido 0x96: el de la muerte por golpe, tres canales
 	call SONIDO		;69c3
-	ld a,010h		;69c6
+	ld a,010h		;69c6   ; E136 = 0x10: la primera de las dos poses de muerte
 	ld (0e136h),a		;69c8
 	call PINTA_JUGADOR_MUERTO		;69cb
 	ld a,010h		;69ce
-	ld (0e138h),a		;69d0
-	xor a			;69d3
+	ld (0e138h),a		;69d0   ; Estado 16 del jugador
+	xor a			;69d3   ; El contador de fotogramas a cero: los 128 del estado 16 cuentan desde aqui
 	ld (0e003h),a		;69d4
 	ret			;69d7
-ESTADO_16_LE_HAN_DADO:		; Cae dos puntos por fotograma hasta el suelo (Y=0x6C); cada 16 cambia de lado; a los 128 fotogramas, muerto (E00C)
+ESTADO_16_LE_HAN_DADO:		; Cae dos puntos por fotograma hasta el suelo (Y=0x6C); cada 16 alterna las dos poses de muerte; a los 128 fotogramas, muerto (E00C)
 	ld hl,0e134h		;69d8
 	ld a,(hl)			;69db
-	cp 06ch		;69dc
+	cp 06ch		;69dc   ; 0x6C es la Y del suelo
 	jr nc,L_69E2		;69de
 	inc (hl)			;69e0
 	inc (hl)			;69e1
 L_69E2:
 	ld a,(0e003h)		;69e2
-	and 00fh		;69e5
+	and 00fh		;69e5   ; Cada 16 fotogramas
 	jr nz,L_69F1		;69e7
 	inc hl			;69e9
 	inc hl			;69ea
-	ld a,(hl)			;69eb
-	xor 001h		;69ec   ; Cambia el bit 0 de la mirada: da vueltas
+	ld a,(hl)			;69eb   ; E136, la pose
+	xor 001h		;69ec   ; Cambia el bit 0 de la pose: alterna las dos poses de muerte
 	and 011h		;69ee
 	ld (hl),a			;69f0
 L_69F1:
@@ -5029,7 +5030,7 @@ L_69F1:
 	cp 06ch		;69f7
 	ret c			;69f9
 	ld a,(0e003h)		;69fa
-	and 07fh		;69fd
+	and 07fh		;69fd   ; Ciento veintiocho fotogramas tirado antes de dar la vida por perdida
 	ret nz			;69ff
 	inc a			;6a00
 	ld (0e00ch),a		;6a01
@@ -5074,7 +5075,7 @@ SALE_DE_PANTALLA:		; E00E y E058 con lo que diga BC
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 CHOQUES:		; La cabeza contra los sprites 11-22, las piernas contra 11-31
-	ld bc,0040bh		;6a41
+	ld bc,0040bh		;6a41   ; B=4 es el sprite de la cabeza, C=11 el primer pez; C sube de uno en uno
 	call CHOCAN_SPRITES		;6a44   ; Cabeza contra pez 1
 	jp nc,LE_HAN_DADO		;6a47
 	inc bc			;6a4a
@@ -5084,13 +5085,13 @@ CHOQUES:		; La cabeza contra los sprites 11-22, las piernas contra 11-31
 	call CHOCAN_SPRITES		;6a52
 	jp nc,LE_HAN_DADO		;6a55
 	inc bc			;6a58
-	call CHOCAN_SPRITES		;6a59
+	call CHOCAN_SPRITES		;6a59   ; Sprites 14 y 15, las bolas que ruedan
 	jp nc,LE_HAN_DADO		;6a5c
 	inc bc			;6a5f
 	call CHOCAN_SPRITES		;6a60
 	jp nc,LE_HAN_DADO		;6a63
 	inc bc			;6a66
-	call CHOCAN_SPRITES		;6a67
+	call CHOCAN_SPRITES		;6a67   ; Sprites 16, 17 y 18, las aranas
 	jp nc,LE_HAN_DADO		;6a6a
 	inc bc			;6a6d
 	call CHOCAN_SPRITES		;6a6e
@@ -5110,10 +5111,10 @@ CHOQUES:		; La cabeza contra los sprites 11-22, las piernas contra 11-31
 	call SONIDO		;6a8e
 	pop bc			;6a91
 CHOQUES_ABEJA_BOLA:		; Cabeza contra la abeja y la bola que bota
-	inc bc			;6a92
+	inc bc			;6a92   ; Sprite 20, la abeja
 	call CHOCAN_SPRITES		;6a93
 	jp nc,LE_HAN_DADO		;6a96
-	inc bc			;6a99
+	inc bc			;6a99   ; Dos de golpe: el 21 es la otra mitad de la abeja
 	inc bc			;6a9a
 	call CHOCAN_SPRITES		;6a9b
 	jp nc,LE_HAN_DADO		;6a9e
@@ -5127,13 +5128,13 @@ CHOQUES_ABEJA_BOLA:		; Cabeza contra la abeja y la bola que bota
 	call CHOCAN_SPRITES		;6ab2
 	jp nc,LE_HAN_DADO		;6ab5
 	inc bc			;6ab8
-	call CHOCAN_SPRITES		;6ab9
+	call CHOCAN_SPRITES		;6ab9   ; Sprites 14 y 15, las bolas
 	jp nc,LE_HAN_DADO		;6abc
 	inc bc			;6abf
 	call CHOCAN_SPRITES		;6ac0
 	jp nc,LE_HAN_DADO		;6ac3
 	inc bc			;6ac6
-	call CHOCAN_SPRITES		;6ac7
+	call CHOCAN_SPRITES		;6ac7   ; Sprites 16, 17 y 18, las aranas
 	jp nc,LE_HAN_DADO		;6aca
 	inc bc			;6acd
 	call CHOCAN_SPRITES		;6ace
@@ -5145,7 +5146,7 @@ CHOQUES_ABEJA_BOLA:		; Cabeza contra la abeja y la bola que bota
 	inc bc			;6adc
 	call CHOCAN_SPRITES		;6add
 	jp nc,LE_HAN_DADO		;6ae0
-	inc bc			;6ae3
+	inc bc			;6ae3   ; Otro salto de dos: del 20 al 22
 	inc bc			;6ae4
 	call CHOCAN_SPRITES		;6ae5
 	jp nc,LE_HAN_DADO		;6ae8
@@ -5157,13 +5158,13 @@ COBRA_BOLAS_Y_ABEJA:		; Con los moviles activos: por pasar las dos bolas (E1AC, 
 	or a			;6af7
 	ret z			;6af8
 	ld a,(0e100h)		;6af9
-	cp 074h		;6afc
-	ld hl,0e1ach		;6afe
+	cp 074h		;6afc   ; Y=0x74 es donde se queda con la altura mas baja (0x72): solo entonces cuenta
+	ld hl,0e1ach		;6afe   ; E1AC y E1AD son las X de las dos bolas, E1AE la de la abeja
 	ld b,003h		;6b01
 	jr z,L_6B07		;6b03
 	ld b,002h		;6b05
 L_6B07:
-	ld c,010h		;6b07
+	ld c,010h		;6b07   ; Del 16 en adelante en la tabla de cobrados
 	jp COBRA_AL_PASAR		;6b09
 
 ; ----------------------------------------------------------------------
@@ -5233,15 +5234,15 @@ L_6B4B:
 	ld a,010h		;6b62
 	add a,b			;6b64
 SOMBRA:		; Sprite 8: Y=A, X del jugador, patron 0xD4, negro; con Y>=0x48 se ve
-	ld hl,0e0d0h		;6b65
+	ld hl,0e0d0h		;6b65   ; E0D0 son los cuatro bytes del sprite 8
 	ld (hl),a			;6b68
 	inc hl			;6b69
 	ld (hl),c			;6b6a
 	inc hl			;6b6b
-	ld (hl),0d4h		;6b6c
+	ld (hl),0d4h		;6b6c   ; El patron 0xD4 es la mancha, en color 1 (negro)
 	inc hl			;6b6e
 	ld (hl),001h		;6b6f
-	cp 048h		;6b71
+	cp 048h		;6b71   ; Por encima de la fila 0x48 se queda sin color y no se ve
 	ret nc			;6b73
 SIN_SOMBRA:		; Color 0: no se ve
 	xor a			;6b74
@@ -5253,14 +5254,14 @@ SOMBRA_EN_EL_SUELO:		; Y=0x8C
 DOS_SPRITES:		; Dos sprites seguidos con la misma Y,X y los dos patrones siguientes de DE
 	call UN_SPRITE		;6b7d
 UN_SPRITE:		; Y=B, X=C, patron (DE), y salta el color
-	ld (hl),b			;6b80
+	ld (hl),b			;6b80   ; Los cuatro bytes del sprite: Y, X, patron y color
 	inc hl			;6b81
 	ld (hl),c			;6b82
 	inc hl			;6b83
-	ld a,(de)			;6b84
+	ld a,(de)			;6b84   ; El patron sale de la tabla que trae DE, y DE avanza
 	inc de			;6b85
 	ld (hl),a			;6b86
-	inc hl			;6b87
+	inc hl			;6b87   ; El segundo inc hl salta el color, que no se toca
 	inc hl			;6b88
 	ret			;6b89
 
@@ -5291,7 +5292,7 @@ DATA_poses_del_jugador:
 
 
 PINTA_JUGADOR_MUERTO:		; Los sprites del jugador con la pose de muerte (0x6C06) segun hacia donde mira, y el color 8
-	ld hl,0e134h		;6bc2
+	ld hl,0e134h		;6bc2   ; Y del jugador mas 16 y X menos 16
 	ld a,(hl)			;6bc5
 	add a,010h		;6bc6
 	ld b,a			;6bc8
@@ -5300,7 +5301,7 @@ PINTA_JUGADOR_MUERTO:		; Los sprites del jugador con la pose de muerte (0x6C06) 
 	sub 010h		;6bcb
 	ld c,a			;6bcd
 	inc hl			;6bce
-	ld a,(0e139h)		;6bcf
+	ld a,(0e139h)		;6bcf   ; E139 es hacia donde mira
 	cp 004h		;6bd2   ; Mirando a la izquierda: X+16 y la otra mitad de la tabla
 	ld a,(hl)			;6bd4
 	jr nz,L_6BE0		;6bd5
@@ -5312,26 +5313,26 @@ PINTA_JUGADOR_MUERTO:		; Los sprites del jugador con la pose de muerte (0x6C06) 
 	ld a,(hl)			;6bdd
 	add a,002h		;6bde
 L_6BE0:
-	ld de,06c06h		;6be0
+	ld de,06c06h		;6be0   ; La tabla de cuatro poses de cinco patrones
 	ld l,a			;6be3
-	add a,a			;6be4
+	add a,a			;6be4   ; El indice por 5; el bit 4 de E136 no estorba porque 16 por 5 es multiplo de 16
 	add a,a			;6be5
 	add a,l			;6be6
 	and 00fh		;6be7
 	call DE_MAS_A		;6be9
-	ld hl,0e0c0h		;6bec
+	ld hl,0e0c0h		;6bec   ; E0C0 es el sprite 4, la cabeza
 	call DOS_SPRITES		;6bef
 	push bc			;6bf2
-	ld a,(0e135h)		;6bf3
+	ld a,(0e135h)		;6bf3   ; Los sprites 6 y 7, en la X del jugador sin desplazar
 	ld c,a			;6bf6
 	call DOS_SPRITES		;6bf7
 	pop bc			;6bfa
-	ld a,b			;6bfb
+	ld a,b			;6bfb   ; El quinto patron 16 mas abajo, en el hueco del sprite 8 (la sombra)
 	add a,010h		;6bfc
 	ld b,a			;6bfe
 	call UN_SPRITE		;6bff
 	dec hl			;6c02
-	ld (hl),008h		;6c03
+	ld (hl),008h		;6c03   ; Y a ese quinto sprite, el color 8
 	ret			;6c05
 
 ; ----------------------------------------------------------------------
@@ -5394,24 +5395,24 @@ AGARRA_LIANA:		; Toca el cabo: cuelga
 	call CHOCA_CON_SPRITE		;6c53
 	jr c,PASO_DE_ARCO_JUGADOR		;6c56
 COLGADO:		; E13C = que liana, cobra sus puntos, estado 2
-	ld a,l			;6c58
+	ld a,l			;6c58   ; Los dos bits bajos del puntero dicen cual de las dos lianas es
 	and 003h		;6c59
 	ld (0e13ch),a		;6c5b
 	ld c,a			;6c5e
-	call COBRA_PUNTOS		;6c5f
+	call COBRA_PUNTOS		;6c5f   ; Sus puntos, por el indice de la tabla de cobrados
 	ld a,002h		;6c62
-	ld (0e138h),a		;6c64
+	ld (0e138h),a		;6c64   ; Estado 2: colgado
 PASO_DE_ARCO_JUGADOR:		; Cobra lo saltado y avanza el arco
 	ld hl,0e1a5h		;6c67   ; Trampolines, charcos, piedra y hoguera (E1A5-E1AB)
-	ld b,007h		;6c6a
+	ld b,007h		;6c6a   ; Siete obstaculos, del 9 al 15 de la tabla de cobrados
 	ld c,009h		;6c6c
 	call COBRA_AL_PASAR		;6c6e
-	ld a,(0e202h)		;6c71
+	ld a,(0e202h)		;6c71   ; Bit 0 de E202: hacia donde va el arco del salto
 	ld b,a			;6c74
 	ld hl,0e205h		;6c75
 	bit 0,b		;6c78
 	jr nz,L_6C7F		;6c7a
-	inc (hl)			;6c7c
+	inc (hl)			;6c7c   ; E205 es el paso dentro del arco
 	jr L_6C80		;6c7d
 L_6C7F:
 	dec (hl)			;6c7f
@@ -5430,17 +5431,17 @@ L_6C89:
 	jr nz,L_6C9A		;6c96
 	neg		;6c98
 L_6C9A:
-	add a,(hl)			;6c9a
+	add a,(hl)			;6c9a   ; La Y del jugador
 	ld (hl),a			;6c9b
 	inc hl			;6c9c
-	ld a,(0e137h)		;6c9d
+	ld a,(0e137h)		;6c9d   ; E137: izquierda o derecha, guardadas al saltar
 	or a			;6ca0
 	jr z,ARCO_JUGADOR_AVANZA		;6ca1
 	ld c,a			;6ca3
 	ld a,(0e144h)		;6ca4   ; Saliendo de la liana (E144=0xFF), dos puntos por fotograma
 	inc a			;6ca7
 	jr nz,L_6CB6		;6ca8
-	bit 3,c		;6caa
+	bit 3,c		;6caa   ; Bit 3: hacia la derecha
 	jr z,L_6CB2		;6cac
 	inc (hl)			;6cae
 	inc (hl)			;6caf
@@ -5465,23 +5466,23 @@ ARCO_JUGADOR_AVANZA:		; Puntero adelante (subiendo) o atras (bajando); 0xFF da l
 L_6CC6:
 	dec hl			;6cc6
 L_6CC7:
-	ld a,(hl)			;6cc7
+	ld a,(hl)			;6cc7   ; 0xFF cierra la tabla por el lado de subir
 	ld b,a			;6cc8
 	inc a			;6cc9
 	jr nz,L_6CDC		;6cca
-	dec hl			;6ccc
+	dec hl			;6ccc   ; Dos atras: se vuelve al ultimo valor bueno
 	dec hl			;6ccd
 	push hl			;6cce
 	ld hl,0e144h		;6ccf
-	inc (hl)			;6cd2
+	inc (hl)			;6cd2   ; E144 sube: sale del 0xFF y ya se puede agarrar otra liana
 	pop hl			;6cd3
 	inc a			;6cd4
-	ld (0e202h),a		;6cd5
+	ld (0e202h),a		;6cd5   ; E202 = 1: el arco se recorre al reves, cayendo
 L_6CD8:
 	ld (0e200h),hl		;6cd8
 	ret			;6cdb
 L_6CDC:
-	inc a			;6cdc
+	inc a			;6cdc   ; 0xFE es el tope de abajo: se vuelve al primer valor y el paso se repite sin fin
 	jr nz,L_6CD8		;6cdd
 	inc hl			;6cdf
 	jr L_6CD8		;6ce0
@@ -5522,10 +5523,10 @@ ESTADO_2_LIANA:		; Colgado del cabo de la liana
 	jr z,L_6D13		;6d0e
 	ld hl,0e142h		;6d10
 L_6D13:
-	ld b,(hl)			;6d13
+	ld b,(hl)			;6d13   ; El cabo de la liana: Y en B, X en C
 	inc hl			;6d14
 	ld c,(hl)			;6d15
-	ld hl,0e134h		;6d16
+	ld hl,0e134h		;6d16   ; El jugador se pega al cabo
 	ld (hl),b			;6d19
 	inc hl			;6d1a
 	ld a,(0e139h)		;6d1b
@@ -5537,15 +5538,15 @@ L_6D13:
 L_6D26:
 	ld (hl),a			;6d26
 	inc hl			;6d27
-	ld (hl),005h		;6d28
-	ld a,(0e009h)		;6d2a
+	ld (hl),005h		;6d28   ; Pose 5: colgado
+	ld a,(0e009h)		;6d2a   ; E009, lo que se pulsa en este fotograma
 	ld b,a			;6d2d
 	bit 1,a		;6d2e   ; Abajo: se suelta
 	jr z,L_6D43		;6d30
-	ld hl,06cf2h		;6d32
+	ld hl,06cf2h		;6d32   ; Al soltarse, el arco corto de 0x6CF2
 	call ARCO_CAYENDO		;6d35
 	ld a,001h		;6d38
-	ld (0e138h),a		;6d3a
+	ld (0e138h),a		;6d3a   ; Estado 1 (en el aire) y E144=1: soltado desde liana
 	ld (0e144h),a		;6d3d
 L_6D40:
 	jp MOVIMIENTO_COMUN		;6d40
@@ -5554,18 +5555,18 @@ L_6D43:
 	ld (0e137h),a		;6d45
 	call SALTA_SI_BOTON		;6d48
 	jr nc,L_6D40		;6d4b
-	ld hl,06cedh		;6d4d
+	ld hl,06cedh		;6d4d   ; El arco cortito de 0x6CED, el impulso del salto
 	call ARCO_SUBIENDO		;6d50
 	ld a,001h		;6d53
 	ld (0e138h),a		;6d55
 	ld a,003h		;6d58
 	call SONIDO		;6d5a
-	ld a,0ffh		;6d5d
+	ld a,0ffh		;6d5d   ; E144 = 0xFF: acaba de saltar de una liana
 	ld (0e144h),a		;6d5f
 	ld a,(0e139h)		;6d62
 	cp 004h		;6d65
 	jr nz,L_6D70		;6d67
-	ld hl,0e136h		;6d69
+	ld hl,0e136h		;6d69   ; Mirando a la izquierda, seis poses mas alla: las espejadas
 	ld a,(hl)			;6d6c
 	add a,006h		;6d6d
 	ld (hl),a			;6d6f
@@ -5573,13 +5574,13 @@ L_6D70:
 	jr L_6D40		;6d70
 ANDA:		; Izquierda o derecha: un paso (X mas o menos 1), sonido 2, mirada, y la pose por los pasos (E13B); parado, pose 6
 	xor a			;6d72
-	ld (0e144h),a		;6d73
+	ld (0e144h),a		;6d73   ; E144 a cero: desde el suelo no se agarra liana
 	ld (0e13ch),a		;6d76
-	ld a,(0e009h)		;6d79
+	ld a,(0e009h)		;6d79   ; Bits 2 y 3 de lo pulsado: izquierda y derecha
 	and 00ch		;6d7c
 	ld (0e137h),a		;6d7e
 	ld hl,0e135h		;6d81
-	ld de,0e13bh		;6d84
+	ld de,0e13bh		;6d84   ; E13B cuenta los pasos; de el sale la pose
 	jr nz,L_6D8D		;6d87
 	ld a,006h		;6d89   ; Parado: pose 6
 	jr L_6DA7		;6d8b
@@ -5610,12 +5611,12 @@ L_6DA7:
 SALTA_SI_BOTON:		; Acarreo si se acaba de pulsar espacio o SELECT (bits 4-5, ahora si y antes no); guarda la altura segura E13A: la del jugador sobre un surtidor de en medio, o 16 mas abajo
 	ld hl,0e008h		;6daa
 	ld a,(hl)			;6dad
-	cpl			;6dae
+	cpl			;6dae   ; Los botones de antes al reves: los que estaban sueltos
 	and 030h		;6daf
 	inc hl			;6db1
-	and (hl)			;6db2
+	and (hl)			;6db2   ; Y ahora pulsados: cuenta el flanco, no que este apretado
 	ret z			;6db3
-	ld a,(0e134h)		;6db4
+	ld a,(0e134h)		;6db4   ; E134, la Y desde la que arranca el salto
 	ld b,a			;6db7
 	ld a,(0e138h)		;6db8
 	cp 004h		;6dbb   ; Sobre un surtidor y entre X=0x48 y 0x9F: la altura es la de la tabla
@@ -5632,7 +5633,7 @@ L_6DCA:
 L_6DCE:
 	ld a,b			;6dce
 	ld (0e13ah),a		;6dcf
-	scf			;6dd2
+	scf			;6dd2   ; Acarreo: hay salto
 	ret			;6dd3
 
 ; ----------------------------------------------------------------------
@@ -6334,9 +6335,9 @@ DATA_relleno_77F8:
 
 
 SONIDO:		; Pide el sonido A: efecto (canal C), musica de dos canales (0x8E) o de tres (0x90+)
-	di			;77fe
+	di			;77fe   ; El reproductor corre dentro de la interrupcion: no puede pillar los canales a medio repartir
 	push de			;77ff
-	ld d,000h		;7800
+	ld d,000h		;7800   ; D=0: solo entra si el canal no lleva ya algo igual o mas alto
 	call SONIDO_ARRANCA		;7802
 	pop de			;7805
 	ei			;7806
@@ -6371,31 +6372,31 @@ SONIDO_PISTAS:		; Indice = numero & 0x3F en la tabla de punteros; una palabra po
 	ld de,0796ah		;7832
 	call DE_MAS_A		;7835
 SONIDO_CANAL:		; Arranca un canal: 1 fotograma, duracion 1, el numero, y el puntero de la tabla; y al siguiente canal (10 bytes mas alla)
-	dec hl			;7838
+	dec hl			;7838   ; HL llega apuntando a +2 del canal: atras hasta +0
 	dec hl			;7839
-	ld (hl),001h		;783a
+	ld (hl),001h		;783a   ; +0, lo que queda de nota: 1 fotograma, para que el primer paso ya lea el evento
 	inc hl			;783c
-	ld (hl),001h		;783d
+	ld (hl),001h		;783d   ; +1, la duracion de las notas
 	inc hl			;783f
 	ld a,c			;7840
-	ld (hl),a			;7841
+	ld (hl),a			;7841   ; +2, el numero del sonido; con el bit 7 puesto es musica
 	inc hl			;7842
-	ld a,(de)			;7843
+	ld a,(de)			;7843   ; +3/+4, el puntero de la pista que da la tabla de 0x796A
 	ld (hl),a			;7844
 	inc hl			;7845
 	inc de			;7846
 	ld a,(de)			;7847
 	ld (hl),a			;7848
-	ld a,008h		;7849
+	ld a,008h		;7849   ; Desde +4, ocho mas caen en el +2 del canal siguiente
 	call HL_MAS_A		;784b
 	inc de			;784e
 	djnz SONIDO_CANAL		;784f
 SONIDO_FIN:		; Nada que hacer
 	ret			;7851
 SONIDO_REPITE:		; 0xFE en la pista: vuelve a arrancar el mismo sonido sin mirar prioridades (bucle)
-	ld a,(ix+002h)		;7852
+	ld a,(ix+002h)		;7852   ; +2 guarda el numero del sonido que estaba sonando
 	push bc			;7855
-	ld d,001h		;7856
+	ld d,001h		;7856   ; D=1: sin mirar prioridad, o el bucle se cortaria a si mismo
 	call SONIDO_ARRANCA		;7858
 	pop bc			;785b
 	ret			;785c
@@ -6416,26 +6417,26 @@ SONIDO_REPITE:		; 0xFE en la pista: vuelve a arrancar el mismo sonido sin mirar 
 ; ----------------------------------------------------------------------
 SUENA:		; Un fotograma de los tres canales (IX = E010, +10 por canal; C = registro de periodo)
 	ld b,003h		;785d
-	ld de,0000ah		;785f
+	ld de,0000ah		;785f   ; Diez bytes por canal: E010, E01A y E024
 	push bc			;7862
 	push de			;7863
-	ld l,001h		;7864
+	ld l,001h		;7864   ; L=1: registros 1 y 0 del PSG; luego 3 y 5
 	ld ix,0e010h		;7866
 	jr SUENA_CANAL_MIRA		;786a
 SUENA_CANAL:		; Siguiente canal
 	push bc			;786c
 	push de			;786d
 SUENA_CANAL_MIRA:		; Con sonido en curso (+2 distinto de 0), un paso
-	ld c,l			;786e
-	ld a,(ix+002h)		;786f
+	ld c,l			;786e   ; C se lleva el registro de periodo de este canal
+	ld a,(ix+002h)		;786f   ; +2 a cero es canal libre: ni se le mira la pista
 	or a			;7872
 	call nz,SUENA_PASO		;7873
-	inc c			;7876
+	inc c			;7876   ; Los dos registros del canal siguiente: 1, 3, 5
 	inc c			;7877
 	ld l,c			;7878
 	pop de			;7879
 	pop bc			;787a
-	add ix,de		;787b
+	add ix,de		;787b   ; IX al bloque del canal siguiente
 	djnz SUENA_CANAL		;787d
 	ret			;787f
 SUENA_PASO:		; Musica (bit 7) por 78D7; efecto: descuenta y, a cero, siguiente evento
@@ -6460,29 +6461,29 @@ SIGUIENTE_EVENTO:		; Lee la pista: 0xFE bucle, 0xFF apaga, musica por 7902, efec
 	inc hl			;78a7
 EFECTO_EVENTO:		; Nibble alto volumen, nibble bajo y byte siguiente el periodo
 	ld a,(hl)			;78a8
-	and 0f0h		;78a9
+	and 0f0h		;78a9   ; El nibble alto, el volumen
 	ld b,a			;78ab
-	xor (hl)			;78ac
+	xor (hl)			;78ac   ; El xor deja el nibble bajo: los 4 bits altos del periodo
 	ld d,a			;78ad
 	inc hl			;78ae
-	ld e,(hl)			;78af
+	ld e,(hl)			;78af   ; Y el byte de detras, los 8 bajos
 	inc hl			;78b0
-	ld (ix+003h),l		;78b1
+	ld (ix+003h),l		;78b1   ; La pista queda apuntando a lo que venga detras
 	ld (ix+004h),h		;78b4
 	ex de,hl			;78b7
 	call PSG_PERIODO		;78b8
 	ld a,b			;78bb
-	rrca			;78bc
+	rrca			;78bc   ; El volumen baja al nibble bajo para PSG_VOLUMEN
 	rrca			;78bd
 	rrca			;78be
 	rrca			;78bf
 	and 00fh		;78c0
 NOTA_ARRANCA:		; H = volumen; +0 = duracion, +8 = duracion + 3 (la envolvente); y al PSG
 	ld h,a			;78c2
-	ld a,(ix+001h)		;78c3
+	ld a,(ix+001h)		;78c3   ; +1 es la duracion fijada; +0 la cuenta atras que se le pone al lado
 	ld (ix+000h),a		;78c6
 	add a,003h		;78c9
-	ld (ix+008h),a		;78cb
+	ld (ix+008h),a		;78cb   ; +8 arranca tres por encima: la envolvente los gasta al principio
 	jr PSG_VOLUMEN		;78ce
 CANAL_APAGA:		; Numero 0 y volumen 0
 	xor a			;78d0
@@ -6509,10 +6510,10 @@ VOLUMEN_BAJA:		; Un paso menos, sin pasar de cero
 	ld h,a			;78f7
 PSG_VOLUMEN:		; Registro 8/9/10 (segun C) = H
 	ld a,c			;78f8
-	rrca			;78f9
+	rrca			;78f9   ; C vale 1, 3 o 5: registros 8, 9 y 10, los tres volumenes
 	add a,088h		;78fa
 	out (0a0h),a		;78fc
-	ld a,h			;78fe
+	ld a,h			;78fe   ; H trae el volumen, de 0 a 15
 	out (0a1h),a		;78ff
 	ret			;7901
 MUSICA_EVENTO:		; 0xFD: octava (bits 0-2) y volumen (bits 3-7); luego la nota
@@ -6520,15 +6521,15 @@ MUSICA_EVENTO:		; 0xFD: octava (bits 0-2) y volumen (bits 3-7); luego la nota
 	jr nz,MUSICA_NOTA		;7904
 	inc hl			;7906
 	ld a,(hl)			;7907
-	and 007h		;7908
+	and 007h		;7908   ; Bits 0-2: cuantas octavas se baja, a +5
 	ld (ix+005h),a		;790a
-	xor (hl)			;790d
+	xor (hl)			;790d   ; El xor deja los bits 3-7 y tres rrca los bajan: el volumen de arranque, a +6
 	rrca			;790e
 	rrca			;790f
 	rrca			;7910
 	ld (ix+006h),a		;7911
 	inc hl			;7914
-	ld a,(hl)			;7915
+	ld a,(hl)			;7915   ; Y detras del 0xFD viene ya el byte de la nota
 MUSICA_NOTA:		; Nibble bajo la nota, alto el indice de duracion; 12 es silencio (no repone el volumen)
 	and 00fh		;7916
 	ld b,a			;7918
@@ -6552,23 +6553,23 @@ MUSICA_NOTA:		; Nibble bajo la nota, alto el indice de duracion; 12 es silencio 
 MUSICA_PERIODO:		; Periodo de la nota por 0x7960, doblado tantas veces como octavas
 	call NOTA_ARRANCA		;793a
 	ld a,b			;793d
-	ld hl,07960h		;793e
+	ld hl,07960h		;793e   ; Los doce periodos de la octava mas alta
 	call HL_MAS_A		;7941
 	ld l,(hl)			;7944
 	ld h,000h		;7945
-	ld a,(ix+005h)		;7947
+	ld a,(ix+005h)		;7947   ; Sin octavas que bajar, el periodo va tal cual
 	or a			;794a
 	jr z,PSG_PERIODO		;794b
 	ld b,a			;794d
 MUSICA_OCTAVA:		; Una octava mas abajo por vuelta
-	add hl,hl			;794e
+	add hl,hl			;794e   ; Doblar el periodo es bajar una octava
 	djnz MUSICA_OCTAVA		;794f
 PSG_PERIODO:		; Registros C y C-1 = HL (periodo)
-	ld a,c			;7951
+	ld a,c			;7951   ; El registro impar lleva el byte alto del periodo
 	out (0a0h),a		;7952
 	ld a,h			;7954
 	out (0a1h),a		;7955
-	dec c			;7957
+	dec c			;7957   ; Y el par de debajo, el bajo
 	ld a,c			;7958
 	out (0a0h),a		;7959
 	ld a,l			;795b

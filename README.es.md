@@ -53,7 +53,7 @@ nueve fotogramas de la liana tal como son.
 | bytes de datos | 8.936 |
 | bytes sin identificar | **0** |
 | etiquetas con nombre | 296 |
-| comentarios anclados | 348 |
+| comentarios anclados | 566 |
 | rangos de datos con explicación | 166 |
 
 ## Algunas cosas que han salido

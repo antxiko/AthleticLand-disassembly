@@ -97,11 +97,15 @@ créditos.
 
 ## Los obstáculos que se mueven no arrancan de golpe
 
-Arrancan a los **veinticuatro pasos**. La rutina del fotograma (0x586A) vigila
-el contador de pasos 0xE13B y, justo cuando llega a 24, copia 0xE158 en 0xE159,
-que es el byte que miran de verdad las bolas, los peces, las arañas, la abeja y
-la bola que bota. Entras en una pantalla y durante dos docenas de pasos no te
-persigue nada.
+Las bolas que ruedan arrancan a los **veinticuatro pasos**. La rutina del
+fotograma (0x586A) vigila el contador de pasos 0xE13B y, justo cuando llega a
+24, copia 0xE158 en 0xE159.
+
+Y ahí hay que afinar, porque esta página lo contaba mal: **0xE159 solo lo miran
+las bolas que ruedan** (0x611B) y la rutina que las cobra (0x6AF4). Los peces
+(0x61F3), la bola que bota (0x62DC), las arañas (0x6326), la abeja (0x6426) y el
+tronco (0x64A8) leen **0xE158** directamente y salen desde el primer fotograma.
+La tregua de dos docenas de pasos es solo con las bolas.
 
 Del estado 7 en adelante el jugador se está muriendo, y entonces no se llama a
 ninguna de las once rutinas de obstáculos (0x587A): la pantalla se congela y
@@ -120,8 +124,10 @@ nibbles BCD —0x05, 0x10, 0x20—:
 | 100 | cada poste, cada trampolín, cada charco, la hoguera, la piedra, la abeja |
 | 200 | la fruta, cada tabla de surtidor, el tronco flotante |
 
-El marcador son seis cifras BCD y se planta en **999999** (0x4669), y el récord
-igual. Hay vida nueva a los 10000 y luego cada 20000 (0x4677); pasado el último
+El marcador son seis cifras BCD, y lo que se planta en **999999** es el
+**récord**: al desbordar, 0x4669 mete tres 0x99 en 0xE040-0xE042 con dos
+escrituras de 16 bits solapadas. Los puntos del jugador (0xE043 y 0xE046) no se
+topan: el `daa` da la vuelta y siguen contando desde cero. Hay vida nueva a los 10000 y luego cada 20000 (0x4677); pasado el último
 umbral no hay más. Superar una fase vale un **BONUS SCORE 2000** escrito en la
 fila 12 (0x4299).
 

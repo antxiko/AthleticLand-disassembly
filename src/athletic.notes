@@ -253,8 +253,12 @@ D 0x4545 0x454D registros_del_vdp R0=02 SCREEN 2, R1=E2 16K/pantalla/interrupcio
 F 0x4545 1
 L 0x454D COPIA_A_VRAM         BC bytes de HL a la VRAM DE
 L 0x4555 COPIA_A_VRAM_BUCLE   El bucle de salida, con la direccion ya puesta
+C 0x4556 El puerto 0x98 va solo: el VDP adelanta la direccion en cada byte
+C 0x455E El di solo protegia poner la direccion
 L 0x4560 RELLENA_VRAM         BC bytes de A en la VRAM DE
 L 0x4573 COPIA_VRAM_A_VRAM    BC bytes de la VRAM DE a la VRAM HL, byte a byte
+C 0x4573 Un byte de la VRAM DE...
+C 0x4577 ...a la VRAM HL; VPEEK y VPOKE mandan la direccion cada vez
 L 0x4583 TRIPLICA_PATRONES    Copia el primer tercio de la tabla de patrones (0x2000) a los otros dos
 L 0x4594 TRIPLICA_COLORES     Lo mismo con la tabla de colores (0x0000)
 
@@ -281,7 +285,11 @@ L 0x45FC PINTA_LISTA_TILES    El bucle de tiles con DE ya puesto
 C 0x45FF 0xFF: fin
 C 0x4601 0xFE: sigue otra direccion
 L 0x460A INTERCAMBIA          Cambia B bytes entre (HL) y (DE)
+C 0x460A Un byte de cada lado por vuelta, con C de apoyo
 L 0x4614 PUERTO_DEL_JOYSTICK  Registro 15 del PSG: joystick 1 para el jugador 1, joystick 2 para el 2 (bit 7 de E002)
+C 0x4614 Registro 15 del PSG: el que elige que puerto de mando se lee
+C 0x4618 0x8F: los dos puertos como entrada y el joystick 1 conectado
+C 0x4621 Bit 6: pasa al joystick 2
 L 0x4626 CARGA_FUENTE         Colores blancos (0xF0) y patrones de la fuente (0x48CE, 48 tiles 0x30-0x5F) y los triplica a los tres tercios
 C 0x4626 Blanco sobre transparente para los tiles 0x30-0x5F
 C 0x4631 La fuente: 48 glifos
@@ -290,11 +298,19 @@ L 0x4648 SUMA_PUNTOS          Suma DE (BCD) a los puntos del jugador que juega; 
 C 0x464B Bit 6 al signo (sin partida no se puntua) y bit 7 al acarreo (que jugador)
 C 0x464D E043 los puntos del 1P, E046 los del 2P
 C 0x4669 Se pasa de 999999: record a 999999
+C 0x4654 Byte bajo, con daa detras: los puntos estan en BCD
+C 0x4659 inc l y no inc hl: los tres bytes no se salen de la pagina
+C 0x4661 El tercer byte solo si hubo acarreo
+C 0x466C Dos escrituras de 16 bits solapadas dejan los tres bytes del record a 0x99
 L 0x4677 VIDA_EXTRA           A los 10000 y luego cada 20000 (E052 guarda las decenas de millar del proximo)
 C 0x467F Proximo umbral: +20000
 C 0x4684 Ya no hay mas vidas extra
 C 0x4690 Sonido de vida extra
 L 0x4695 RECORD               Si los puntos superan el record, se copian y se pinta
+C 0x4696 E042, el byte alto del record
+C 0x4699 (HL) es el byte alto de los puntos
+C 0x469D El record se queda corto: hay marca nueva
+C 0x469F Distintos y sin acarreo: el record sigue por delante
 L 0x46AA RECORD_NUEVO         E040-E042 = los puntos
 L 0x46B4 MARCADOR             Pinta el marcador entero: rotulos, puntos de los dos, fase, tiempo, SCENE y el KONAMI 1984 de abajo
 C 0x46B4 "1P", "HI", "STAGE", "TIME" y "SCENE"
@@ -310,6 +326,10 @@ L 0x46FF PINTA_SCENE          Dos cifras de E059 en la fila 23, columna 28
 L 0x4707 PINTA_FASE           Dos cifras de E051 en la fila 0, columna 28
 L 0x470D PINTA_1_BYTE_BCD     Dos cifras
 L 0x470F PINTA_BCD            B bytes BCD desde HL hacia abajo, dos cifras por byte, en la VRAM DE
+C 0x470F HL va hacia atras: la cifra menos significativa esta la primera
+C 0x4711 El nibble bajo es la cifra de la derecha; 0x30 es el tile del cero
+C 0x4717 El alto, la de la izquierda, que se pinta antes
+C 0x4728 DE hacia delante: dos columnas por byte
 L 0x472C PARPADEA_1P_2P       Cada 32 fotogramas borra o repinta el rotulo del jugador que juega (1P en 0x3802, 2P en 0x3822)
 C 0x4731 Bits 0-4 del contador de fotogramas a cero: cada 32
 C 0x473A Bit 7 de C: el jugador 2
@@ -394,7 +414,8 @@ D 0x4BD8 0x4C6B logo_konami_rle El KONAMI grande de 26 tiles (0x60-0x79) comprim
 #        2 cuatro trampolines con fruta, 3 cuatro surtidores, 4 estanque de cinco
 #        postes, 5 la piedra, 6 la hoguera, 7 el estanque)
 #   E158 los moviles (bits 0-2 cuantas bolas ruedan, 3 aranas que caen, 4 peces,
-#        5 tronco flotante, 6 bola que bota, 7 abeja); E159 copia activa de E158
+#        5 tronco flotante, 6 bola que bota, 7 abeja); E159 es la copia que se hace
+#        a los 24 pasos y que SOLO miran las bolas que ruedan (0x611B) y su cobro
 #        (los que la miran arrancan a los 24 pasos)  E157 variante del decorado
 #   E160-E171 punteros y sentidos por los arcos de salto de bolas y peces
 #   E172 azar de la bola que bota  E173/E175 su arco  E176-E178 espera de los peces
@@ -409,14 +430,20 @@ D 0x4BD8 0x4C6B logo_konami_rle El KONAMI grande de 26 tiles (0x60-0x79) comprim
 L 0x5857 MONTA_PANTALLA        Borra el estado de la pantalla (5A64) y la construye (5AE3)
 B 0x585E ----------------------------------------------------------------------
 B 0x585E UN FOTOGRAMA DE PARTIDA. Primero manda los 32 atributos de sprite a la
-B 0x585E VRAM; a los 24 pasos activa los moviles (E159); mientras el jugador este
-B 0x585E vivo (estado < 7) corre todo lo de la pantalla: tiempo, contadores,
+B 0x585E VRAM; a los 24 pasos copia E158 en E159, que solo miran las bolas que
+B 0x585E ruedan; mientras el jugador este vivo (estado < 7) corre todo lo de la
+B 0x585E pantalla: tiempo, contadores,
 B 0x585E lianas, surtidores, bolas, peces, hoguera, bola que bota, aranas,
 B 0x585E abeja y tronco; y siempre el jugador (66A6).
 B 0x585E ----------------------------------------------------------------------
 L 0x585E FOTOGRAMA_DE_PARTIDA  Sprites a la VRAM, los obstaculos y el jugador
 C 0x586D A los 24 pasos arrancan los moviles que miran E159
 C 0x587A Del 7 en adelante el jugador esta muriendo: los obstaculos se paran
+C 0x585E Los 32 sprites (128 bytes) de la RAM a la VRAM, de una vez por fotograma
+C 0x586A E13B, los pasos que lleva andados el jugador
+C 0x5871 E159 solo lo miran las bolas que ruedan (0x611B) y su cobro (0x6AF4); los demas moviles leen E158 y salen desde el primer fotograma
+C 0x587E El tiempo y los contadores de fase, antes que los obstaculos
+C 0x589F El jugador se pinta siempre, este muriendo o no
 L 0x58A3 PREPARA_DEMO          Fuente, graficos del juego, partida nueva, marcador y la primera pantalla
 B 0x58B2 ----------------------------------------------------------------------
 B 0x58B2 LOS MANDOS DE LA DEMO. En la pantalla 0 corre a la derecha y salta en
@@ -447,13 +474,26 @@ C 0x59FD ...y sus espejos, mirando a la izquierda, en 0x1AE0 (sprites 23-45)
 C 0x5A3E Los sprites 46-63: peces, bolas, aranas, abeja, sombra, puntos, caras y fruta
 L 0x5A09 ESPEJA_SPRITES        Da la vuelta a 23 sprites de 16x16 bit a bit en E0B0
 L 0x5A0C ESPEJA_SPRITE_FILA    Una fila de 16 bits
+C 0x5A0C DE trae la columna izquierda del patron y HL la derecha, 16 bytes mas alla
+C 0x5A13 Las dos columnas de la fila, 16 bits
 L 0x5A15 ESPEJA_16_BITS        Los 16 bits, uno a uno
+C 0x5A15 El bit mas alto de la fila sale al acarreo...
+C 0x5A16 ...y entra por arriba en el par IX+0 / IX+16, que se desplaza a la derecha: quedan del reves
+C 0x5A1A La columna izquierda del espejo recibe el reflejo de la derecha
+C 0x5A27 B ya vale 0, asi que BC son 16: los otros 16 bytes del sprite
+C 0x5A32 Los 23 espejos (0x2E0 bytes) montados en la RAM se copian a la VRAM
 L 0x5A4B ESPEJA_TILES          Da la vuelta bit a bit a BC bytes de HL en E130 (tiles espejados)
 L 0x5A4E ESPEJA_TILES_BUCLE    Un byte
 L 0x5A52 ESPEJA_8_BITS         Los 8 bits
+C 0x5A52 El bit alto de C sale al acarreo y entra por el alto de A, que baja: A acaba del reves
+C 0x5A5B Un byte menos de los BC
 L 0x5A64 BORRA_PANTALLA        Pone a cero E130-E330 salvo las cuatro fases de lianas y surtidores, y arranca los tiempos de los peces y la abeja
 C 0x5A95 Peces escalonados: E177 en 12 y E178 en 24 de los 31; aranas en las fases 5, 0 y 1
 C 0x5AA9 Altura segura del salto: el suelo
+C 0x5A64 E131 y E133, la fase de las dos lianas
+C 0x5A6C E14D y E14F, la de dos de los surtidores
+C 0x5A76 De E130 a E330 a cero de un ldir
+C 0x5A85 Y las cuatro fases vuelven a su sitio
 D 0x5AAF 0x5AC3 sprites_iniciales_11_15 Cinco atributos de sprite (Y, X, patron, color) para los sprites 11-15: peces y bolas, escondidos (Y=0xFC/0xCC/0xEC) hasta que arrancan
 F 0x5AAF 4
 D 0x5AC3 0x5ACB sprites_del_tronco Los dos sprites del tronco (9 y 10): Y=0x87, X=0x98 y 0xA8, patrones 0x58 y 0xB4 (uno el espejo del otro), verde claro
@@ -629,6 +669,12 @@ C 0x603B Liana 2 en la columna 22, doce columnas mas alla
 L 0x604B SURTIDORES            Bit 3: pinta las cuatro tablas de los surtidores en su fase (fila 10, columnas 8, 12, 17, 21) y guarda la altura de cada una en E148-E14B; y el borde de agua de la fila 16
 C 0x6081 El agua de la fila 16, columnas 8-24
 C 0x6087 Las bases de los cuatro chorros en la fila 17 (columnas 9, 13, 18 y 22)
+C 0x6051 Fila 10, columna 8: la tabla de mas a la izquierda
+C 0x6054 Su fase es la misma que la de una de las lianas
+C 0x605D Fila 10, columna 17
+C 0x6069 Fila 10, columna 12
+C 0x6075 Fila 10, columna 21
+C 0x607E E148-E14B quedan de izquierda a derecha, no en el orden en que se pintan
 D 0x60A4 0x60B7 agua_surtidores Lista de rotulo: 17 tiles de agua en la fila 16 desde la columna 8
 L 0x60B7 PINTA_SURTIDOR        Bloque de 6x3 de la fase A (0..31: sube hasta la 17 y baja) en la VRAM DE; devuelve en A la altura de la tabla
 C 0x60B9 De la 18 a la 31 se repite hacia atras: la tabla sube y baja
@@ -688,9 +734,25 @@ C 0x6202 Espera cumplida
 C 0x621C Se acabo el salto: otro desde el agua
 C 0x6229 Patron: 0xB8 subiendo, 0xBC bajando...
 C 0x6233 ...y 0xC0 por encima de Y=0x34
+C 0x61F3 Bit 4 de E158: esta pantalla lleva peces
+C 0x61F9 Y bits 0 o 7 de E156: hacen falta charcos o estanque de donde salir
+C 0x61FF E176, la espera del primer pez
+C 0x6206 E16F el paso del arco y E169 la posicion
+C 0x620E E0DC es el sprite 11
+C 0x6239 E0DE, el byte del patron del sprite
 L 0x623D PEZ_2                 El segundo pez (sprite 12)
+C 0x623D E177, la espera del segundo
+C 0x624C E0E0 es el sprite 12
+C 0x6277 Su patron
 L 0x627B PEZ_3                 El tercero (sprite 13)
+C 0x627B E178, la del tercero
+C 0x6289 E0E4 es el sprite 13
+C 0x62B4 Y su patron
 L 0x62B9 PEZ_SALTA             Espera a cero, Y=0x8C, X al azar de la tabla, rojo claro y sonido 7
+C 0x62B9 La espera vuelve a cero
+C 0x62BC Y=0x8C: asomando por el agua
+C 0x62C2 El registro de refresco hace de azar: una de las ocho X
+C 0x62CD El cuarto byte del sprite, el color
 D 0x62D4 0x62DC x_de_los_peces Ocho X por donde puede saltar un pez: 0x38, 0x58, 0x58, 0x78, 0x78, 0x98, 0x98, 0xB8 (las de los charcos, con las de en medio dobles)
 B 0x62DC ----------------------------------------------------------------------
 B 0x62DC LA BOLA QUE BOTA (sprite 22). Bit 6 de E158, un fotograma de cada
@@ -714,10 +776,22 @@ C 0x6332 Fase 8: aparece
 C 0x6339 Sigue en el aire
 C 0x633B Toco el suelo: fase 0 y escondido (Y=0x90)
 L 0x634B ARANA_2               La segunda (sprite 17, X=0x78)
+C 0x634B E0F4 es el sprite 17
+C 0x634E E17D, la fase de la segunda
+C 0x635A Al tocar el suelo: fase 0 y escondida en Y=0x90
 L 0x636A ARANA_3               La tercera (sprite 18, X=0x98)
+C 0x636A E0F8 es el sprite 18
+C 0x636D E17E, la de la tercera
 L 0x6382 ARANA_APARECE_3       Y=0x28, X=0x98
 L 0x6384 ARANA_APARECE         Y=0x28, X=A, patron 0xCC, blanca
+C 0x6384 Y=0x28: cuelga desde arriba del todo
+C 0x6389 Patron 0xCC, color 15 (blanco)
 L 0x638F ARANA_MUEVE           Fase < 15: se balancea (X+1 o X-1 segun el bit 0 de la fase, acarreo); si no cae 2 y devuelve acarreo mientras no llegue a 0x8C
+C 0x638F Por debajo de la fase 15 solo se balancea colgada
+C 0x6393 Baja dos puntos por fotograma
+C 0x6396 Acarreo mientras no llegue al suelo (Y=0x8C)
+C 0x6399 HL a la X del sprite
+C 0x639A Fase impar a la derecha, par a la izquierda
 D 0x63A4 0x63B6 arco_alto El arco de salto alto (0xFE ... 0xFF): 6 5 5 5 4 4 3 3 3 3 2 2 2 1 0 0. Lo usa la bola que rueda cuando el bit 0 de E158 esta a 1
 D 0x63B6 0x63C8 arco_plano El arco casi plano: 0 0 0 1 0 0 0 1 0 0 0 1 0 0 0 0. La bola que rueda por defecto
 D 0x63C8 0x63E4 arco_de_salto El arco del jugador y de la bola que bota: 8 8 8 8 8 8 7 7 5 5 4 4 3 3 2 1 1 1 1 1 1 1 1 0 0
@@ -741,8 +815,19 @@ C 0x6432 Espera cumplida: aparece
 C 0x643B Se fue por la izquierda: sonido 6, escondida (Y=0xC8) y altura nueva
 C 0x644C En la fase 2 siempre baja al primer nivel
 L 0x6459 ABEJA_SPRITES         El sprite 21 copia Y y X del 20; patrones 0xD8 amarillo y 0xDC negro
+C 0x6459 E100 es el sprite 20 y E104 el 21: el mismo bicho en dos colores
+C 0x6465 E1AE se queda con la X: por ahi se mira si el jugador la ha dejado atras
+C 0x646A Patron 0xD8 en color 11 (amarillo claro)
+C 0x6470 Y encima el 0xDC en color 1 (negro): las rayas
 L 0x6476 ABEJA_APARECE         Y=0x28, X=0xD8, 100 puntos por pasarla, sonido 5
+C 0x6476 E19E = 0x10 en BCD: cien puntos por dejarla atras
+C 0x647B Y=0x28, X=0xD8: entra por arriba a la derecha
 L 0x6487 ABEJA_MUEVE           Escondida: nada. Por encima de su altura: baja 2. Si no, X-2; acarreo al pasar de X=8
+C 0x6487 Y=0xC8 es la abeja escondida
+C 0x648C E179 elige una de las cuatro alturas de 0x64A4
+C 0x6496 Aun por encima de su altura: baja dos
+C 0x6499 Ya a su altura: dos puntos a la izquierda
+C 0x649D Acarreo al llegar a X=8: se sale por el borde
 D 0x64A4 0x64A8 alturas_de_la_abeja Las cuatro alturas a las que baja: 0x38, 0x48, 0x58, 0x72
 B 0x64A8 ----------------------------------------------------------------------
 B 0x64A8 EL TRONCO (sprites 9 y 10). Bit 5 de E158 y sin surtidores, un
@@ -755,8 +840,19 @@ C 0x64BD Con el jugador cayendo al agua, quieto
 C 0x64C0 Estado 5: el jugador va montado y se mueve con el
 C 0x64E3 Con el borde derecho (X+16) en 0x58, da la vuelta hacia la derecha
 C 0x64ED Con el borde derecho en 0xA8, hacia la izquierda
+C 0x64A8 Bit 5 de E158: esta pantalla lleva tronco
+C 0x64AE Y bit 3 de E156: con surtidores no hay tronco
+C 0x64B7 Un fotograma de cada dos: medio punto por fotograma
+C 0x64C2 E17A, hacia donde va el tronco
+C 0x64C8 Montado encima, la X del jugador se mueve con el
+C 0x64D2 E0D5 es la X del sprite 9, la mitad izquierda del tronco
+C 0x64DD El sprite 10 va 16 a la derecha: ese es el borde
 L 0x64E9 TRONCO_SENTIDO        E17A = 1 derecha, 0 izquierda
 L 0x64F3 CHOCA_CON_SPRITE      El jugador contra el sprite (HL): NC si sus 16x16 se solapan (Y+8 y X)
+C 0x64F3 E134 y E135, la Y y la X del jugador
+C 0x64F7 Y del jugador mas 8, menos la del sprite: solapan si cae entre 0 y 15
+C 0x6502 Lo mismo con las X, estas sin desplazar
+C 0x650A Sin acarreo: se tocan
 L 0x650C NO_CHOCA              Acarreo: no
 B 0x650E ----------------------------------------------------------------------
 B 0x650E CAER SOBRE UN SURTIDOR. Cuatro tramos de X (0x38-0x50, 0x58-0x70,
@@ -765,9 +861,24 @@ B 0x650E jugador esta a menos de 9 puntos por encima, se sube (estado 4). Con
 B 0x650E acarreo si ademas cayo 16 o mas por debajo de donde salto: al agua.
 B 0x650E ----------------------------------------------------------------------
 L 0x650E CAE_SOBRE_SURTIDOR    NC y estado 4 si aterriza en una tabla; acarreo si la caida mata
+C 0x650E E148-E14B, la altura de las cuatro tablas
+C 0x6514 La X del jugador se compara con los cuatro tramos; el primero, de 0x38 a 0x50
+C 0x6520 Su altura mas 4 menos la Y del jugador: vale de 0 a 8, o sea hasta 8 por encima
+C 0x652C La altura de la segunda tabla
+C 0x652E Segundo tramo, de 0x58 a 0x70
+C 0x6544 Tercero, de 0x80 a 0x98
+C 0x655A Y cuarto, de 0xA0 a 0xB8
 L 0x656C SOBRE_SURTIDOR        Estado 4; acarreo si Y-16 >= la altura desde la que salto
-L 0x657E CAE_AL_VACIO          NC: no ha caido en ninguna
+C 0x656E Estado 4: encaramado a la tabla
+C 0x6574 E13A es la Y desde la que empezo a caer
+L 0x657E CAE_AL_VACIO          Sin acarreo: o no ha dado en ninguna tabla, o ha dado y la caida no mata
 L 0x6580 CHOCAN_SPRITES        NC si los sprites B y C se solapan (16x16, con 8 de margen en Y y en X)
+C 0x6580 Cuatro bytes por sprite en E0B0: Y, X, patron y color
+C 0x6589 DE al sprite B
+C 0x6590 HL al sprite C
+C 0x6594 Yb mas 8 menos Yc: solapan si cae entre 0 y 15
+C 0x659F Con las X la ventana es de 0 a 16, un punto mas ancha
+C 0x65A9 Sin acarreo: se tocan
 B 0x65AD ----------------------------------------------------------------------
 B 0x65AD EL TIEMPO. E055 son 0x3A tramos que bajan uno cada 256 fotogramas;
 B 0x65AD la barra va de la columna 30 hacia la 16 en la fila 1, un tile por
@@ -787,14 +898,21 @@ C 0x65FF Desde la columna 16, llenos (0x2F)
 L 0x660D PINTA_TIEMPO          La barra entera (y de paso un tramo menos); agotada (2), catorce vacios
 L 0x6623 COBRA_AL_PASAR        Para B obstaculos con su X en (HL): si el jugador ya los ha dejado atras, cobra los puntos E18C+C (una sola vez)
 L 0x6636 COBRA_AL_PASAR_IZQ    Lo mismo yendo hacia la izquierda
+C 0x6636 Entrando por la derecha se anda hacia la izquierda: los pasados son los que quedan a la derecha
 L 0x6642 COBRA_PUNTOS          Cobra los puntos E18C+C si aun no estan cobrados: los suma, y saca el rotulo 50/100/200 sobre el jugador 30 fotogramas
 C 0x664C Ya cobrados
 C 0x6652 Los dos nibbles a DE en BCD: 0x20 son 200
 C 0x6668 El primer rotulo libre de los cuatro (sprites 23-26)
 C 0x6689 Patron 0xE0 (50), 0xE4 (100) o 0xE8 (200), blanco
 C 0x6692 30 fotogramas a la vista
+C 0x666B E181-E184: los fotogramas que le quedan a cada rotulo; a cero esta libre
+C 0x6673 C es el numero de rotulo libre; por cuatro, los bytes del sprite
+C 0x6677 E10C es el sprite 23, el primero de los cuatro rotulos
+C 0x667D E134 y E135: el rotulo sale 16 por encima del jugador
+C 0x6690 Color 15, blanco
 L 0x6696 COBRA_PUNTOS_FIN      Nada que cobrar
 L 0x6699 CARAS_DE_LAS_VIDAS    Pone el patron A en las cuatro caras: 0xF4 normal, 0xF8 preocupada, 0xEC contenta, 0xF0 llorando
+C 0x669E Cuatro bytes por sprite: solo se toca el patron
 B 0x66A6 ----------------------------------------------------------------------
 B 0x66A6 EL JUGADOR. Esconde los rotulos de puntos que hayan caducado y
 B 0x66A6 despacha por su estado E138: 0 anda, 1 en el aire, 2 colgado de la
@@ -920,8 +1038,17 @@ L 0x69A2 MEDIA_VUELTA          Arco corto y estado 7
 L 0x69B0 A_PINTAR_JUGADOR      Pinta los sprites del jugador
 L 0x69B3 ESTADO_8_FASE_SUPERADA E00D = 1: la fase esta superada (lo recoge el estado 11 del juego)
 L 0x69B9 LE_HAN_DADO           Caras llorando, obstaculos fuera, sonido 0x96, pose 16, estado 16 y el contador de fotogramas a cero
-L 0x69D8 ESTADO_16_LE_HAN_DADO Cae dos puntos por fotograma hasta el suelo (Y=0x6C); cada 16 cambia de lado; a los 128 fotogramas, muerto (E00C)
-C 0x69EC Cambia el bit 0 de la mirada: da vueltas
+C 0x69B9 0xF0: el patron de la cara llorando en la fila de las vidas
+C 0x69C1 Sonido 0x96: el de la muerte por golpe, tres canales
+C 0x69C6 E136 = 0x10: la primera de las dos poses de muerte
+C 0x69D0 Estado 16 del jugador
+C 0x69D3 El contador de fotogramas a cero: los 128 del estado 16 cuentan desde aqui
+L 0x69D8 ESTADO_16_LE_HAN_DADO Cae dos puntos por fotograma hasta el suelo (Y=0x6C); cada 16 alterna las dos poses de muerte; a los 128 fotogramas, muerto (E00C)
+C 0x69EC Cambia el bit 0 de la pose: alterna las dos poses de muerte
+C 0x69DC 0x6C es la Y del suelo
+C 0x69E5 Cada 16 fotogramas
+C 0x69EB E136, la pose
+C 0x69FD Ciento veintiocho fotogramas tirado antes de dar la vida por perdida
 L 0x6A05 ESTADO_15_SE_HUNDE    Cada 8 fotogramas un paso del arco de hundimiento, con la pose 6; al llegar a Y=0x7C, muerto (E00C)
 C 0x6A0B Sin sombra
 L 0x6A24 MOVIMIENTO_COMUN      Pinta al jugador y mira los bordes: X<3 sale por la izquierda (E00E=1, entrara por la derecha), X>=0xF0 por la derecha (E00E=2, entrara por la izquierda); si no, los choques
@@ -939,11 +1066,22 @@ L 0x6A41 CHOQUES               La cabeza contra los sprites 11-22, las piernas c
 C 0x6A44 Cabeza contra pez 1
 C 0x6A7C Cabeza contra la fruta
 C 0x6A82 200 puntos, la fruta desaparece, sonido 0x0A
+C 0x6A41 B=4 es el sprite de la cabeza, C=11 el primer pez; C sube de uno en uno
+C 0x6A59 Sprites 14 y 15, las bolas que ruedan
+C 0x6A67 Sprites 16, 17 y 18, las aranas
 L 0x6A92 CHOQUES_ABEJA_BOLA    Cabeza contra la abeja y la bola que bota
 C 0x6AA1 Las piernas: contra los peces, bolas, aranas, la fruta no (salta el 19)...
 C 0x6ADB ...la abeja, la bola que bota...
 C 0x6AEB ...y la caja invisible de la piedra o la hoguera
+C 0x6A92 Sprite 20, la abeja
+C 0x6A99 Dos de golpe: el 21 es la otra mitad de la abeja
+C 0x6AB9 Sprites 14 y 15, las bolas
+C 0x6AC7 Sprites 16, 17 y 18, las aranas
+C 0x6AE3 Otro salto de dos: del 20 al 22
 L 0x6AF4 COBRA_BOLAS_Y_ABEJA   Con los moviles activos: por pasar las dos bolas (E1AC, E1AD) y, si la abeja esta baja, tambien a ella (E1AE)
+C 0x6AFC Y=0x74 es donde se queda con la altura mas baja (0x72): solo entonces cuenta
+C 0x6AFE E1AC y E1AD son las X de las dos bolas, E1AE la de la abeja
+C 0x6B07 Del 16 en adelante en la tabla de cobrados
 B 0x6B0C ----------------------------------------------------------------------
 B 0x6B0C LOS SPRITES DEL JUGADOR. Cuatro sprites: dos arriba (cabeza y torso,
 B 0x6B0C rojo y amarillo) y dos abajo (piernas, magenta y azul). La pose E136
@@ -961,14 +1099,28 @@ C 0x6B51 Muriendo la sombra se queda como este
 C 0x6B54 En el aire, sin sombra; en la meta, en el suelo
 C 0x6B5C Sobre tabla o poste (estados 3+): sombra 16 por debajo
 L 0x6B65 SOMBRA                Sprite 8: Y=A, X del jugador, patron 0xD4, negro; con Y>=0x48 se ve
+C 0x6B65 E0D0 son los cuatro bytes del sprite 8
+C 0x6B6C El patron 0xD4 es la mancha, en color 1 (negro)
+C 0x6B71 Por encima de la fila 0x48 se queda sin color y no se ve
 L 0x6B74 SIN_SOMBRA            Color 0: no se ve
 L 0x6B79 SOMBRA_EN_EL_SUELO    Y=0x8C
 L 0x6B7D DOS_SPRITES           Dos sprites seguidos con la misma Y,X y los dos patrones siguientes de DE
 L 0x6B80 UN_SPRITE             Y=B, X=C, patron (DE), y salta el color
+C 0x6B80 Los cuatro bytes del sprite: Y, X, patron y color
+C 0x6B84 El patron sale de la tabla que trae DE, y DE avanza
+C 0x6B87 El segundo inc hl salta el color, que no se toca
 D 0x6B8A 0x6BC2 poses_del_jugador Catorce poses de cuatro patrones (dos de arriba, dos de abajo): 0-6 mirando a la derecha (parado, andando, saltando, colgado...), 7-13 las mismas con los sprites espejados
 F 0x6B8A 4
 L 0x6BC2 PINTA_JUGADOR_MUERTO  Los sprites del jugador con la pose de muerte (0x6C06) segun hacia donde mira, y el color 8
 C 0x6BD2 Mirando a la izquierda: X+16 y la otra mitad de la tabla
+C 0x6BC2 Y del jugador mas 16 y X menos 16
+C 0x6BCF E139 es hacia donde mira
+C 0x6BE0 La tabla de cuatro poses de cinco patrones
+C 0x6BE4 El indice por 5; el bit 4 de E136 no estorba porque 16 por 5 es multiplo de 16
+C 0x6BEC E0C0 es el sprite 4, la cabeza
+C 0x6BF3 Los sprites 6 y 7, en la X del jugador sin desplazar
+C 0x6BFB El quinto patron 16 mas abajo, en el hueco del sprite 8 (la sombra)
+C 0x6C03 Y a ese quinto sprite, el color 8
 D 0x6C06 0x6C1A poses_de_muerte Cuatro poses de 5 patrones (los cuatro del jugador y uno mas en el hueco de la sombra): dos mirando a la derecha, que alternan cada 16 fotogramas, y sus espejos. Indice E136*5 modulo 16
 F 0x6C06 5
 L 0x6C1A ARCO_SUBIENDO         Arranca el arco HL hacia arriba (E202=0): un salto
@@ -987,13 +1139,27 @@ C 0x6C3F E144 distinto de 0: no puede agarrar
 C 0x6C48 E13C=2: viene de la liana 2 y solo puede agarrar la 1; a 0, cualquiera de las dos
 L 0x6C53 AGARRA_LIANA          Toca el cabo: cuelga
 L 0x6C58 COLGADO               E13C = que liana, cobra sus puntos, estado 2
+C 0x6C58 Los dos bits bajos del puntero dicen cual de las dos lianas es
+C 0x6C5F Sus puntos, por el indice de la tabla de cobrados
+C 0x6C64 Estado 2: colgado
 L 0x6C67 PASO_DE_ARCO_JUGADOR  Cobra lo saltado y avanza el arco
 C 0x6C67 Trampolines, charcos, piedra y hoguera (E1A5-E1AB)
 C 0x6C81 Pose 6 los primeros 8 fotogramas, luego la 4
 C 0x6C95 Y mas o menos el delta
 C 0x6CA4 Saliendo de la liana (E144=0xFF), dos puntos por fotograma
 C 0x6CB6 Si no, uno
+C 0x6C6A Siete obstaculos, del 9 al 15 de la tabla de cobrados
+C 0x6C71 Bit 0 de E202: hacia donde va el arco del salto
+C 0x6C7C E205 es el paso dentro del arco
+C 0x6C9A La Y del jugador
+C 0x6C9D E137: izquierda o derecha, guardadas al saltar
+C 0x6CAA Bit 3: hacia la derecha
 L 0x6CBE ARCO_JUGADOR_AVANZA   Puntero adelante (subiendo) o atras (bajando); 0xFF da la vuelta y E144+1 (desde el suelo ya no se agarra liana bajando; desde otra liana, 0xFF pasa a 0 y si); 0xFE termina
+C 0x6CC7 0xFF cierra la tabla por el lado de subir
+C 0x6CCC Dos atras: se vuelve al ultimo valor bueno
+C 0x6CD2 E144 sube: sale del 0xFF y ya se puede agarrar otra liana
+C 0x6CD5 E202 = 1: el arco se recorre al reves, cayendo
+C 0x6CDC 0xFE es el tope de abajo: se vuelve al primer valor y el paso se repite sin fin
 D 0x6CE2 0x6CF2 arco_de_hundirse El arco medio: 2 1 2 1 2 1 1 1 1 1 1 1 0 1 0 0. Lo usan hundirse y la bola que rueda con el bit 1 de E158
 D 0x6CF2 0x6D06 arco_corto El arco corto: 4 4 3 3 3 3 2 2 2 2 1 1 1 1 0 0. El salto normal, el bote sin boton, y caer de tabla o poste
 B 0x6D06 ----------------------------------------------------------------------
@@ -1007,14 +1173,30 @@ C 0x6D0C Bit 1 de E13C: la liana 2
 C 0x6D23 Mirando a la izquierda, 14 mas a la derecha
 C 0x6D2E Abajo: se suelta
 C 0x6D43 Izquierda o derecha guardadas para el salto
+C 0x6D13 El cabo de la liana: Y en B, X en C
+C 0x6D16 El jugador se pega al cabo
+C 0x6D28 Pose 5: colgado
+C 0x6D2A E009, lo que se pulsa en este fotograma
+C 0x6D32 Al soltarse, el arco corto de 0x6CF2
+C 0x6D3A Estado 1 (en el aire) y E144=1: soltado desde liana
+C 0x6D4D El arco cortito de 0x6CED, el impulso del salto
+C 0x6D5D E144 = 0xFF: acaba de saltar de una liana
+C 0x6D69 Mirando a la izquierda, seis poses mas alla: las espejadas
 L 0x6D72 ANDA                  Izquierda o derecha: un paso (X mas o menos 1), sonido 2, mirada, y la pose por los pasos (E13B); parado, pose 6
 C 0x6D89 Parado: pose 6
 C 0x6D8D Un paso mas
 C 0x6D9C Sonido de pisada
 C 0x6DA2 Pose 0-3 por los bits 2-3 de los pasos
+C 0x6D73 E144 a cero: desde el suelo no se agarra liana
+C 0x6D79 Bits 2 y 3 de lo pulsado: izquierda y derecha
+C 0x6D84 E13B cuenta los pasos; de el sale la pose
 L 0x6DAA SALTA_SI_BOTON        Acarreo si se acaba de pulsar espacio o SELECT (bits 4-5, ahora si y antes no); guarda la altura segura E13A: la del jugador sobre un surtidor de en medio, o 16 mas abajo
 C 0x6DBB Sobre un surtidor y entre X=0x48 y 0x9F: la altura es la de la tabla
 C 0x6DCA Si no, 16 por debajo (el suelo)
+C 0x6DAE Los botones de antes al reves: los que estaban sueltos
+C 0x6DB2 Y ahora pulsados: cuenta el flanco, no que este apretado
+C 0x6DB4 E134, la Y desde la que arranca el salto
+C 0x6DD2 Acarreo: hay salto
 D 0x6DD4 0x6DDB fondo_lista_cielo Lista del motor: los cielos de las filas 3-8 (0x6DD4)
 D 0x6DDB 0x6DDF fondo_lista_hierba Lista: la hierba de la fila 15 (0x6DDB); 0x6DDF la del seto y la hierba
 D 0x6DDF 0x6DE2 fondo_lista_seto Lista: el seto de las filas 10-12 y la hierba
@@ -1151,6 +1333,8 @@ F 0x5701 19
 # Manda el numero mas alto: uno nuevo solo interrumpe a otro mas bajo.
 # =============================================================================
 L 0x77FE SONIDO               Pide el sonido A: efecto (canal C), musica de dos canales (0x8E) o de tres (0x90+)
+C 0x77FE El reproductor corre dentro de la interrupcion: no puede pillar los canales a medio repartir
+C 0x7800 D=0: solo entra si el canal no lleva ya algo igual o mas alto
 L 0x7808 SONIDO_ARRANCA        D=0 respeta la prioridad; D=1 (desde el bucle) no. Reparte los canales y apunta las pistas
 C 0x780D Por debajo de 0x8E: efecto, un canal
 C 0x7811 0x8E: dos canales (A y B); del 0x90 en adelante, tres
@@ -1159,8 +1343,16 @@ L 0x781C SONIDO_PRIORIDAD      Si el canal ya suena algo igual o mayor, nada
 C 0x7824 Del 0x95 al 0x9A se guardan sin el bit 7: suenan con el formato de efecto aunque vayan por tres canales
 L 0x782E SONIDO_PISTAS         Indice = numero & 0x3F en la tabla de punteros; una palabra por canal seguida
 L 0x7838 SONIDO_CANAL          Arranca un canal: 1 fotograma, duracion 1, el numero, y el puntero de la tabla; y al siguiente canal (10 bytes mas alla)
+C 0x7838 HL llega apuntando a +2 del canal: atras hasta +0
+C 0x783A +0, lo que queda de nota: 1 fotograma, para que el primer paso ya lea el evento
+C 0x783D +1, la duracion de las notas
+C 0x7841 +2, el numero del sonido; con el bit 7 puesto es musica
+C 0x7843 +3/+4, el puntero de la pista que da la tabla de 0x796A
+C 0x7849 Desde +4, ocho mas caen en el +2 del canal siguiente
 L 0x7851 SONIDO_FIN            Nada que hacer
 L 0x7852 SONIDO_REPITE         0xFE en la pista: vuelve a arrancar el mismo sonido sin mirar prioridades (bucle)
+C 0x7852 +2 guarda el numero del sonido que estaba sonando
+C 0x7856 D=1: sin mirar prioridad, o el bucle se cortaria a si mismo
 B 0x785D ----------------------------------------------------------------------
 B 0x785D EL REPRODUCTOR, en cada interrupcion (aunque el juego vaya atrasado).
 B 0x785D Para cada canal ocupado descuenta la nota y, si acabo, lee el
@@ -1174,8 +1366,14 @@ B 0x785D La musica lleva envolvente: la nota arranca al volumen v y baja tres
 B 0x785D pasos en tres fotogramas, se mantiene, y baja dos mas al acabar.
 B 0x785D ----------------------------------------------------------------------
 L 0x785D SUENA                 Un fotograma de los tres canales (IX = E010, +10 por canal; C = registro de periodo)
+C 0x785F Diez bytes por canal: E010, E01A y E024
+C 0x7864 L=1: registros 1 y 0 del PSG; luego 3 y 5
 L 0x786C SUENA_CANAL           Siguiente canal
 L 0x786E SUENA_CANAL_MIRA      Con sonido en curso (+2 distinto de 0), un paso
+C 0x786E C se lleva el registro de periodo de este canal
+C 0x786F +2 a cero es canal libre: ni se le mira la pista
+C 0x7876 Los dos registros del canal siguiente: 1, 3, 5
+C 0x787B IX al bloque del canal siguiente
 L 0x7880 SUENA_PASO            Musica (bit 7) por 78D7; efecto: descuenta y, a cero, siguiente evento
 L 0x7887 SIGUIENTE_EVENTO      Lee la pista: 0xFE bucle, 0xFF apaga, musica por 7902, efecto aqui
 C 0x788E 0xFE: bucle
@@ -1183,20 +1381,37 @@ C 0x7892 0xFF: canal apagado
 C 0x7894 Musica: otro formato
 C 0x789D 0x2n: nueva duracion de las notas del efecto
 L 0x78A8 EFECTO_EVENTO         Nibble alto volumen, nibble bajo y byte siguiente el periodo
+C 0x78A9 El nibble alto, el volumen
+C 0x78AC El xor deja el nibble bajo: los 4 bits altos del periodo
+C 0x78AF Y el byte de detras, los 8 bajos
+C 0x78B1 La pista queda apuntando a lo que venga detras
+C 0x78BC El volumen baja al nibble bajo para PSG_VOLUMEN
 L 0x78C2 NOTA_ARRANCA          H = volumen; +0 = duracion, +8 = duracion + 3 (la envolvente); y al PSG
+C 0x78C3 +1 es la duracion fijada; +0 la cuenta atras que se le pone al lado
+C 0x78CB +8 arranca tres por encima: la envolvente los gasta al principio
 L 0x78D0 CANAL_APAGA           Numero 0 y volumen 0
 L 0x78D7 MUSICA_PASO           Descuenta la nota; envolvente: tres pasos abajo al principio, dos al final
 C 0x78E7 Los ultimos tres fotogramas: baja
 L 0x78EC ENVOLVENTE_ARRANQUE   Los tres primeros fotogramas: baja
 L 0x78EF VOLUMEN_BAJA          Un paso menos, sin pasar de cero
 L 0x78F8 PSG_VOLUMEN           Registro 8/9/10 (segun C) = H
+C 0x78F9 C vale 1, 3 o 5: registros 8, 9 y 10, los tres volumenes
+C 0x78FE H trae el volumen, de 0 a 15
 L 0x7902 MUSICA_EVENTO         0xFD: octava (bits 0-2) y volumen (bits 3-7); luego la nota
+C 0x7908 Bits 0-2: cuantas octavas se baja, a +5
+C 0x790D El xor deja los bits 3-7 y tres rrca los bajan: el volumen de arranque, a +6
+C 0x7915 Y detras del 0xFD viene ya el byte de la nota
 L 0x7916 MUSICA_NOTA           Nibble bajo la nota, alto el indice de duracion; 12 es silencio (no repone el volumen)
 C 0x7925 Tabla de 14 duraciones
 C 0x7930 Nota 12: silencio
 L 0x793A MUSICA_PERIODO        Periodo de la nota por 0x7960, doblado tantas veces como octavas
+C 0x793E Los doce periodos de la octava mas alta
+C 0x7947 Sin octavas que bajar, el periodo va tal cual
+C 0x794E Doblar el periodo es bajar una octava
 L 0x794E MUSICA_OCTAVA         Una octava mas abajo por vuelta
 L 0x7951 PSG_PERIODO           Registros C y C-1 = HL (periodo)
+C 0x7951 El registro impar lleva el byte alto del periodo
+C 0x7957 Y el par de debajo, el bajo
 D 0x7960 0x796A periodos_de_notas Los periodos del PSG de Do6 a La6 (106, 100, 95, 89, 84, 80, 75, 71, 67, 63); La#6 y Si6 (60, 56) son los dos bytes siguientes, que a la vez son la entrada 0 de la tabla de punteros
 D 0x796A 0x79AE tabla_de_sonidos 34 punteros de pista, indice = numero del sonido & 0x3F, con los canales seguidos: 1-13 los efectos, 14-15 la musica de la partida (0x8E), 16-18 la muerte (0x90), 19-21 GAME OVER (0x93), 22-24 le han dado (0x96), 25-27 se hunde (0x99), 28-30 la fanfarria del menu y la meta (0x9C), 31-33 mudos. La entrada 0 (0x383C) no es un puntero: son las dos ultimas notas de la tabla de periodos. 0x79DB (un 0xFF) es la pista muda de los canales vacios y del sonido 6
 F 0x796A w1
@@ -1229,4 +1444,9 @@ D 0x7C3E 0x8000 relleno_final 962 bytes a 0xFF hasta el final del cartucho
 L 0x41EC ESTADO_A_MAS_UNO     Pone el estado A, E004 = 80 y suma 1 (igual que 0x43B1)
 L 0x4201 MENU_CORTINILLA_BUCLE La cortinilla entera, columna a columna, sin salir
 L 0x4771 VIDA_PINTA_HUECO      Un hueco de 2x2 y el color de su cara
+C 0x4772 Un bloque de 2 por 2 tiles
+C 0x4778 El quinto byte de la tabla es el color de la cara
+C 0x4779 E186 recorre los colores de los sprites 27-30, las caras de las vidas
+C 0x477D Cuatro bytes mas alla, el sprite siguiente
+C 0x4786 Dos columnas a la izquierda: el hueco siguiente
 L 0x6767 AIRE_MOVIMIENTO_COMUN Al movimiento comun (6A24)
