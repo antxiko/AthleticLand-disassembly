@@ -172,7 +172,7 @@ L 0x4256 MENU_ARRANCA_PARTIDA Prepara la partida (44C8) y pasa al estado 9 con c
 L 0x4265 ESTADO_09_VIDA_NUEVA Estado 9: tras la cortinilla, una vida menos, fuente y decorado, marcador, PLAYER n si son dos, y BONUS SCORE 2000 o los creditos si viene de superar fase
 C 0x426C Bit 6: la partida esta en marcha
 C 0x4271 Una vida menos
-C 0x427F "PLAYER" y el numero, solo cuando E001 vale 0 (dos jugadores)
+C 0x427F "PLAYER" y el numero, solo cuando E001 vale 0. OJO: eso NO es "solo con dos jugadores". E001 es el subestado, y quien lo pone a 0x20 con un jugador es SUBESTADO_POR_JUGADORES (0x444F), que solo la llaman el estado 12 (muerte, 0x4324) y el 15 (fase superada, 0x43A1). La primera vez que se entra aqui viene del menu por 0x425E, que deja E001 a 0 sin mirar cuantos juegan: al empezar la partida sale PLAYER 1 aunque se juegue solo
 C 0x4289 E00D: se viene de superar una fase
 C 0x428D Sonido de fase superada
 C 0x4295 La fase ha dado la vuelta de 99 a 00: ALL STAGE CLEAR y los creditos
@@ -423,7 +423,10 @@ D 0x4BD8 0x4C6B logo_konami_rle El KONAMI grande de 26 tiles (0x60-0x79) comprim
 #        abeja  E17C-E17E fase de los tres aranas
 #   E181-E184 cuenta atras de los rotulos de puntos  E186 puntero para las vidas
 #   E187 contador de la segunda bola  E18C-E1AE X de los obstaculos y sus puntos
-#        (0x6623 los cobra al pasar: E18C+n puntos en BCD, E1A5+n la X)
+#        (0x6623 los cobra al pasar: E18C+n los puntos en BCD, E19C+n la X;
+#        E1A5 es la X del indice 9, los trampolines, no la del 0. Las dos tablas
+#        se solapan en E19C-E19E, pero los indices 0-3 -lianas, surtidores y
+#        tronco- no pasan por 0x6623 y no usan la de X)
 #   E200 puntero al arco de salto  E202 sube (0) o baja (1)  E203 direccion en la
 #        liana  E204 salto pedido en el trampolin  E205 fotogramas de salto
 
@@ -1818,3 +1821,199 @@ C 0x4779 E186 recorre los colores de los sprites 27-30, las caras de las vidas
 C 0x477D Cuatro bytes mas alla, el sprite siguiente
 C 0x4786 Dos columnas a la izquierda: el hueco siguiente
 L 0x6767 AIRE_MOVIMIENTO_COMUN Al movimiento comun (6A24)
+
+# =============================================================================
+# TERCERA PASADA DE COMENTARIOS: las rutinas que se habian quedado bautizadas
+# pero sin explicar (medido con densidad.py, todas por debajo del 10 %)
+# =============================================================================
+
+# --- Las rutinas del VDP y la interrupcion -----------------------------------
+C 0x4019 Sin interrupciones desde que se pone la direccion hasta que se lee el dato
+C 0x401A Sin poner el bit 6 de D: direccion de LECTURA de la VRAM
+C 0x401D Dos nop de margen entre mandar la direccion y leer el puerto de datos
+C 0x401F Puerto 0x98: el byte de la VRAM
+C 0x4067 Deshace los cinco push de 0x4038 sin abrir el candado E005: lo abre el paso que sigue corriendo
+C 0x406C El AF de la interrupcion, que aqui no lleva nada util
+C 0x406D El sonido ya ha sonado en 0x4041: aunque el paso vaya tarde, la musica no se corta
+C 0x40C3 E009 es lo pulsado ahora; E008, lo del fotograma anterior
+C 0x40C6 Lo que habia en E009 se aparta antes de pisarlo...
+C 0x40C9 ...y baja a E008; asi 0x6DAA puede ver el flanco del boton en vez de si esta pulsado
+
+# --- El paso del juego y los estados del titulo -------------------------------
+C 0x412A E003, el contador de fotogramas: sube uno por interrupcion y de el cuelgan casi todos los ritmos del juego
+C 0x4131 Bit 6 de E002: el rotulo 1P/2P solo parpadea con partida en marcha
+C 0x4136 E000, el estado del juego, se guarda en C porque TECLAS_1_A_4 machaca A
+C 0x413E ...y por debajo del 8 tambien; del 8 al 17 son el menu y la partida, donde ya no se puede cambiar de opcion
+C 0x4174 E00B lo pone a 1 el fin de la demo (0x41E5): antes del logotipo hay que borrar lo que hubiera
+C 0x417A Una columna por fotograma; este estado se repite hasta que termine
+C 0x417D CORTINILLA vuelve positiva mientras le queden columnas
+C 0x417E Borrada del todo: se apaga la peticion y el logotipo se carga en este mismo fotograma
+C 0x4182 Descomprime los 26 tiles del KONAMI grande y prepara la subida
+C 0x41C0 E00F a 0xFF: mientras dure la cortinilla no se repinta el recuadro del SCENE (0x45E2)
+C 0x41C5 Otra vez una columna por fotograma
+C 0x41C9 Ya borrada: fuente, graficos del juego, partida nueva, marcador y la primera pantalla
+C 0x41CD E00F otra vez a 0: a partir de aqui la cortinilla si vuelve a pintar el recuadro
+C 0x41D0 Al estado 7, la partida de demostracion, sin espera ninguna
+C 0x4247 En el menu el titulo no se anima: las 52 llamadas de TITULO_COLUMNA caben en este fotograma
+C 0x424A Acarreo mientras quede columna o quede KONAMI 1984 que repintar
+C 0x424D E00A, el contador de columnas, a cero para la proxima vez que se anime
+C 0x4250 Y encima el menu de las cuatro opciones
+C 0x4256 Vidas, fase, tiempo y puntos a los valores de arranque de 0x44F2
+C 0x425B E00F a 0xFF: la cortinilla del estado 9 no repintara el recuadro del SCENE
+C 0x425E El inc a deja 0: con E001 a cero, el estado 9 saca PLAYER 1 aunque se juegue solo
+C 0x4262 80 fotogramas y al estado 9
+
+# --- El cambio de pantalla y las utilidades del marcador ----------------------
+C 0x43F9 Borra el estado EN RAM de la pantalla anterior (E130-E330); el decorado ya lo borro la cortinilla del estado 16
+C 0x43FC Monta la pantalla nueva entera: sprites, lianas, decorado y obstaculos
+C 0x43FF El SCENE nuevo en el recuadro de abajo a la derecha
+C 0x4402 Vuelta al estado 11, el de jugar, sin espera ninguna
+C 0x4408 E054, el numero de pantalla; el estado 18 acaba de subirlo
+C 0x440C La demo solo ensena la 0 y la 1: al llegar a la 2 se acaba y se vuelve al titulo
+C 0x4411 Igual que el estado 17, pero aqui si hay que repintar el marcador...
+C 0x4414 ...porque en la demo el bit 6 de E002 esta apagado y la cortinilla borra las 24 filas, no solo las 19 de en medio
+C 0x441A Estado 6+1 = 7 con 80 fotogramas de espera: sigue la demo
+C 0x443B Lo que quedo tras quitar las centenas, de diez en diez
+C 0x443E Por debajo de diez, lo que queda son las unidades y ya estan en B
+C 0x4442 Cada resta suma una decena al nibble alto de C
+C 0x4447 El pop af ha devuelto las banderas del sub: se para justo cuando el resto da cero
+C 0x444F E001, el subestado, que en la partida solo dice si hay que pintar PLAYER n
+C 0x4452 Bit 5 de E002: dos jugadores
+C 0x4455 Se invierte y se aisla: con dos jugadores queda 0 y con uno 0x20
+C 0x4459 Y el estado 9 saca el rotulo PLAYER solo cuando E001 vale 0
+C 0x44C8 Desde E043, los puntos del 1P; el record (E040-E042) se salva
+C 0x44CE 0x100 bytes mas el propio E043: se borra hasta E143
+C 0x44D5 Los once valores de arranque al jugador que va a jugar
+C 0x44E5 Con un solo jugador no hay copia que hacer
+C 0x44E6 Con dos, los 32 bytes de E050 se clonan en E080: el segundo arranca igual
+C 0x453A El valor del registro, sacado de la copia E038-E03F
+C 0x453C Escribir un registro del VDP es mandar el dato por el 0x99 y detras 0x80 mas el numero
+C 0x4541 D arranca en 0x80 y sube: los ocho registros, del 0 al 7
+C 0x4569 H guarda el byte de relleno porque A se gasta en la cuenta
+C 0x456A El VDP adelanta solo la direccion: basta con repetir por el 0x98
+C 0x4571 Las interrupciones vuelven al salir; el di solo tapaba el poner la direccion
+C 0x46ED Fila 0, columna 5: los puntos del 1P
+C 0x46F0 E043-E045; se entra por el byte alto porque PINTA_BCD recorre HL hacia atras
+C 0x46F3 El bit 7 de A al acarreo: puesto, es el jugador 2
+C 0x46F6 Fila 1, columna 5 (0x3825), y sus puntos en E046-E048
+
+# --- La pantalla del titulo ---------------------------------------------------
+C 0x47A0 Diecisiete vueltas, una por fila de 16 colores
+C 0x47A2 Siempre el mismo bloque RLE: los 34 tiles del logotipo llevan colores identicos de dos en dos
+C 0x47A5 Descomprime 16 bytes: 0x08 0xE0 son ocho 0xE0, y 0x88 copia e0 e0 30 30 30 20 20 c0 tal cual
+C 0x47A9 DE avanza 16 bytes, los colores de dos tiles
+C 0x47B3 VRAM 0x1180: la tabla de colores empieza en 0x0000, y ahi cae el tile 0x30 del tercio de abajo
+C 0x47B6 0x180 bytes son 48 tiles, del 0x30 al 0x5F: las cifras y las letras que usa el menu
+C 0x47C7 E00A a cero: TITULO_COLUMNA empezara por la columna 0
+C 0x47CB E00A cuenta las llamadas y sube en cada una
+C 0x47D0 De la 17 en adelante ya no queda columna: solo el KONAMI 1984 (0x47F0)
+C 0x47D8 La columna n de la fila 4 es 0x3888 mas n
+C 0x47DB Dos tiles por columna: 0x40+2n arriba y 0x41+2n justo debajo
+C 0x47E1 El primer tile que se escribe es un 0: la fila 4 se va limpiando por delante
+C 0x47E2 Tres tiles en la misma columna: el 0 de la fila 4 y los dos del logotipo, filas 5 y 6
+C 0x47E5 Bajar una fila en la tabla de nombres es sumar 32
+C 0x47EA A para la vuelta siguiente, y C ya apunta al tile de abajo
+C 0x47EE Acarreo: aun quedan columnas por sacar
+
+# --- El logotipo de KONAMI que sube ------------------------------------------
+C 0x4B75 En el titulo E050 no son las vidas: es el cursor de 16 bits de lo que lleva subido el logotipo
+C 0x4B78 Una fila entera de la tabla de nombres son 32 bytes
+C 0x4B84 0x3AAA menos lo subido; la primera vez sale 0x3A8A, fila 20 y columna 10
+C 0x4B87 Los 26 tiles del logotipo van seguidos desde el 0x60
+C 0x4B89 Tres tiles arriba, once en medio y doce abajo: asi esta partido el KONAMI grande
+C 0x4B98 Doce ceros en la fila de debajo: borran el rastro que deja al subir
+C 0x4BA2 E00A cuenta las 17 filas; al llegar a cero es el z que espera 0x4188
+C 0x4BA5 Un tile por posicion, y el codigo del tile sube con la columna
+C 0x4BAC Se recupera el principio de la fila...
+C 0x4BAD ...y se le suman 32: DE se va a la fila de debajo para la llamada siguiente
+
+# --- Los mandos de la demo ----------------------------------------------------
+C 0x58B2 E054, la pantalla: la demo se comporta distinto en la 0 y en la 1
+C 0x58B8 E009 es lo que el juego lee como pulsado ahora; aqui lo escribe la demo, no el mando
+C 0x58BE En la pantalla 0 solo salta en dos sitios, X=0x38 y X=0x80: el resto es correr
+C 0x58D0 Solo la pantalla 1 tiene mandos propios; en cualquier otra la demo no toca nada
+C 0x58D3 HL a la X del jugador, que es lo que miran las tres ramas de abajo
+C 0x58D6 E138, el estado del jugador
+C 0x58DA Cero: andando (0x58E8)
+C 0x58DD Uno, en el aire: nada que pulsar, el arco va solo
+C 0x58E0 Con A ya rebajado en dos, este cero es el estado 2: colgado de la liana
+C 0x58E2 Y este 3 es el estado 5, montado en el tronco
+C 0x58E6 Cualquier otro estado (trampolin, surtidor, poste, muriendo): quieto
+
+# --- El tiempo y el cobro de los obstaculos -----------------------------------
+C 0x6542 La altura de la tercera tabla, E14A
+C 0x654C Su altura mas 4 menos la Y: el mismo margen de 0 a 8 puntos por encima
+C 0x6556 Dentro: se sube a la tabla
+C 0x6558 La cuarta y ultima, E14B
+C 0x6562 Fallar tambien aqui ya es CAE_AL_VACIO: no hay quinta tabla
+C 0x6568 Y el mismo margen de 9 puntos que en los otros tres tramos
+C 0x660D E055, los tramos de tiempo que quedan
+C 0x6611 Con mas de 2 se repinta la barra desde el cursor, y de paso se gasta un tramo
+C 0x6615 Agotado: catorce tiles vacios seguidos desde la fila 1, columna 16
+C 0x6618 Catorce, que es la barra entera
+C 0x662A La X del jugador contra la del obstaculo de turno
+C 0x662E Entrando por la izquierda (E058 = 8) se anda hacia la derecha: pasados son los que tienen X menor
+C 0x6631 C es el indice en la tabla de puntos E18C, HL la X del obstaculo siguiente
+C 0x66B5 Al contador siguiente (E181-E184) y al sprite siguiente, cuatro bytes mas alla
+C 0x66BC E138, el estado del jugador: el indice de la tabla de 0x66C2
+C 0x66BF DESPACHA no vuelve: el ret del estado es el de JUGADOR
+
+# --- El jugador en el aire y los postes ---------------------------------------
+C 0x6717 La Y del jugador menos la de la cabeza del poste (parejas Y,X en 0x6746)
+C 0x671A HL avanza a la X en cuanto lee la Y
+C 0x6721 Y la X del jugador menos la del poste, sin signo: solo cae encima por la derecha
+C 0x6733 Se queda de pie 4 puntos por debajo de la cabeza del poste
+C 0x673B E1A0-E1A4, las X de los cinco postes; con C=4 sus puntos salen de E190-E194
+C 0x67B6 La Y del jugador: solo entre 0x64 y 0x68 esta a la altura de la lona
+C 0x67C1 B=4 trampolines y C=0x40, la X del primero
+C 0x67C4 La X del jugador menos la del trampolin de turno
+C 0x67C6 A menos de 16 por su derecha: ha caido en el
+C 0x67CB El trampolin siguiente, 0x20 mas a la derecha
+C 0x67D0 Ninguno: se vuelve sin acarreo
+C 0x67D1 A trae la X del trampolin: el jugador se centra 8 puntos a su derecha
+C 0x67D4 E1A5-E1A8, las X de los cuatro; con C=9 sus puntos salen de E195-E198
+C 0x67DE Acarreo: ha caido en un trampolin
+
+# --- Tronco, postes, charcos y hundirse ---------------------------------------
+C 0x6873 El indice 0 de la tabla de puntos: los 200 que 0x5C27 pone en E18C, y que comparten la liana 1, el primer surtidor y el tronco
+C 0x6878 E0D5 es la X del sprite 9, la mitad izquierda del tronco; menos 8, su borde util
+C 0x6882 Mas de 32 puntos de separacion: se ha salido del tronco al agua
+C 0x6886 Sigue montado: anda o salta como en el suelo (0x686C)
+C 0x688D HL arranca en 0x6747, la X del primer poste; las Y se van salteando
+C 0x6891 A menos de 16 de su X: sigue encima
+C 0x6893 Encima: puede andar o saltar (0x686C)
+C 0x6895 Dos bytes por poste, Y y X
+C 0x6899 Se ha salido de los cinco: cae con el arco corto (0x685C)
+C 0x68AE La plantilla de 0x68EA: los sprites 0-3, aparcados en Y=0x90 (0x5F61), suben cuatro lineas a Y=0x8C
+C 0x68B1 Van con patron y color 0: no pintan nada, solo ocupan plaza de sprite en esas lineas (?)
+C 0x68B4 E139, hacia donde mira: 4 es a la izquierda
+C 0x68BE Mirando a la izquierda, dos puntos mas a la izquierda; mirando a la derecha, dos a la derecha
+C 0x68DC E0DC es el sprite 11, el primero de los obstaculos
+C 0x68E2 0xC3 en todos los bytes; lo que importa es la Y, que deja el sprite por debajo de las 192 filas
+C 0x68E4 61 bytes: los sprites 11 a 25 enteros y la Y del 26
+C 0x68F5 La X del jugador menos la del charco de turno (B=5 charcos desde C=0x30)
+C 0x68FB Dentro de la ventana de 16: cae en el (0x68AE)
+C 0x68FE El charco siguiente, 0x20 mas alla
+C 0x6903 Ninguno pisado: a mirar si se ha llegado a la meta
+C 0x6A05 Un paso cada ocho fotogramas: el hundimiento va ocho veces mas lento que un salto
+C 0x6A0D E0D0 es la Y del sprite 8, la sombra: a 0xC3 se sale de la pantalla
+C 0x6A13 La pose 6 fija, la ultima de las siete de 0x6B8A
+C 0x6A1B A Y=0x7C ya no se le ve
+C 0x6A20 E00C distinto de cero es muerto, y aqui se le mete la propia Y; lo recoge el estado 12
+C 0x6B1A E134 y E135, la Y y la X del jugador, a B y C
+C 0x6B21 E136, la pose, con el lado ya sumado
+C 0x6B23 E0C0 es el sprite 4: cabeza y torso. Las piernas son el 6 y el 7, 16 filas mas abajo
+C 0x6C2A E142 y E143, la Y y la X del cabo de la liana 2
+C 0x6C2D El jugador contra ese cabo, con la caja de 16x16 de 0x64F3
+C 0x6C32 Y si no la agarra, se prueba con la liana 1
+C 0x6C3A Ninguna de las dos: el salto sigue su arco
+
+# --- Los colores de los tiles del juego ---------------------------------------
+C 0x7116 B lleva la cuenta de los 0xB0 bytes y hace falta A: se guarda
+C 0x7117 El nibble alto, la tinta
+C 0x711A Tinta 1, negro, pasa a 3, verde claro
+C 0x711E Las demas tintas se copian tal cual
+C 0x7120 La tinta, cambiada o no, se aparca en B
+C 0x7121 Y ahora el nibble bajo, el fondo
+C 0x7124 El mismo cambio: fondo 1 pasa a 3
+C 0x7126 Y si no es negro, se queda como esta

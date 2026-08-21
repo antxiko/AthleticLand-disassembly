@@ -31,11 +31,11 @@ VPOKE:		; Escribe A en la VRAM DE. Salta a 0x4070 para acabar (res 6,d deja DE c
 	call VDP_DIRECCION		;4014
 	jr $+89		;4017
 VPEEK:		; Lee en A el byte de la VRAM DE
-	di			;4019
-	call VDP_DIRECCION		;401a
-	nop			;401d
+	di			;4019   ; Sin interrupciones desde que se pone la direccion hasta que se lee el dato
+	call VDP_DIRECCION		;401a   ; Sin poner el bit 6 de D: direccion de LECTURA de la VRAM
+	nop			;401d   ; Dos nop de margen entre mandar la direccion y leer el puerto de datos
 	nop			;401e
-	in a,(098h)		;401f
+	in a,(098h)		;401f   ; Puerto 0x98: el byte de la VRAM
 	ei			;4021
 	ret			;4022
 VDP_DIRECCION:		; Manda DE al VDP como direccion (con el bit 6 de D a 1 es de escritura)
@@ -109,12 +109,12 @@ INTERRUPCION:		; Cada fotograma: sonido, mandos y un paso del juego. Reentrante 
 	ei			;4064
 	reti		;4065
 INTERRUPCION_OCUPADA:		; El paso anterior sigue corriendo: solo ha sonado la musica
-	pop ix		;4067
+	pop ix		;4067   ; Deshace los cinco push de 0x4038 sin abrir el candado E005: lo abre el paso que sigue corriendo
 	pop hl			;4069
 	pop de			;406a
 	pop bc			;406b
-	pop af			;406c
-	ei			;406d
+	pop af			;406c   ; El AF de la interrupcion, que aqui no lleva nada util
+	ei			;406d   ; El sonido ya ha sonado en 0x4041: aunque el paso vaya tarde, la musica no se corta
 	reti		;406e
 VPOKE_FIN:		; El final de VPOKE: manda el dato y devuelve D sin el bit de escritura
 	res 6,d		;4070
@@ -192,11 +192,11 @@ LEE_MANDOS:		; E009 = ahora, E008 = el fotograma anterior; joystick o teclado se
 	cpl			;40c0
 	and 03fh		;40c1   ; Cuatro direcciones y dos botones
 GUARDA_MANDOS:		; Lo de ahora pasa a E009 y lo que habia baja a E008
-	ld hl,0e009h		;40c3
-	ld c,(hl)			;40c6
+	ld hl,0e009h		;40c3   ; E009 es lo pulsado ahora; E008, lo del fotograma anterior
+	ld c,(hl)			;40c6   ; Lo que habia en E009 se aparta antes de pisarlo...
 	ld (hl),a			;40c7
 	dec hl			;40c8
-	ld (hl),c			;40c9
+	ld (hl),c			;40c9   ; ...y baja a E008; asi 0x6DAA puede ver el flanco del boton en vez de si esta pulsado
 	ret			;40ca
 LEE_TECLADO:		; Monta el mismo mapa de bits con las filas 7 (SELECT) y 8 (flechas y espacio) del teclado
 	ld bc,057aah		;40cb   ; Fila 7 del teclado (0x57: fila 7, motor de cinta y CAPS apagados)
@@ -288,16 +288,16 @@ DATA_opciones_por_tecla:
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 PASO_DEL_JUEGO:		; Cada fotograma: contador, parpadeo del 1P/2P, teclas 1-4 y el estado de turno
-	ld hl,0e003h		;412a
+	ld hl,0e003h		;412a   ; E003, el contador de fotogramas: sube uno por interrupcion y de el cuelgan casi todos los ritmos del juego
 	inc (hl)			;412d
 	ld a,(0e002h)		;412e
-	and 040h		;4131
+	and 040h		;4131   ; Bit 6 de E002: el rotulo 1P/2P solo parpadea con partida en marcha
 	call nz,PARPADEA_1P_2P		;4133
-	ld a,(0e000h)		;4136
+	ld a,(0e000h)		;4136   ; E000, el estado del juego, se guarda en C porque TECLAS_1_A_4 machaca A
 	ld c,a			;4139
 	cp 012h		;413a   ; Estados 8-17 (menu y partida): aqui no valen las teclas 1-4
 	jr nc,L_4142		;413c
-	cp 008h		;413e
+	cp 008h		;413e   ; ...y por debajo del 8 tambien; del 8 al 17 son el menu y la partida, donde ya no se puede cambiar de opcion
 	jr nc,L_4145		;4140
 L_4142:
 	call TECLAS_1_A_4		;4142
@@ -343,15 +343,15 @@ DATA_tabla_de_estados:
 ESTADO_00_ARRANCA:		; Estado 0: no hace nada; pasa al 1
 	jp ESTADO_SIGUIENTE		;4171
 ESTADO_01_LOGO:		; Estado 1: si hace falta, la cortinilla (E00B); luego carga el logotipo KONAMI (4B52) y pasa al 2
-	ld a,(0e00bh)		;4174
+	ld a,(0e00bh)		;4174   ; E00B lo pone a 1 el fin de la demo (0x41E5): antes del logotipo hay que borrar lo que hubiera
 	or a			;4177
 	jr z,L_4182		;4178
-	call CORTINILLA		;417a
-	ret p			;417d
-	xor a			;417e
+	call CORTINILLA		;417a   ; Una columna por fotograma; este estado se repite hasta que termine
+	ret p			;417d   ; CORTINILLA vuelve positiva mientras le queden columnas
+	xor a			;417e   ; Borrada del todo: se apaga la peticion y el logotipo se carga en este mismo fotograma
 	ld (0e00bh),a		;417f
 L_4182:
-	call CARGA_LOGO_KONAMI		;4182
+	call CARGA_LOGO_KONAMI		;4182   ; Descomprime los 26 tiles del KONAMI grande y prepara la subida
 	jp ESTADO_SIGUIENTE		;4185
 ESTADO_02_SUBE_LOGO:		; Estado 2: cada dos fotogramas sube una fila el KONAMI (4B75); al llegar arriba pinta VIDEO CARTRIDGE y espera 80 fotogramas en el 3
 	ld a,(0e003h)		;4188
@@ -383,14 +383,14 @@ ESTADO_05_MENU_QUIETO:		; Estado 5: 256 fotogramas con el titulo y el menu; lueg
 	ret nz			;41bc
 	jp ESPERA_80_Y_SIGUIENTE		;41bd
 ESTADO_06_CORTINILLA:		; Estado 6: pasa la cortinilla sin borrar el recuadro SCENE y prepara la partida de demostracion (58A3)
-	ld a,0ffh		;41c0
+	ld a,0ffh		;41c0   ; E00F a 0xFF: mientras dure la cortinilla no se repinta el recuadro del SCENE (0x45E2)
 	ld (0e00fh),a		;41c2
-	call CORTINILLA		;41c5
+	call CORTINILLA		;41c5   ; Otra vez una columna por fotograma
 	ret p			;41c8
-	call PREPARA_DEMO		;41c9
+	call PREPARA_DEMO		;41c9   ; Ya borrada: fuente, graficos del juego, partida nueva, marcador y la primera pantalla
 	xor a			;41cc
-	ld (0e00fh),a		;41cd
-	jp ESTADO_SIGUIENTE		;41d0
+	ld (0e00fh),a		;41cd   ; E00F otra vez a 0: a partir de aqui la cortinilla si vuelve a pintar el recuadro
+	jp ESTADO_SIGUIENTE		;41d0   ; Al estado 7, la partida de demostracion, sin espera ninguna
 ESTADO_07_DEMO:		; Estado 7: un fotograma de la partida de demostracion (58B2). Si muere, vuelve al titulo por el 1; si sale de la pantalla, cambia de pantalla por el 18
 	call FOTOGRAMA_DE_DEMO		;41d3
 	ld hl,0e00ch		;41d6
@@ -479,19 +479,19 @@ DATA_fila_por_opcion:
 
 
 TITULO_DE_GOLPE:		; Saca las 17 columnas de ATHLETIC LAND, el KONAMI 1984 y el menu en una sola llamada
-	call TITULO_COLUMNA		;4247
-	jr c,TITULO_DE_GOLPE		;424a
+	call TITULO_COLUMNA		;4247   ; En el menu el titulo no se anima: las 52 llamadas de TITULO_COLUMNA caben en este fotograma
+	jr c,TITULO_DE_GOLPE		;424a   ; Acarreo mientras quede columna o quede KONAMI 1984 que repintar
 	xor a			;424c
-	ld (0e00ah),a		;424d
-	ld hl,04a95h		;4250
+	ld (0e00ah),a		;424d   ; E00A, el contador de columnas, a cero para la proxima vez que se anime
+	ld hl,04a95h		;4250   ; Y encima el menu de las cuatro opciones
 	jp PINTA_LISTA		;4253
 MENU_ARRANCA_PARTIDA:		; Prepara la partida (44C8) y pasa al estado 9 con cortinilla
-	call PARTIDA_NUEVA		;4256
+	call PARTIDA_NUEVA		;4256   ; Vidas, fase, tiempo y puntos a los valores de arranque de 0x44F2
 	ld a,0ffh		;4259
-	ld (0e00fh),a		;425b
-	inc a			;425e
+	ld (0e00fh),a		;425b   ; E00F a 0xFF: la cortinilla del estado 9 no repintara el recuadro del SCENE
+	inc a			;425e   ; El inc a deja 0: con E001 a cero, el estado 9 saca PLAYER 1 aunque se juegue solo
 	ld (0e001h),a		;425f
-	jp ESPERA_80_Y_SIGUIENTE		;4262
+	jp ESPERA_80_Y_SIGUIENTE		;4262   ; 80 fotogramas y al estado 9
 ESTADO_09_VIDA_NUEVA:		; Estado 9: tras la cortinilla, una vida menos, fuente y decorado, marcador, PLAYER n si son dos, y BONUS SCORE 2000 o los creditos si viene de superar fase
 	call CORTINILLA		;4265
 	ret p			;4268
@@ -504,7 +504,7 @@ ESTADO_09_VIDA_NUEVA:		; Estado 9: tras la cortinilla, una vida menos, fuente y 
 	call MARCADOR		;4278
 	ld a,(0e001h)		;427b
 	or a			;427e
-	ld hl,04b20h		;427f   ; "PLAYER" y el numero, solo cuando E001 vale 0 (dos jugadores)
+	ld hl,04b20h		;427f   ; "PLAYER" y el numero, solo cuando E001 vale 0. OJO: eso NO es "solo con dos jugadores". E001 es el subestado, y quien lo pone a 0x20 con un jugador es SUBESTADO_POR_JUGADORES (0x444F), que solo la llaman el estado 12 (muerte, 0x4324) y el 15 (fase superada, 0x43A1). La primera vez que se entra aqui viene del menu por 0x425E, que deja E001 a 0 sin mirar cuantos juegan: al empezar la partida sale PLAYER 1 aunque se juegue solo
 	call z,ROTULO_Y_JUGADOR		;4282
 	ld hl,0e00dh		;4285
 	xor a			;4288
@@ -705,21 +705,21 @@ L_43F4:
 	call SCENE_A_BCD		;43f4   ; SCENE a BCD para el marcador
 	jr ESPERA_80_Y_SIGUIENTE		;43f7
 ESTADO_17_PANTALLA_NUEVA:		; Estado 17: monta la pantalla nueva (5A64, 5AE3), pinta el SCENE y vuelve al juego (11)
-	call BORRA_PANTALLA		;43f9
-	call CONSTRUYE_PANTALLA		;43fc
-	call PINTA_SCENE		;43ff
-	ld a,00bh		;4402
+	call BORRA_PANTALLA		;43f9   ; Borra el estado EN RAM de la pantalla anterior (E130-E330); el decorado ya lo borro la cortinilla del estado 16
+	call CONSTRUYE_PANTALLA		;43fc   ; Monta la pantalla nueva entera: sprites, lianas, decorado y obstaculos
+	call PINTA_SCENE		;43ff   ; El SCENE nuevo en el recuadro de abajo a la derecha
+	ld a,00bh		;4402   ; Vuelta al estado 11, el de jugar, sin espera ninguna
 	ld (0e000h),a		;4404
 	ret			;4407
 ESTADO_19_DEMO_PANTALLA:		; Estado 19: la demo solo tiene dos pantallas: en la 2 vuelve al titulo; si no, monta la pantalla y sigue la demo en el 7
-	ld hl,0e054h		;4408
+	ld hl,0e054h		;4408   ; E054, el numero de pantalla; el estado 18 acaba de subirlo
 	ld a,(hl)			;440b
-	cp 002h		;440c
+	cp 002h		;440c   ; La demo solo ensena la 0 y la 1: al llegar a la 2 se acaba y se vuelve al titulo
 	jp z,DEMO_TERMINA		;440e
-	call BORRA_PANTALLA		;4411
-	call MARCADOR		;4414
+	call BORRA_PANTALLA		;4411   ; Igual que el estado 17, pero aqui si hay que repintar el marcador...
+	call MARCADOR		;4414   ; ...porque en la demo el bit 6 de E002 esta apagado y la cortinilla borra las 24 filas, no solo las 19 de en medio
 	call CONSTRUYE_PANTALLA		;4417
-	ld a,006h		;441a
+	ld a,006h		;441a   ; Estado 6+1 = 7 con 80 fotogramas de espera: sigue la demo
 	jp CAMBIA_ESTADO_ESPERA		;441c
 ROTULO_Y_JUGADOR:		; Pinta la lista HL y el numero del jugador (1 o 2, bit 7 de E002) en la fila 9, columna 19
 	call PINTA_LISTA		;441f
@@ -738,27 +738,27 @@ SCENE_A_BCD_RESTA_100:		; Quita centenas
 	jr nc,SCENE_A_BCD_RESTA_100		;4437
 	ld c,000h		;4439
 SCENE_A_BCD_DECENAS:		; Cuenta decenas en el nibble alto de C
-	ld a,b			;443b
+	ld a,b			;443b   ; Lo que quedo tras quitar las centenas, de diez en diez
 	sub 00ah		;443c
-	jr c,L_4449		;443e
+	jr c,L_4449		;443e   ; Por debajo de diez, lo que queda son las unidades y ya estan en B
 	push af			;4440
 	ld a,c			;4441
-	add a,010h		;4442
+	add a,010h		;4442   ; Cada resta suma una decena al nibble alto de C
 	ld c,a			;4444
 	pop af			;4445
 	ld b,a			;4446
-	jr nz,SCENE_A_BCD_DECENAS		;4447
+	jr nz,SCENE_A_BCD_DECENAS		;4447   ; El pop af ha devuelto las banderas del sub: se para justo cuando el resto da cero
 L_4449:
 	ld a,c			;4449
 	or b			;444a
 	ld (0e059h),a		;444b
 	ret			;444e
 SUBESTADO_POR_JUGADORES:		; E001 = 0x20 con un jugador, 0 con dos (con dos se pinta PLAYER n)
-	ld hl,0e001h		;444f
-	ld a,(0e002h)		;4452
-	xor 020h		;4455
+	ld hl,0e001h		;444f   ; E001, el subestado, que en la partida solo dice si hay que pintar PLAYER n
+	ld a,(0e002h)		;4452   ; Bit 5 de E002: dos jugadores
+	xor 020h		;4455   ; Se invierte y se aisla: con dos jugadores queda 0 y con uno 0x20
 	and 020h		;4457
-	ld (hl),a			;4459
+	ld (hl),a			;4459   ; Y el estado 9 saca el rotulo PLAYER solo cuando E001 vale 0
 	ret			;445a
 ALL_STAGE_CLEAR:		; La fase 99 superada: los creditos por el motor de rotulos y espera sin limite
 	call MOTOR_DE_ROTULOS		;445b
@@ -806,19 +806,19 @@ DATA_creditos_tiles:
 
 
 PARTIDA_NUEVA:		; Borra E043-E142, copia los 11 valores iniciales a E050 y, con dos jugadores, tambien a E080
-	ld hl,0e043h		;44c8
+	ld hl,0e043h		;44c8   ; Desde E043, los puntos del 1P; el record (E040-E042) se salva
 	ld de,0e044h		;44cb
-	ld bc,00100h		;44ce
+	ld bc,00100h		;44ce   ; 0x100 bytes mas el propio E043: se borra hasta E143
 	ld (hl),000h		;44d1
 	ldir		;44d3
-	ld hl,044f2h		;44d5
+	ld hl,044f2h		;44d5   ; Los once valores de arranque al jugador que va a jugar
 	ld de,0e050h		;44d8
 	ld bc,0000bh		;44db
 	ldir		;44de
 	ld a,(0e002h)		;44e0
 	bit 5,a		;44e3   ; Bit 5: dos jugadores
-	ret z			;44e5
-	ld hl,0e050h		;44e6
+	ret z			;44e5   ; Con un solo jugador no hay copia que hacer
+	ld hl,0e050h		;44e6   ; Con dos, los 32 bytes de E050 se clonan en E080: el segundo arranca igual
 	ld de,0e080h		;44e9
 	ld bc,00020h		;44ec
 	ldir		;44ef
@@ -871,12 +871,12 @@ MANDA_REGISTROS_VDP:		; Manda al VDP los 8 registros guardados en E038
 	ld b,008h		;4536
 	ld d,080h		;4538
 L_453A:
-	ld e,(hl)			;453a
+	ld e,(hl)			;453a   ; El valor del registro, sacado de la copia E038-E03F
 	di			;453b
-	call VDP_DIRECCION		;453c
+	call VDP_DIRECCION		;453c   ; Escribir un registro del VDP es mandar el dato por el 0x99 y detras 0x80 mas el numero
 	ei			;453f
 	inc hl			;4540
-	inc d			;4541
+	inc d			;4541   ; D arranca en 0x80 y sube: los ocho registros, del 0 al 7
 	djnz L_453A		;4542
 	ret			;4544
 
@@ -923,13 +923,13 @@ RELLENA_VRAM:		; BC bytes de A en la VRAM DE
 	call VDP_DIRECCION		;4564
 	res 6,d		;4567
 L_4569:
-	ld a,h			;4569
-	out (098h),a		;456a
+	ld a,h			;4569   ; H guarda el byte de relleno porque A se gasta en la cuenta
+	out (098h),a		;456a   ; El VDP adelanta solo la direccion: basta con repetir por el 0x98
 	dec bc			;456c
 	ld a,b			;456d
 	or c			;456e
 	jr nz,L_4569		;456f
-	ei			;4571
+	ei			;4571   ; Las interrupciones vuelven al salir; el di solo tapaba el poner la direccion
 	ret			;4572
 COPIA_VRAM_A_VRAM:		; BC bytes de la VRAM DE a la VRAM HL, byte a byte
 	call VPEEK		;4573   ; Un byte de la VRAM DE...
@@ -1166,11 +1166,11 @@ PINTA_RECORD:		; Seis cifras del record en la fila 0, columna 15
 PINTA_PUNTOS:		; Los del jugador que juega
 	ld a,(0e002h)		;46ea
 PINTA_PUNTOS_DE:		; Los del jugador del bit 7 de A: 1P en la fila 0, columna 5; 2P en la fila 1
-	ld de,03805h		;46ed
-	ld hl,0e045h		;46f0
-	add a,a			;46f3
+	ld de,03805h		;46ed   ; Fila 0, columna 5: los puntos del 1P
+	ld hl,0e045h		;46f0   ; E043-E045; se entra por el byte alto porque PINTA_BCD recorre HL hacia atras
+	add a,a			;46f3   ; El bit 7 de A al acarreo: puesto, es el jugador 2
 	jr nc,PINTA_3_BYTES_BCD		;46f4
-	ld e,025h		;46f6
+	ld e,025h		;46f6   ; Fila 1, columna 5 (0x3825), y sus puntos en E046-E048
 	ld hl,0e048h		;46f8
 PINTA_3_BYTES_BCD:		; Seis cifras
 	ld b,003h		;46fb
@@ -1294,51 +1294,51 @@ PANTALLA_DEL_TITULO:		; Patrones y colores del logotipo ATHLETIC LAND, fuente cy
 	ld de,04200h		;479b
 	ld b,011h		;479e   ; 17 filas de 16 colores desde 0x0200: los tiles 0x40-0x61
 L_47A0:
-	push bc			;47a0
+	push bc			;47a0   ; Diecisiete vueltas, una por fila de 16 colores
 	push de			;47a1
-	ld hl,048c2h		;47a2
-	call RLE_A_VRAM_DE		;47a5
+	ld hl,048c2h		;47a2   ; Siempre el mismo bloque RLE: los 34 tiles del logotipo llevan colores identicos de dos en dos
+	call RLE_A_VRAM_DE		;47a5   ; Descomprime 16 bytes: 0x08 0xE0 son ocho 0xE0, y 0x88 copia e0 e0 30 30 30 20 20 c0 tal cual
 	pop hl			;47a8
-	ld bc,00010h		;47a9
+	ld bc,00010h		;47a9   ; DE avanza 16 bytes, los colores de dos tiles
 	add hl,bc			;47ac
 	ex de,hl			;47ad
 	pop bc			;47ae
 	djnz L_47A0		;47af
 	ld a,070h		;47b1   ; Cyan sobre transparente para la fuente del tercio de abajo (el menu)
-	ld de,01180h		;47b3
-	ld bc,00180h		;47b6
+	ld de,01180h		;47b3   ; VRAM 0x1180: la tabla de colores empieza en 0x0000, y ahi cae el tile 0x30 del tercio de abajo
+	ld bc,00180h		;47b6   ; 0x180 bytes son 48 tiles, del 0x30 al 0x5F: las cifras y las letras que usa el menu
 	call RELLENA_VRAM		;47b9
 	ld de,03966h		;47bc   ; Borra "@ VIDEO CARTRIDGE @"
 	ld bc,00013h		;47bf
 	xor a			;47c2
 	call RELLENA_VRAM		;47c3
 	xor a			;47c6
-	ld (0e00ah),a		;47c7
+	ld (0e00ah),a		;47c7   ; E00A a cero: TITULO_COLUMNA empezara por la columna 0
 	ret			;47ca
 TITULO_COLUMNA:		; Una columna del logotipo por llamada (17 columnas de 2 tiles, filas 5 y 6); luego el KONAMI 1984 hasta 52 llamadas. Acarreo mientras queda
-	ld hl,0e00ah		;47cb
+	ld hl,0e00ah		;47cb   ; E00A cuenta las llamadas y sube en cada una
 	ld a,(hl)			;47ce
 	inc (hl)			;47cf
-	cp 011h		;47d0
+	cp 011h		;47d0   ; De la 17 en adelante ya no queda columna: solo el KONAMI 1984 (0x47F0)
 	jr nc,L_47F0		;47d2
 	ld de,03888h		;47d4   ; Fila 4, columna 8: la fila 4 se borra y las 5 y 6 llevan los tiles 0x40+2n y 0x41+2n
 	ld c,a			;47d7
-	add a,e			;47d8
+	add a,e			;47d8   ; La columna n de la fila 4 es 0x3888 mas n
 	ld e,a			;47d9
 	ld a,c			;47da
-	add a,a			;47db
+	add a,a			;47db   ; Dos tiles por columna: 0x40+2n arriba y 0x41+2n justo debajo
 	add a,040h		;47dc
 	ld c,a			;47de
 	ld b,003h		;47df
-	xor a			;47e1
+	xor a			;47e1   ; El primer tile que se escribe es un 0: la fila 4 se va limpiando por delante
 L_47E2:
-	call VPOKE		;47e2
-	ld a,020h		;47e5
+	call VPOKE		;47e2   ; Tres tiles en la misma columna: el 0 de la fila 4 y los dos del logotipo, filas 5 y 6
+	ld a,020h		;47e5   ; Bajar una fila en la tabla de nombres es sumar 32
 	call DE_MAS_A		;47e7
-	ld a,c			;47ea
+	ld a,c			;47ea   ; A para la vuelta siguiente, y C ya apunta al tile de abajo
 	inc c			;47eb
 	djnz L_47E2		;47ec
-	scf			;47ee
+	scf			;47ee   ; Acarreo: aun quedan columnas por sacar
 	ret			;47ef
 L_47F0:
 	push af			;47f0
@@ -1530,37 +1530,37 @@ CARGA_LOGO_KONAMI:		; Descomprime los 26 tiles del KONAMI grande (0x60-0x79) en 
 	ld (0e050h),hl		;4b71
 	ret			;4b74
 SUBE_LOGO_KONAMI:		; Una fila mas arriba: pinta las tres filas del KONAMI (3, 11 y 12 tiles desde la columna 10) y borra la de debajo. Z al llegar a la fila 4
-	ld hl,(0e050h)		;4b75
-	ld de,00020h		;4b78
+	ld hl,(0e050h)		;4b75   ; En el titulo E050 no son las vidas: es el cursor de 16 bits de lo que lleva subido el logotipo
+	ld de,00020h		;4b78   ; Una fila entera de la tabla de nombres son 32 bytes
 	add hl,de			;4b7b
 	ld (0e050h),hl		;4b7c
 	ex de,hl			;4b7f
 	or a			;4b80
 	ld hl,03aaah		;4b81   ; Desde la fila 21 hacia arriba
-	sbc hl,de		;4b84
+	sbc hl,de		;4b84   ; 0x3AAA menos lo subido; la primera vez sale 0x3A8A, fila 20 y columna 10
 	ex de,hl			;4b86
-	ld a,060h		;4b87
-	ld b,003h		;4b89
+	ld a,060h		;4b87   ; Los 26 tiles del logotipo van seguidos desde el 0x60
+	ld b,003h		;4b89   ; Tres tiles arriba, once en medio y doce abajo: asi esta partido el KONAMI grande
 	call PINTA_TILES_SEGUIDOS		;4b8b
 	ld b,00bh		;4b8e
 	call PINTA_TILES_SEGUIDOS		;4b90
 	ld b,00ch		;4b93
 	call PINTA_TILES_SEGUIDOS		;4b95
-	ld bc,0000ch		;4b98
+	ld bc,0000ch		;4b98   ; Doce ceros en la fila de debajo: borran el rastro que deja al subir
 	xor a			;4b9b
 	call RELLENA_VRAM		;4b9c
 	ld hl,0e00ah		;4b9f
-	dec (hl)			;4ba2
+	dec (hl)			;4ba2   ; E00A cuenta las 17 filas; al llegar a cero es el z que espera 0x4188
 	ret			;4ba3
 PINTA_TILES_SEGUIDOS:		; B tiles consecutivos desde A en la VRAM DE y baja una fila
 	push de			;4ba4
 L_4BA5:
-	call VPOKE		;4ba5
+	call VPOKE		;4ba5   ; Un tile por posicion, y el codigo del tile sube con la columna
 	inc de			;4ba8
 	inc a			;4ba9
 	djnz L_4BA5		;4baa
-	pop de			;4bac
-	ld hl,00020h		;4bad
+	pop de			;4bac   ; Se recupera el principio de la fila...
+	ld hl,00020h		;4bad   ; ...y se le suman 32: DE se va a la fila de debajo para la llamada siguiente
 	add hl,de			;4bb0
 	ex de,hl			;4bb1
 	ret			;4bb2
@@ -2097,13 +2097,13 @@ PREPARA_DEMO:		; Fuente, graficos del juego, partida nueva, marcador y la primer
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
 FOTOGRAMA_DE_DEMO:		; Escribe en E009 lo que "pulsa" la demo y corre 585E
-	ld a,(0e054h)		;58b2
+	ld a,(0e054h)		;58b2   ; E054, la pantalla: la demo se comporta distinto en la 0 y en la 1
 	or a			;58b5
 	jr nz,L_58D0		;58b6
-	ld hl,0e009h		;58b8
+	ld hl,0e009h		;58b8   ; E009 es lo que el juego lee como pulsado ahora; aqui lo escribe la demo, no el mando
 	ld a,008h		;58bb   ; Derecha
 	ld (hl),a			;58bd
-	ld a,(0e135h)		;58be
+	ld a,(0e135h)		;58be   ; En la pantalla 0 solo salta en dos sitios, X=0x38 y X=0x80: el resto es correr
 	cp 038h		;58c1
 	jr z,L_58C9		;58c3
 	cp 080h		;58c5
@@ -2115,19 +2115,19 @@ L_58C9:
 L_58CE:
 	jr L_5919		;58ce
 L_58D0:
-	dec a			;58d0
+	dec a			;58d0   ; Solo la pantalla 1 tiene mandos propios; en cualquier otra la demo no toca nada
 	jr nz,L_5919		;58d1
-	ld hl,0e135h		;58d3
-	ld a,(0e138h)		;58d6
+	ld hl,0e135h		;58d3   ; HL a la X del jugador, que es lo que miran las tres ramas de abajo
+	ld a,(0e138h)		;58d6   ; E138, el estado del jugador
 	or a			;58d9
-	jr z,L_58E8		;58da
+	jr z,L_58E8		;58da   ; Cero: andando (0x58E8)
 	dec a			;58dc
-	jr z,L_5919		;58dd
+	jr z,L_5919		;58dd   ; Uno, en el aire: nada que pulsar, el arco va solo
 	dec a			;58df
-	jr z,L_591C		;58e0
-	cp 003h		;58e2
+	jr z,L_591C		;58e0   ; Con A ya rebajado en dos, este cero es el estado 2: colgado de la liana
+	cp 003h		;58e2   ; Y este 3 es el estado 5, montado en el tronco
 	jr z,L_5925		;58e4
-	jr L_5919		;58e6
+	jr L_5919		;58e6   ; Cualquier otro estado (trampolin, surtidor, poste, muriendo): quieto
 L_58E8:
 	ld a,(hl)			;58e8
 	cp 0b0h		;58e9   ; Andando: si X esta entre 0x2E y 0xAF, cada cuatro fotogramas...
@@ -4201,31 +4201,31 @@ L_652C:
 	jr nc,L_6542		;653e
 	jr SOBRE_SURTIDOR		;6540
 L_6542:
-	inc de			;6542
+	inc de			;6542   ; La altura de la tercera tabla, E14A
 	ld a,b			;6543
 	cp 080h		;6544   ; Tercero, de 0x80 a 0x98
 	jr c,L_6558		;6546
 	cp 099h		;6548
 	jr nc,L_6558		;654a
-	ld a,(de)			;654c
+	ld a,(de)			;654c   ; Su altura mas 4 menos la Y: el mismo margen de 0 a 8 puntos por encima
 	add a,004h		;654d
 	sub (hl)			;654f
 	jr c,L_6558		;6550
 	cp 009h		;6552
 	jr nc,L_6558		;6554
-	jr SOBRE_SURTIDOR		;6556
+	jr SOBRE_SURTIDOR		;6556   ; Dentro: se sube a la tabla
 L_6558:
-	inc de			;6558
+	inc de			;6558   ; La cuarta y ultima, E14B
 	ld a,b			;6559
 	cp 0a0h		;655a   ; Y cuarto, de 0xA0 a 0xB8
 	jr c,CAE_AL_VACIO		;655c
 	cp 0b9h		;655e
 	jr nc,CAE_AL_VACIO		;6560
-	ld a,(de)			;6562
+	ld a,(de)			;6562   ; Fallar tambien aqui ya es CAE_AL_VACIO: no hay quinta tabla
 	add a,004h		;6563
 	sub (hl)			;6565
 	jr c,CAE_AL_VACIO		;6566
-	cp 009h		;6568
+	cp 009h		;6568   ; Y el mismo margen de 9 puntos que en los otros tres tramos
 	jr nc,CAE_AL_VACIO		;656a
 SOBRE_SURTIDOR:		; Estado 4; acarreo si Y-16 >= la altura desde la que salto
 	ld a,004h		;656c
@@ -4343,12 +4343,12 @@ L_6604:
 	djnz L_6604		;660a
 	ret			;660c
 PINTA_TIEMPO:		; La barra entera (y de paso un tramo menos); agotada (2), catorce vacios
-	ld hl,0e055h		;660d
+	ld hl,0e055h		;660d   ; E055, los tramos de tiempo que quedan
 	ld a,(hl)			;6610
-	cp 002h		;6611
+	cp 002h		;6611   ; Con mas de 2 se repinta la barra desde el cursor, y de paso se gasta un tramo
 	jr nz,PINTA_BARRA_TIEMPO		;6613
-	ld de,03830h		;6615
-	ld b,00eh		;6618
+	ld de,03830h		;6615   ; Agotado: catorce tiles vacios seguidos desde la fila 1, columna 16
+	ld b,00eh		;6618   ; Catorce, que es la barra entera
 L_661A:
 	ld a,014h		;661a
 	call VPOKE		;661c
@@ -4360,10 +4360,10 @@ COBRA_AL_PASAR:		; Para B obstaculos con su X en (HL): si el jugador ya los ha d
 	cp 008h		;6626
 	jr nz,COBRA_AL_PASAR_IZQ		;6628
 L_662A:
-	ld a,(0e135h)		;662a
+	ld a,(0e135h)		;662a   ; La X del jugador contra la del obstaculo de turno
 	cp (hl)			;662d
-	call nc,COBRA_PUNTOS		;662e
-	inc c			;6631
+	call nc,COBRA_PUNTOS		;662e   ; Entrando por la izquierda (E058 = 8) se anda hacia la derecha: pasados son los que tienen X menor
+	inc c			;6631   ; C es el indice en la tabla de puntos E18C, HL la X del obstaculo siguiente
 	inc hl			;6632
 	djnz L_662A		;6633
 	ret			;6635
@@ -4470,14 +4470,14 @@ L_66AE:
 	ld a,0c8h		;66b2   ; Rotulo caducado: Y=0xC8, escondido
 	ld (de),a			;66b4
 L_66B5:
-	inc hl			;66b5
+	inc hl			;66b5   ; Al contador siguiente (E181-E184) y al sprite siguiente, cuatro bytes mas alla
 	inc de			;66b6
 	inc de			;66b7
 	inc de			;66b8
 	inc de			;66b9
 	djnz L_66AE		;66ba
-	ld a,(0e138h)		;66bc
-	call DESPACHA		;66bf
+	ld a,(0e138h)		;66bc   ; E138, el estado del jugador: el indice de la tabla de 0x66C2
+	call DESPACHA		;66bf   ; DESPACHA no vuelve: el ret del estado es el de JUGADOR
 
 ; ----------------------------------------------------------------------
 ; DATOS tabla_de_estados_del_jugador: Los 17 estados del jugador: 0x689B anda,
@@ -4542,13 +4542,13 @@ AIRE_SIN_TRAMPOLIN:		; Con postes: si cae sobre uno, se queda de pie en el (esta
 	ld b,005h		;6712   ; Cinco postes: Y y X en 0x6746
 	ld hl,06746h		;6714
 L_6717:
-	ld a,(0e134h)		;6717
-	ld c,(hl)			;671a
+	ld a,(0e134h)		;6717   ; La Y del jugador menos la de la cabeza del poste (parejas Y,X en 0x6746)
+	ld c,(hl)			;671a   ; HL avanza a la X en cuanto lee la Y
 	inc hl			;671b
 	sub c			;671c
 	cp 005h		;671d   ; A menos de 5 puntos por encima y a menos de 16 de su X
 	jr nc,L_672A		;671f
-	ld a,(0e135h)		;6721
+	ld a,(0e135h)		;6721   ; Y la X del jugador menos la del poste, sin signo: solo cae encima por la derecha
 	ld c,(hl)			;6724
 	sub c			;6725
 	cp 010h		;6726
@@ -4561,10 +4561,10 @@ L_672F:
 	dec hl			;672f   ; De pie sobre el poste (Y+4), estado 6, y cobra los 100 puntos del poste
 	ld a,(hl)			;6730
 	add a,004h		;6731
-	ld (0e134h),a		;6733
+	ld (0e134h),a		;6733   ; Se queda de pie 4 puntos por debajo de la cabeza del poste
 	ld a,006h		;6736
 	ld (0e138h),a		;6738
-	ld hl,0e1a0h		;673b
+	ld hl,0e1a0h		;673b   ; E1A0-E1A4, las X de los cinco postes; con C=4 sus puntos salen de E190-E194
 	ld b,005h		;673e
 	ld c,004h		;6740
 	call COBRA_AL_PASAR		;6742
@@ -4658,30 +4658,30 @@ SOBRE_FOSO:		; Acarreo si X esta entre 0x38 y 0xB7
 	cp 080h		;67b3
 	ret			;67b5
 CAE_EN_TRAMPOLIN:		; Acarreo si Y esta entre 0x64 y 0x68 y X a menos de 16 de un trampolin (0x40, 0x60, 0x80, 0xA0): lo centra (X+8) y cobra sus 100 puntos
-	ld a,(0e134h)		;67b6
+	ld a,(0e134h)		;67b6   ; La Y del jugador: solo entre 0x64 y 0x68 esta a la altura de la lona
 	sub 064h		;67b9
 	cp 005h		;67bb
 	ret nc			;67bd
 	ld hl,0e135h		;67be
-	ld bc,00440h		;67c1
+	ld bc,00440h		;67c1   ; B=4 trampolines y C=0x40, la X del primero
 L_67C4:
-	ld a,(hl)			;67c4
+	ld a,(hl)			;67c4   ; La X del jugador menos la del trampolin de turno
 	sub c			;67c5
-	cp 010h		;67c6
+	cp 010h		;67c6   ; A menos de 16 por su derecha: ha caido en el
 	ld a,c			;67c8
 	jr c,L_67D1		;67c9
-	add a,020h		;67cb
+	add a,020h		;67cb   ; El trampolin siguiente, 0x20 mas a la derecha
 	ld c,a			;67cd
 	djnz L_67C4		;67ce
-	ret			;67d0
+	ret			;67d0   ; Ninguno: se vuelve sin acarreo
 L_67D1:
-	add a,008h		;67d1
+	add a,008h		;67d1   ; A trae la X del trampolin: el jugador se centra 8 puntos a su derecha
 	ld (hl),a			;67d3
-	ld hl,0e1a5h		;67d4
+	ld hl,0e1a5h		;67d4   ; E1A5-E1A8, las X de los cuatro; con C=9 sus puntos salen de E195-E198
 	ld b,004h		;67d7
 	ld c,009h		;67d9
 	call COBRA_AL_PASAR		;67db
-	scf			;67de
+	scf			;67de   ; Acarreo: ha caido en un trampolin
 	ret			;67df
 
 ; ----------------------------------------------------------------------
@@ -4792,28 +4792,28 @@ DATA_x_de_los_surtidores:
 
 
 ESTADO_5_TRONCO:		; Montado en el tronco: cobra sus 200 puntos, va con el, y si se aleja mas de 32 de el cae al agua (68C4)
-	ld c,000h		;6873
+	ld c,000h		;6873   ; El indice 0 de la tabla de puntos: los 200 que 0x5C27 pone en E18C, y que comparten la liana 1, el primer surtidor y el tronco
 	call COBRA_PUNTOS		;6875
-	ld a,(0e0d5h)		;6878
+	ld a,(0e0d5h)		;6878   ; E0D5 es la X del sprite 9, la mitad izquierda del tronco; menos 8, su borde util
 	sub 008h		;687b
 	ld b,a			;687d
 	ld a,(0e135h)		;687e
 	sub b			;6881
-	cp 020h		;6882
+	cp 020h		;6882   ; Mas de 32 puntos de separacion: se ha salido del tronco al agua
 	jr nc,SE_HUNDE		;6884
-	jr $-26		;6886
+	jr $-26		;6886   ; Sigue montado: anda o salta como en el suelo (0x686C)
 ESTADO_6_POSTE:		; De pie en un poste: mientras este a menos de 16 de su X puede andar o saltar; si no, cae (685C)
 	ld b,005h		;6888
 	ld hl,06747h		;688a
 L_688D:
-	ld a,(0e135h)		;688d
+	ld a,(0e135h)		;688d   ; HL arranca en 0x6747, la X del primer poste; las Y se van salteando
 	sub (hl)			;6890
-	cp 010h		;6891
-	jr c,$-39		;6893
-	inc hl			;6895
+	cp 010h		;6891   ; A menos de 16 de su X: sigue encima
+	jr c,$-39		;6893   ; Encima: puede andar o saltar (0x686C)
+	inc hl			;6895   ; Dos bytes por poste, Y y X
 	inc hl			;6896
 	djnz L_688D		;6897
-	jr $-61		;6899
+	jr $-61		;6899   ; Se ha salido de los cinco: cae con el arco corto (0x685C)
 
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
@@ -4834,13 +4834,13 @@ ESTADO_0_ANDA:		; Andando por el suelo
 	jp nc,META		;68a9
 	jr SE_HUNDE		;68ac
 CAE_EN_CHARCO:		; Sprites 0-3 a Y=0x8C, dos puntos mas alla, y a hundirse
-	ld hl,068eah		;68ae
-	call CUATRO_SPRITES_IGUALES		;68b1
-	ld a,(0e139h)		;68b4
+	ld hl,068eah		;68ae   ; La plantilla de 0x68EA: los sprites 0-3, aparcados en Y=0x90 (0x5F61), suben cuatro lineas a Y=0x8C
+	call CUATRO_SPRITES_IGUALES		;68b1   ; Van con patron y color 0: no pintan nada, solo ocupan plaza de sprite en esas lineas (?)
+	ld a,(0e139h)		;68b4   ; E139, hacia donde mira: 4 es a la izquierda
 	cp 004h		;68b7
 	ld hl,0e135h		;68b9
 	jr nz,L_68C2		;68bc
-	dec (hl)			;68be
+	dec (hl)			;68be   ; Mirando a la izquierda, dos puntos mas a la izquierda; mirando a la derecha, dos a la derecha
 	dec (hl)			;68bf
 	jr SE_HUNDE		;68c0
 L_68C2:
@@ -4857,10 +4857,10 @@ SE_HUNDE:		; Arco de hundimiento 0x6CE3, estado 15, sonido 0x99, caras llorando 
 	ld a,0f0h		;68d7   ; Caras llorando
 	call CARAS_DE_LAS_VIDAS		;68d9
 ESCONDE_OBSTACULOS:		; Sprites 11-25 a 0xC3
-	ld hl,0e0dch		;68dc
+	ld hl,0e0dch		;68dc   ; E0DC es el sprite 11, el primero de los obstaculos
 	ld de,0e0ddh		;68df
-	ld (hl),0c3h		;68e2
-	ld bc,0003ch		;68e4
+	ld (hl),0c3h		;68e2   ; 0xC3 en todos los bytes; lo que importa es la Y, que deja el sprite por debajo de las 192 filas
+	ld bc,0003ch		;68e4   ; 61 bytes: los sprites 11 a 25 enteros y la Y del 26
 	ldir		;68e7
 	ret			;68e9
 
@@ -4880,15 +4880,15 @@ ANDA_SIN_ESTANQUE:		; Los cinco charcos (X 0x30, 0x50, 0x70, 0x90, 0xB0)
 	jr z,ANDA_ESTANQUE_POSTES		;68f0
 	ld bc,00530h		;68f2
 L_68F5:
-	ld a,(0e135h)		;68f5
+	ld a,(0e135h)		;68f5   ; La X del jugador menos la del charco de turno (B=5 charcos desde C=0x30)
 	sub c			;68f8
 	cp 010h		;68f9
-	jr c,$-77		;68fb
+	jr c,$-77		;68fb   ; Dentro de la ventana de 16: cae en el (0x68AE)
 	ld a,c			;68fd
-	add a,020h		;68fe
+	add a,020h		;68fe   ; El charco siguiente, 0x20 mas alla
 	ld c,a			;6900
 	djnz L_68F5		;6901
-	jr META		;6903
+	jr META		;6903   ; Ninguno pisado: a mirar si se ha llegado a la meta
 ANDA_ESTANQUE_POSTES:		; Bit 4: sobre el estanque de postes chapotea (X+1 y sonido 0x0B)
 	ld hl,0e135h		;6905
 	bit 4,a		;6908
@@ -5039,18 +5039,18 @@ L_69F1:
 	ld (0e00ch),a		;6a01
 	ret			;6a04
 ESTADO_15_SE_HUNDE:		; Cada 8 fotogramas un paso del arco de hundimiento, con la pose 6; al llegar a Y=0x7C, muerto (E00C)
-	ld a,(0e003h)		;6a05
+	ld a,(0e003h)		;6a05   ; Un paso cada ocho fotogramas: el hundimiento va ocho veces mas lento que un salto
 	and 007h		;6a08
 	ret nz			;6a0a
 	ld a,0c3h		;6a0b   ; Sin sombra
-	ld (0e0d0h),a		;6a0d
+	ld (0e0d0h),a		;6a0d   ; E0D0 es la Y del sprite 8, la sombra: a 0xC3 se sale de la pantalla
 	call PASO_DE_SALTO		;6a10
-	ld a,006h		;6a13
+	ld a,006h		;6a13   ; La pose 6 fija, la ultima de las siete de 0x6B8A
 	ld (0e136h),a		;6a15
 	ld a,(0e134h)		;6a18
-	cp 07ch		;6a1b
+	cp 07ch		;6a1b   ; A Y=0x7C ya no se le ve
 	jp c,PINTA_JUGADOR		;6a1d
-	ld (0e00ch),a		;6a20
+	ld (0e00ch),a		;6a20   ; E00C distinto de cero es muerto, y aqui se le mete la propia Y; lo recoge el estado 12
 	ret			;6a23
 MOVIMIENTO_COMUN:		; Pinta al jugador y mira los bordes: X<3 sale por la izquierda (E00E=1, entrara por la derecha), X>=0xF0 por la derecha (E00E=2, entrara por la izquierda); si no, los choques
 	call PINTA_JUGADOR		;6a24
@@ -5188,14 +5188,14 @@ PINTA_JUGADOR:		; Los cuatro sprites del jugador segun pose y lado, y la sombra
 	add a,007h		;6b17
 	ld (hl),a			;6b19
 L_6B1A:
-	ld hl,0e134h		;6b1a
+	ld hl,0e134h		;6b1a   ; E134 y E135, la Y y la X del jugador, a B y C
 	ld b,(hl)			;6b1d
 	inc hl			;6b1e
 	ld c,(hl)			;6b1f
 	inc hl			;6b20
-	ld a,(hl)			;6b21
+	ld a,(hl)			;6b21   ; E136, la pose, con el lado ya sumado
 	push af			;6b22
-	ld hl,0e0c0h		;6b23
+	ld hl,0e0c0h		;6b23   ; E0C0 es el sprite 4: cabeza y torso. Las piernas son el 6 y el 7, 16 filas mas abajo
 	bit 0,a		;6b26   ; Poses impares un punto mas abajo
 	jr z,L_6B2B		;6b28
 	inc b			;6b2a
@@ -5366,13 +5366,13 @@ ARCO_ARRANCA:		; E200 = HL, E202 = A, E205 = 0
 	ld (0e205h),a		;6c26
 	ret			;6c29
 AGARRA_CUALQUIER_LIANA:		; Prueba con la 2 y con la 1
-	ld hl,0e142h		;6c2a
-	call CHOCA_CON_SPRITE		;6c2d
+	ld hl,0e142h		;6c2a   ; E142 y E143, la Y y la X del cabo de la liana 2
+	call CHOCA_CON_SPRITE		;6c2d   ; El jugador contra ese cabo, con la caja de 16x16 de 0x64F3
 	jr nc,COLGADO		;6c30
-	ld hl,0e140h		;6c32
+	ld hl,0e140h		;6c32   ; Y si no la agarra, se prueba con la liana 1
 	call CHOCA_CON_SPRITE		;6c35
 	jr nc,COLGADO		;6c38
-	jr PASO_DE_ARCO_JUGADOR		;6c3a
+	jr PASO_DE_ARCO_JUGADOR		;6c3a   ; Ninguna de las dos: el salto sigue su arco
 
 ; ----------------------------------------------------------------------
 ; ----------------------------------------------------------------------
@@ -5997,18 +5997,18 @@ DATA_parametros_de_70F9:
 	ld de,003b0h		;7111
 	ld b,0b0h		;7114
 L_7116:
-	push bc			;7116
-	ld a,0f0h		;7117
+	push bc			;7116   ; B lleva la cuenta de los 0xB0 bytes y hace falta A: se guarda
+	ld a,0f0h		;7117   ; El nibble alto, la tinta
 	and (hl)			;7119
-	cp 010h		;711a
+	cp 010h		;711a   ; Tinta 1, negro, pasa a 3, verde claro
 	jr nz,L_7120		;711c
-	ld a,030h		;711e
+	ld a,030h		;711e   ; Las demas tintas se copian tal cual
 L_7120:
-	ld b,a			;7120
-	ld a,00fh		;7121
+	ld b,a			;7120   ; La tinta, cambiada o no, se aparca en B
+	ld a,00fh		;7121   ; Y ahora el nibble bajo, el fondo
 	and (hl)			;7123
-	cp 001h		;7124
-	jr nz,L_712A		;7126
+	cp 001h		;7124   ; El mismo cambio: fondo 1 pasa a 3
+	jr nz,L_712A		;7126   ; Y si no es negro, se queda como esta
 	ld a,003h		;7128
 L_712A:
 	or b			;712a
