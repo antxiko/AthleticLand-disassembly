@@ -96,7 +96,7 @@ out of the trace as data, and each one is declared in the notes.
 The `.nocode` file is short —5 ranges— and holds the five dispatch tables,
 which the tracer would otherwise walk straight into.
 
-### How the data blocks are laid out
+## How the data blocks are laid out
 
 Every data range declared in the `.notes` comes out as a block of its own: its
 own heading saying what it is for, its own label, and the dump aligned to its
