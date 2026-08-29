@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>The code — Athletic Land (1984)</title>
 <style>
 :root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
@@ -89,7 +91,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 412A   one step of the game: the state in 0xE000</code></pre>
 <p>and nothing else. There is no main loop to come back to.</p>
 <h2 id="the-call-that-never-comes-back">The call that never comes back</h2>
-<p>Jumps to computed addresses are a routine of their own here, 0x40A9, and it uses a trick that shows up all over the cartridge: **the table sits right behind its own <code>call</code>**.</p>
+<p>Jumps to computed addresses are a routine of their own here, 0x40A9, and it uses a trick that shows up all over the cartridge: <b>the table sits right behind its own <code>call</code></b>.</p>
 <pre><code>DESPACHA:
     add a,a                   ; 40a9
     pop hl                    ; 40aa   the return address IS the table
@@ -103,7 +105,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <table><tr><th>Table</th><th>How many</th><th>What it picks</th></tr><tr><td>0x4149</td><td>20</td><td>the state of the game</td></tr><tr><td>0x41F8</td><td>2</td><td>the two steps of the menu</td></tr><tr><td>0x5C7F</td><td>4</td><td>which of the four skies is drawn</td></tr><tr><td>0x5E85</td><td>4</td><td>which combination of treetops goes on top</td></tr><tr><td>0x66C2</td><td>17</td><td>what the player is doing</td></tr></table>
 <p>Because the table is data sitting in the middle of the code path, a static tracer walks straight into it. That is what <code>src/athletic.nocode</code> is for: five ranges, one per table.</p>
 <h2 id="one-routine-draws-all-the-scenery">One routine draws all the scenery</h2>
-<p>0x5F65 is the only thing that puts a layout on screen, and it takes its arguments the same way: **six bytes after the <code>call</code>**, two pointers and a video address.</p>
+<p>0x5F65 is the only thing that puts a layout on screen, and it takes its arguments the same way: <b>six bytes after the <code>call</code></b>, two pointers and a video address.</p>
 <pre><code>MOTOR_DE_ROTULOS:
     pop hl                    ; 5f65   the six bytes of parameters
     ld de,0e150h              ; 5f66

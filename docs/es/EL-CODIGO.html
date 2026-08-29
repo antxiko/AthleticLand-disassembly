@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>El código — Athletic Land (1984)</title>
 <style>
 :root{--tinta:#cfd0d4;--suave:#83868f;--fondo:#000;--panel:#0c0e13;--linea:#23262e;
@@ -89,7 +91,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 412A   un paso del juego: el estado que diga 0xE000</code></pre>
 <p>y nada más. No hay un bucle principal al que volver.</p>
 <h2 id="la-llamada-que-no-vuelve">La llamada que no vuelve</h2>
-<p>Los saltos a direcciones calculadas son aquí una rutina propia, 0x40A9, y usa un truco que aparece por todo el cartucho: **la tabla va pegada detrás de su propio <code>call</code>**.</p>
+<p>Los saltos a direcciones calculadas son aquí una rutina propia, 0x40A9, y usa un truco que aparece por todo el cartucho: <b>la tabla va pegada detrás de su propio <code>call</code></b>.</p>
 <pre><code>DESPACHA:
     add a,a                   ; 40a9
     pop hl                    ; 40aa   la direccion de retorno ES la tabla
@@ -103,7 +105,7 @@ audio{display:block;width:100%;max-width:640px;margin:.75rem 0 1.5rem}
 <table><tr><th>Tabla</th><th>Cuántas</th><th>Lo que elige</th></tr><tr><td>0x4149</td><td>20</td><td>el estado del juego</td></tr><tr><td>0x41F8</td><td>2</td><td>los dos pasos del menú</td></tr><tr><td>0x5C7F</td><td>4</td><td>cuál de los cuatro cielos se pinta</td></tr><tr><td>0x5E85</td><td>4</td><td>qué combinación de copas de árbol va arriba</td></tr><tr><td>0x66C2</td><td>17</td><td>lo que está haciendo el jugador</td></tr></table>
 <p>Como la tabla son datos en mitad del camino del código, un trazador estático se mete de largo. Para eso está <code>src/athletic.nocode</code>: cinco rangos, uno por tabla.</p>
 <h2 id="una-sola-rutina-dibuja-todo-el-decorado">Una sola rutina dibuja todo el decorado</h2>
-<p>0x5F65 es lo único que pone una distribución en pantalla, y coge sus argumentos igual: **seis bytes detrás del <code>call</code>**, dos punteros y una dirección de vídeo.</p>
+<p>0x5F65 es lo único que pone una distribución en pantalla, y coge sus argumentos igual: <b>seis bytes detrás del <code>call</code></b>, dos punteros y una dirección de vídeo.</p>
 <pre><code>MOTOR_DE_ROTULOS:
     pop hl                    ; 5f65   los seis bytes de parametros
     ld de,0e150h              ; 5f66
