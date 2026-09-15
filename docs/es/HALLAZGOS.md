@@ -19,6 +19,10 @@ lo mismo con 0x10. Así que el mismo aterrizaje es inofensivo o mortal según
 desde dónde empezara el salto, y saltar desde una tabla alta deja el suelo a
 una distancia que mata.
 
+## No lleva la marca oculta de Konami
+
+Muchos cartuchos de la casa esconden al final de la ROM su número de catálogo y el título en katakana; lo descubrió **Manuel Pazos** ([@ManuelPazosMSX](https://twitter.com/ManuelPazosMSX)). Este no: el último byte con contenido está en 0x7C3C, y detrás solo hay 963 bytes de relleno 0xFF. Y no es que esté en otro sitio: se rastrearon las 16.384 posiciones con un buscador que sí la encuentra en los cartuchos de la serie que la llevan.
+
 ## El mundo son sesenta y cuatro bytes
 
 Ni un mapa ni un generador: dos tablas de treinta y dos bytes, en 0x5C32 y

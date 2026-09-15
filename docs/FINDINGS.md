@@ -19,6 +19,10 @@ Y minus 0x11 has reached it; landing on a plank, 0x656C does the same with
 started, and jumping off a high plank means the ground itself is a fatal
 distance away.
 
+## It does not carry Konami's hidden mark
+
+Many of the house's cartridges hide their catalogue number and the title in katakana at the end of the ROM; **Manuel Pazos** ([@ManuelPazosMSX](https://twitter.com/ManuelPazosMSX)) found it. This one does not: the last byte with any content is at 0x7C3C, and behind it there are only 963 bytes of 0xFF padding. Nor is it somewhere else: all 16,384 positions were swept with a search that does find it in the cartridges of the series that carry it.
+
 ## The world is sixty-four bytes
 
 Not a map, not a generator: two tables of thirty-two bytes, at 0x5C32 and
