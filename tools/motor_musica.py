@@ -132,7 +132,7 @@ class Cartucho(Z80):
 def arranca(cfg, rom, numero):
     z = Cartucho(cfg, rom)
     z.sp = cfg.get("sp", 0xF000)
-    for r, v in dict({7: 0xB8}, **cfg.get("psg0", {})).items():   # el PSG tras el arranque
+    for r, v in {**{7: 0xB8}, **cfg.get("psg0", {})}.items():   # el PSG tras el arranque
         z.maq.psg[r] = v
     for d, regs in cfg.get("init", ()):
         for k, v in regs.items():

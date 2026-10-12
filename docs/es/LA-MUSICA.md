@@ -21,34 +21,34 @@ El timbre no está cotejado: es el de un AY-3-8910 de manual, no una grabación 
 
 Lo pide `ESTADO_10_ESPERA` al arrancar la pantalla; dura 21,5 s y vuelve a empezar en el segundo 0,2.
 
-<audio controls preload="none" src="../audio/musica_8E.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_8E.mp3?v=91617224"></audio>
 
 **La muerte** (0x90)
 
 Lo pide `MUERTE_CON_VIDAS`; dura 2,0 s.
 
-<audio controls preload="none" src="../audio/musica_90.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_90.mp3?v=358a8e79"></audio>
 
 **Game over** (0x93)
 
 Lo pide `ESTADO_12_MUERTE` cuando no quedan vidas; dura 5,0 s.
 
-<audio controls preload="none" src="../audio/musica_93.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_93.mp3?v=b5010777"></audio>
 
 **Te han dado** (0x96)
 
 Lo pide `LE_HAN_DADO`; dura 0,2 s.
 
-<audio controls preload="none" src="../audio/musica_96.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_96.mp3?v=d64d63ae"></audio>
 
 **Te hundes** (0x99)
 
 Lo pide `SE_HUNDE`; dura 0,6 s.
 
-<audio controls preload="none" src="../audio/musica_99.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_99.mp3?v=4a86591a"></audio>
 
 **La fanfarria de meta y del menú** (0x9C)
 
 Lo pide `MENU_CORTINILLA_BUCLE` y `META_ALCANZADA`; dura 3,2 s.
 
-<audio controls preload="none" src="../audio/musica_9C.mp3"></audio>
+<audio controls preload="none" src="../audio/musica_9C.mp3?v=3abee740"></audio>

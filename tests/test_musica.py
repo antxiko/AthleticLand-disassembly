@@ -41,7 +41,7 @@ class Musica(unittest.TestCase):
                     continue
                 txt = open(os.path.join(RAIZ, base, f), encoding="utf-8").read()
                 for src in re.findall(r'<audio [^>]*src="([^"]+)"', txt):
-                    ruta = os.path.normpath(os.path.join(RAIZ, base, src))
+                    ruta = os.path.normpath(os.path.join(RAIZ, base, src.split("?")[0]))
                     self.assertTrue(os.path.exists(ruta), "%s: %s" % (f, src))
 
     def test_cada_pieza_tiene_su_audio_en_las_dos_paginas(self):

@@ -30,6 +30,16 @@ def datos_de(rom, numero, fichero, cfg):
                                               else vuelta / hz)
 
 
+def version(fichero):
+    """Ocho cifras del contenido del MP3: la web lo cachea diez minutos y, sin
+    esto, quien ya lo oyo sigue oyendo el viejo."""
+    import hashlib
+    r = os.path.join(RAIZ, "docs", "audio", fichero)
+    if not os.path.exists(r):
+        return "0"
+    return hashlib.sha1(open(r, "rb").read()).hexdigest()[:8]
+
+
 def pagina(idioma):
     cfg = musica.CFG
     p = cfg["pagina"]
@@ -113,8 +123,8 @@ def pagina(idioma):
             L.append(("Lo pide %s; %s." if es else "Asked for by %s; %s.")
                      % (q_es if es else q_en, dur))
             L.append("")
-            L.append('<audio controls preload="none" src="%s%s"></audio>'
-                     % (ruta, fichero))
+            L.append('<audio controls preload="none" src="%s%s?v=%s"></audio>'
+                     % (ruta, fichero, version(fichero)))
             L.append("")
     return "\n".join(L).rstrip() + "\n"
 

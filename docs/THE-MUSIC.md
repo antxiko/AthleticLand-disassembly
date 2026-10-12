@@ -21,34 +21,34 @@ The timbre is not checked: it is a textbook AY-3-8910, not a recording of the em
 
 Asked for by `ESTADO_10_ESPERA` when a screen starts; lasts 21.5 s and starts again at second 0.2.
 
-<audio controls preload="none" src="audio/musica_8E.mp3"></audio>
+<audio controls preload="none" src="audio/musica_8E.mp3?v=91617224"></audio>
 
 **Death** (0x90)
 
 Asked for by `MUERTE_CON_VIDAS`; lasts 2.0 s.
 
-<audio controls preload="none" src="audio/musica_90.mp3"></audio>
+<audio controls preload="none" src="audio/musica_90.mp3?v=358a8e79"></audio>
 
 **Game over** (0x93)
 
 Asked for by `ESTADO_12_MUERTE` when no lives are left; lasts 5.0 s.
 
-<audio controls preload="none" src="audio/musica_93.mp3"></audio>
+<audio controls preload="none" src="audio/musica_93.mp3?v=b5010777"></audio>
 
 **Hit** (0x96)
 
 Asked for by `LE_HAN_DADO`; lasts 0.2 s.
 
-<audio controls preload="none" src="audio/musica_96.mp3"></audio>
+<audio controls preload="none" src="audio/musica_96.mp3?v=d64d63ae"></audio>
 
 **Sinking** (0x99)
 
 Asked for by `SE_HUNDE`; lasts 0.6 s.
 
-<audio controls preload="none" src="audio/musica_99.mp3"></audio>
+<audio controls preload="none" src="audio/musica_99.mp3?v=4a86591a"></audio>
 
 **The finish and menu fanfare** (0x9C)
 
 Asked for by `MENU_CORTINILLA_BUCLE` and `META_ALCANZADA`; lasts 3.2 s.
 
-<audio controls preload="none" src="audio/musica_9C.mp3"></audio>
+<audio controls preload="none" src="audio/musica_9C.mp3?v=3abee740"></audio>

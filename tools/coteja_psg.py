@@ -8,7 +8,9 @@ cero. Solo cuentan los registros 0-13 (el 14 y el 15 son los del mando). Se
 compara el ESTADO del PSG al acabar cada cuadro, partiendo del estado del chip
 al pedir la pieza; `ident` cuenta ademas los cuadros con escrituras identicas.
 
-Uso:  coteja_psg.py work/psg/psg.txt
+Uso:  coteja_psg.py work/psg/psg.txt [fusiona]
+`fusiona`: una peticion repetida del mismo numero no cuenta (el motor la ignora
+por prioridad, como en Athletic); sin ella, cada peticion reinicia la pieza.
 """
 import os
 import sys
@@ -21,15 +23,15 @@ import musica  # noqa: E402
 MIN_CUADROS = 40       # las peticiones mas cortas las pisa la siguiente
 
 
-def lee(ruta):
+def lee(ruta, fusiona=False):
     tramos, actual, cuadro = [], None, None
     psg = [0] * 14
     for ln in open(ruta):
         p = ln.split()
         if not p:
             continue
-        if p[0] == "S" and actual is not None and int(p[1]) == actual[0]:
-            continue                # la misma otra vez: el motor no la reinicia
+        if p[0] == "S" and fusiona and actual is not None                 and int(p[1]) == actual[0]:
+            continue                # el juego la pide otra vez y el motor no la reinicia
         if p[0] == "S":
             actual = (int(p[1]), list(psg), [])
             tramos.append(actual)
@@ -47,9 +49,9 @@ def lee(ruta):
     return tramos
 
 
-def main(ruta):
+def main(ruta, fusiona=False):
     rom = open(os.path.join(motor_musica.RAIZ, musica.CFG["rom"]), "rb").read()
-    for a, inicial, cuadros in lee(ruta):
+    for a, inicial, cuadros in lee(ruta, fusiona):
         if len(cuadros) < MIN_CUADROS:
             continue
         mios, _ = motor_musica.ejecuta(musica.CFG, rom, a,
@@ -80,4 +82,4 @@ def main(ruta):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    main(sys.argv[1], "fusiona" in sys.argv[2:])
