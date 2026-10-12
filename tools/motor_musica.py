@@ -132,6 +132,8 @@ class Cartucho(Z80):
 def arranca(cfg, rom, numero):
     z = Cartucho(cfg, rom)
     z.sp = cfg.get("sp", 0xF000)
+    for r, v in dict({7: 0xB8}, **cfg.get("psg0", {})).items():   # el PSG tras el arranque
+        z.maq.psg[r] = v
     for d, regs in cfg.get("init", ()):
         for k, v in regs.items():
             setattr(z, k, v)
@@ -174,10 +176,12 @@ VOLUMEN = (0.0, 0.0137, 0.0205, 0.0291, 0.0423, 0.0618, 0.0847, 0.1369,
            0.1691, 0.2647, 0.3527, 0.4499, 0.5704, 0.6873, 0.8482, 1.0)
 
 
-def sintetiza(cuadros, hz=60):
+def sintetiza(cuadros, hz=60, psg0=None):
     import numpy as np
     regs = [0] * 16
-    regs[7] = 0xFF
+    regs[7] = 0xB8          # el mezclador como lo deja el arranque del MSX
+    for r, v in (psg0 or {}).items():
+        regs[r] = v
     por_cuadro = MUESTREO / hz
     fase = [0.0, 0.0, 0.0]
     lfsr, ruido_fase, ruido_bit = 1, 0.0, 0
@@ -293,7 +297,7 @@ def main(cfg, argv):
         n = int(argv[1], 0)
         cuadros, vuelta = ejecuta(cfg, rom, n)
         todo, fundido = desarrolla(cuadros, vuelta, hz)
-        a_mp3(sintetiza(todo, hz), argv[2], fundido, hz)
+        a_mp3(sintetiza(todo, hz, cfg.get("psg0")), argv[2], fundido, hz)
         print("0x%02X: %d cuadros (%.1f s), vuelve al %s -> %s" % (
             n, len(cuadros), len(cuadros) / hz, vuelta, argv[2]))
     elif argv[0] == "todas":
