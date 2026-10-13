@@ -129,30 +129,66 @@ class Cartucho(Z80):
             self._una()
 
 
+def corre_frame(z):
+    """El motor de un cuadro: una direccion, o una lista de llamadas
+    [(direccion, {registro: valor}), ...]."""
+    for v, b in z.cfg.get("bancos_frame", ()):    # los bancos que pone la interrupcion
+        z.pon_banco(v, b)
+    f = z.cfg["frame"]
+    if isinstance(f, int):
+        z.corre(f)
+        return
+    for d, regs in f:
+        for k, v in regs.items():
+            setattr(z, k, v)
+        z.corre(d)
+
+
+def pide_pistas(z, numero):
+    """Juegos sin rutina de peticion: la pieza es una lista de escrituras en las
+    fichas de los canales, cfg["pistas"][numero] = [("w", dir, valor16) |
+    ("b", dir, valor8)], las mismas que hace el juego."""
+    for tipo, d, v in z.cfg["pistas"][numero]:
+        if tipo == "w":
+            z.mem[d] = v & 0xFF
+            z.mem[d + 1] = v >> 8
+        else:
+            z.mem[d] = v & 0xFF
+
+
 def arranca(cfg, rom, numero):
     z = Cartucho(cfg, rom)
     z.sp = cfg.get("sp", 0xF000)
     for r, v in {**{7: 0xB8}, **cfg.get("psg0", {})}.items():   # el PSG tras el arranque
         z.maq.psg[r] = v
+    for d, v in cfg.get("ram0", ()):         # la RAM como la deja el arranque del juego
+        z.mem[d] = v
     for d, regs in cfg.get("init", ()):
         for k, v in regs.items():
             setattr(z, k, v)
         z.corre(d)
     for _ in range(cfg.get("cuadros_previos", 1)):
-        z.corre(cfg["frame"])
-    z.a = numero & 0xFF
-    for k, v in cfg.get("regs_pide", {}).items():
-        setattr(z, k, v)
-    z.corre(cfg["pide"])
+        corre_frame(z)
+    if "pistas" in cfg:
+        pide_pistas(z, numero)
+    else:
+        z.a = numero & 0xFF
+        for k, v in {**cfg.get("regs_pide", {}),
+                     **cfg.get("regs_pide_de", {}).get(numero, {})}.items():
+            setattr(z, k, v)
+        z.corre(cfg["pide"])
     z.escrituras.clear()
     return z
 
 
 def cuadro(z):
     z.escrituras.clear()
+    corre_frame(z)
+    # el SCC va en la misma lista, con el registro 0x100 + su desplazamiento
+    # (0x9800 = 0); lo que escribieron el arranque y la peticion entra aqui
+    salida = list(z.escrituras) + [(0x100 + o, v) for o, v in z.scc]
     z.scc.clear()
-    z.corre(z.cfg["frame"])
-    return list(z.escrituras)
+    return salida
 
 
 def ejecuta(cfg, rom, numero, maximo=None):
@@ -163,7 +199,10 @@ def ejecuta(cfg, rom, numero, maximo=None):
     cuadros, vistos = [], {}
     for n in range(maximo):
         cuadros.append(cuadro(z))
-        h = hashlib.sha1(bytes(z.mem[a:b])).digest()
+        ram = bytearray(z.mem[a:b])
+        for d in cfg.get("excluye", ()):    # contadores de vueltas, que no cierran el bucle
+            ram[d - a] = 0
+        h = hashlib.sha1(bytes(ram)).digest()
         if h in vistos:
             if vistos[h] == n:
                 return cuadros, None
@@ -187,8 +226,27 @@ def sintetiza(cuadros, hz=60, psg0=None):
     lfsr, ruido_fase, ruido_bit = 1, 0.0, 0
     env_fase = 0.0
     salida, acumulado = [], 0.0
+    ondas = [[0] * 32 for _ in range(4)]       # el SCC: cuatro formas de onda
+    scc_per, scc_vol, scc_on = [0] * 5, [0] * 5, 0
+    scc_fase = [0.0] * 5
     for escr in cuadros:
         for r, v in escr:
+            if r >= 0x100:
+                o = r - 0x100
+                if o < 0x80:
+                    b = v - 256 if v > 127 else v
+                    ondas[o >> 5][o & 31] = b
+                elif o < 0x8A:
+                    c = (o - 0x80) >> 1
+                    if o & 1:
+                        scc_per[c] = (scc_per[c] & 0xFF) | ((v & 0x0F) << 8)
+                    else:
+                        scc_per[c] = (scc_per[c] & 0xF00) | v
+                elif o < 0x8F:
+                    scc_vol[o - 0x8A] = v & 0x0F
+                elif o == 0x8F:
+                    scc_on = v
+                continue
             regs[r & 15] = v
             if (r & 15) == 13:
                 env_fase = 0.0
@@ -244,6 +302,16 @@ def sintetiza(cuadros, hz=60, psg0=None):
             nivel = (np.array(VOLUMEN)[env.astype(int)] if v & 0x10
                      else VOLUMEN[v & 0x0F])
             mezcla += puerta * nivel
+        for c in range(5):                        # el SCC: 5 canales de onda
+            if not (scc_on >> c) & 1 or not scc_vol[c]:
+                continue
+            f = 3579545.0 / (32 * (scc_per[c] + 1))
+            if f > 20000:
+                continue
+            onda_c = np.array(ondas[min(c, 3)], dtype=float) / 128.0
+            ph = scc_fase[c] + f / MUESTREO * t
+            mezcla += 0.45 * (scc_vol[c] / 15.0) * onda_c[(ph * 32).astype(int) % 32]
+            scc_fase[c] = (scc_fase[c] + f / MUESTREO * n) % 1.0
         salida.append(mezcla)
     onda = np.concatenate(salida) if salida else np.zeros(0)
     if len(onda) > 2205:
@@ -297,6 +365,8 @@ def main(cfg, argv):
         n = int(argv[1], 0)
         cuadros, vuelta = ejecuta(cfg, rom, n)
         todo, fundido = desarrolla(cuadros, vuelta, hz)
+        if vuelta is None and len(cuadros) >= hz * cfg.get("max_s", 300) - 1:
+            fundido = 3 * hz        # la pieza se corta al tope: se apaga en 3 s
         a_mp3(sintetiza(todo, hz, cfg.get("psg0")), argv[2], fundido, hz)
         print("0x%02X: %d cuadros (%.1f s), vuelve al %s -> %s" % (
             n, len(cuadros), len(cuadros) / hz, vuelta, argv[2]))
@@ -305,22 +375,45 @@ def main(cfg, argv):
         for n, fichero, *_ in cfg["piezas"]:
             main(cfg, ["mp3", "0x%02X" % n, os.path.join(argv[1], fichero)])
     elif argv[0] == "emu":
-        f, q = cfg["frame"], cfg["pide"]
+        f = cfg.get("bp_frame") or (cfg["frame"] if isinstance(cfg["frame"], int)
+                                    else cfg["frame"][0][0])
+        q = cfg.get("bp_pide") or cfg.get("pide") or cfg["bp_frame"]   # bp_pide: el cuerpo de la peticion, comun a todas sus entradas
         org = cfg["org"]
         print("export EMU_MAQUINA=%s EMU_ROM=%s EMU_TIPO='%s'" % (
             cfg.get("maquina", "C-BIOS_MSX1_JP"), cfg["rom"],
             ("-romtype " + cfg["romtype"]) if cfg.get("romtype") else ""))
         print("export PSG_FRAME=0x%04X PSG_FRAME_BYTE=%d" % (
-            f, rom[f - org] if not cfg.get("mapper") else cfg["byte_frame"]))
+            f, rom[f - org] if not cfg.get("mapper") else rom[cfg["banco_frame"] * 0x2000 + (f & 0x1FFF)]))
+        if "pistas" in cfg:
+            print("export PSG_PIDE=0x%04X PSG_PIDE_BYTE=%d" % (
+                f, rom[f - org] if not cfg.get("mapper") else rom[cfg["banco_frame"] * 0x2000 + (f & 0x1FFF)]))
+            return 0
         print("export PSG_PIDE=0x%04X PSG_PIDE_BYTE=%d" % (
-            q, rom[q - org] if not cfg.get("mapper") else cfg["byte_pide"]))
+            q, rom[q - org] if not cfg.get("mapper") else rom[cfg["banco_pide"] * 0x2000 + (q & 0x1FFF)]))
     elif argv[0] == "barrido":
         for n in range(int(argv[1], 0), int(argv[2], 0) + 1):
             try:
                 cuadros, vuelta = ejecuta(cfg, rom, n, hz * 30)
+                aud = sum(1 for e in cuadros for r, v in e
+                          if 8 <= r <= 10 and v & 0x1F)
                 print("0x%02X: %4d cuadros, vuelta %s, %s" % (
                     n, len(cuadros), vuelta,
-                    "MUDO" if sonido_mudo(cuadros) else "suena"))
+                    "MUDO" if not aud else "suena (%d volumenes)" % aud))
             except ParadaZ80 as e:
                 print("0x%02X: PARADA %s" % (n, e))
     return 0
+
+
+# ------------------------------------------------- atajos para el musica.py de cada juego
+
+def P(numero, es, en, quien):
+    """Una pieza: (numero, fichero, grupo, titulo es, titulo en, quien, quien)."""
+    return (numero, "musica_%02X.mp3" % numero, "musica", es, en, quien, quien)
+
+
+def pagina_basica(motor_es, motor_en, maquina, cotejo, notas=()):
+    """CFG["pagina"] con el grupo unico de musicas. `cotejo`: [(es, en)];
+    `notas`: [(titulo es, texto es, titulo en, texto en)]."""
+    return dict(motor_es=motor_es, motor_en=motor_en, maquina=maquina,
+                cotejo=cotejo, notas=list(notas),
+                grupos=[("musica", "Las músicas", "The tunes", "", "")])
