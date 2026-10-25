@@ -186,3 +186,28 @@ Y un sonido se ríe de los demás: **el número 6 es una pista que solo contiene
 0xFF**. Se pide cuando la abeja se va de la pantalla y cuando dejas una
 pantalla, y lo único que hace es apagar el canal de efectos — que es la única
 manera de callar el zumbido.
+
+## Código compartido con otros cartuchos de Konami
+
+Este desensamblado se ha comparado, instrucción por instrucción, con
+todos los demás de Konami de la serie. Cuenta un bloque cuando las
+mismas instrucciones, al menos seis desde una etiqueta hasta su `ret`
+o su salto sin condición, están en los dos cartuchos; las direcciones
+no se miran, porque cambian de un cartucho a otro. De los otros 57,
+**29** tienen al menos un bloque en común con este; estos son los
+que más comparten:
+
+| Cartucho | Bloques | Instrucciones | Por ejemplo (aquí = allí) |
+|---|---:|---:|---|
+| [Cabbage Patch Kids](https://antxiko.github.io/CabbagePatchKids-disassembly/es/) | 72 | 1.114 | `COBRA_PUNTOS` (0x6642) |
+| [Monkey Academy](https://antxiko.github.io/MonkeyAcademy-disassembly/es/) | 17 | 255 | `SUENA_PASO` (0x7880) |
+| [Antarctic Adventure](https://antxiko.github.io/AntarcticAdventure-disassembly/es/) | 14 | 222 | `SUENA_PASO` (0x7880) = `CANAL_SIGUE` |
+| [Super Cobra](https://antxiko.github.io/SuperCobra-disassembly/es/) | 11 | 116 | `MUSICA_PERIODO` (0x793A) |
+| [Circus Charlie](https://antxiko.github.io/CircusCharlie-disassembly/es/) | 10 | 87 | `COPIA_VRAM_A_VRAM` (0x4573) = `copia_vram_a_vram` |
+| [Magical Tree](https://antxiko.github.io/MagicalTree-disassembly/es/) | 8 | 85 | `PINTA_FASE` (0x4707) = `pinta_el_numero_de_fase` |
+| [Konami’s Billiards](https://antxiko.github.io/KonamisBilliards-disassembly/es/) | 6 | 111 | `SUENA_PASO` (0x7880) = `paso_de_un_canal` |
+| [Konami’s Mahjong Dojo](https://antxiko.github.io/KonamisMahjongDojo-disassembly/es/) | 5 | 43 | `COPIA_VRAM_A_VRAM` (0x4573) = `copia_dentro_de_la_vram` |
+
+La matriz entera, los 58 cartuchos entre sí, está en
+[Las rutinas](https://antxiko.github.io/MSX-disassembly-database/es/LAS-RUTINAS.html) de la base de datos de la
+serie, con el método y el programa que la mide.

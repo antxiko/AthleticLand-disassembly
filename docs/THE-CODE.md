@@ -185,3 +185,28 @@ One sound is a joke on the rest: **number 6 is a track that only contains
 0xFF**. It is asked for when the bee flies off the screen and when you leave a
 screen, and all it does is switch the effects channel off — the only way to
 stop the buzzing.
+
+## Code shared with other Konami cartridges
+
+This disassembly has been compared, instruction by instruction, with
+every other Konami one in the series. A block counts when the same
+instructions, at least six of them from a label to its `ret` or its
+unconditional jump, are in both cartridges; the addresses are left
+aside, because they change from one cartridge to the next. Of the
+other 57, **29** have at least one block in common with this one;
+these are the ones that share the most:
+
+| Cartridge | Blocks | Instructions | For example (here = there) |
+|---|---:|---:|---|
+| [Cabbage Patch Kids](https://antxiko.github.io/CabbagePatchKids-disassembly/) | 72 | 1,114 | `COBRA_PUNTOS` (0x6642) |
+| [Monkey Academy](https://antxiko.github.io/MonkeyAcademy-disassembly/) | 17 | 255 | `SUENA_PASO` (0x7880) |
+| [Antarctic Adventure](https://antxiko.github.io/AntarcticAdventure-disassembly/) | 14 | 222 | `SUENA_PASO` (0x7880) = `CANAL_SIGUE` |
+| [Super Cobra](https://antxiko.github.io/SuperCobra-disassembly/) | 11 | 116 | `MUSICA_PERIODO` (0x793A) |
+| [Circus Charlie](https://antxiko.github.io/CircusCharlie-disassembly/) | 10 | 87 | `COPIA_VRAM_A_VRAM` (0x4573) = `copia_vram_a_vram` |
+| [Magical Tree](https://antxiko.github.io/MagicalTree-disassembly/) | 8 | 85 | `PINTA_FASE` (0x4707) = `pinta_el_numero_de_fase` |
+| [Konami’s Billiards](https://antxiko.github.io/KonamisBilliards-disassembly/) | 6 | 111 | `SUENA_PASO` (0x7880) = `paso_de_un_canal` |
+| [Konami’s Mahjong Dojo](https://antxiko.github.io/KonamisMahjongDojo-disassembly/) | 5 | 43 | `COPIA_VRAM_A_VRAM` (0x4573) = `copia_dentro_de_la_vram` |
+
+The whole matrix, the 58 cartridges against each other, is on
+[The routines](https://antxiko.github.io/MSX-disassembly-database/THE-ROUTINES.html) in the series database, along
+with the method and the program that measures it.
